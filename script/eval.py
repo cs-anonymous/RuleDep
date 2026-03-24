@@ -9,8 +9,7 @@ import argparse
 import os
 from datetime import datetime
 
-
-def _summarize_ranking(ranking: dict) -> tuple[int, int, int]:
+def _summarize_ranking(ranking):
     relation_count = len(ranking)
     query_count = 0
     candidate_total = 0

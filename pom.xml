@@ -44,7 +44,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>tarmorn.TLearn</mainClass>
+                            <mainClass>tarmorn.DepLearn</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -72,12 +72,6 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <source>src/main/java</source>
-                                <source>target/generated-sources/annotations</source>
-                            </sourceDirs>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>test-compile</id>

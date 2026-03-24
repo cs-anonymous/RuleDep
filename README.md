@@ -2,7 +2,7 @@
 
 RuleDep is a rule-based KGC pipeline. In practice, the most common entrypoints are:
 
-- `./run.sh` for the full Stage 1-5 pipeline
+- `./run.sh` for the full Stage 0-5 pipeline
 - `./step3_dataset.sh`
 - `./step4_dependency.sh`
 - `./step5_aggregation.sh`
@@ -21,7 +21,6 @@ The default dataset list in `run.sh` is:
 Run one dataset end to end:
 
 ```bash
-python preprocess.py data/FB15k-237
 ./run.sh FB15k-237
 ```
 
@@ -101,6 +100,8 @@ Output:
 
 - `data/<dataset>/application/eval-noisyor.log`
 - `data/<dataset>/application/eval-maxplus.log`
+- `data/<dataset>/application/eval_base_ranker_noisyor.log`
+- `data/<dataset>/application/eval_base_ranker_maxplus.log`
 - `data/<dataset>/application/applied_rules_train.json`
 - `data/<dataset>/application/applied_rules_valid.json`
 - `data/<dataset>/application/applied_rules_test.json`

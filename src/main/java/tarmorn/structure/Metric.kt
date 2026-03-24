@@ -1,4 +1,4 @@
-package tarmorn.structure.TLearn
+package tarmorn.structure
 
 import tarmorn.Settings
 import kotlin.math.min

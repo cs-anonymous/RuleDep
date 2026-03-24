@@ -3,12 +3,9 @@ package tarmorn
 import tarmorn.data.IdManager
 import tarmorn.data.RelationPath
 import tarmorn.data.TripleSet
-import tarmorn.eval.HitsAtK
-import tarmorn.eval.ResultSet
-import tarmorn.structure.TLearn.DepAtom
-import tarmorn.structure.TLearn.Metric
-import tarmorn.structure.TLearn.RuleParser
-import tarmorn.data.MyTriple
+import tarmorn.structure.DepAtom
+import tarmorn.structure.Metric
+import tarmorn.structure.RuleParser
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream

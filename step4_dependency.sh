@@ -24,7 +24,10 @@ echo "======================================"
 
 mkdir -p "data/${dataset}/rules" "data/${dataset}/application"
 
-mvn -q -DskipTests compile exec:java > "data/${dataset}/rules/run_depgraph.log" 2>&1
+mvn -DskipTests compile exec:java > "data/${dataset}/rules/run_deplearn.log" 2>&1 || {
+    tail -n 120 "data/${dataset}/rules/run_deplearn.log" >&2
+    exit 1
+}
 python filter_dependency.py -d "${dataset}" --rule_file "data/${dataset}/rules/${ruleset}"
 
 echo "Step 4 finished for ${dataset}"

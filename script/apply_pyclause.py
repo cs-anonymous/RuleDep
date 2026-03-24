@@ -96,6 +96,7 @@ def main():
     parser.add_argument("--read-zero-rules", type=int, default=0)
     parser.add_argument("--read-uxxc-rules", type=int, default=1)
     parser.add_argument("--read-uxxd-rules", type=int, default=1)
+    parser.add_argument("--num_top_rules", type=int, default=200)
 
     args = parser.parse_args()
     opts = Options()
@@ -120,7 +121,7 @@ def main():
     opts.set("ranking_handler.aggregation_function", args.aggregation)
     opts.set("ranking_handler.filter_w_data", bool(args.filter_w_data))
     # opts.set("ranking_handler.num_top_rules", -1)
-    opts.set("ranking_handler.num_top_rules", 200)
+    opts.set("ranking_handler.num_top_rules", args.num_top_rules)
     opts.set("ranking_handler.num_threads", args.worker_threads)
     # make sure we do not stop early
     opts.set("ranking_handler.disc_at_least", -1)

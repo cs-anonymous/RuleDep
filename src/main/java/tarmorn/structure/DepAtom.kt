@@ -1,6 +1,5 @@
-package tarmorn.structure.TLearn
+package tarmorn.structure
 
-import tarmorn.TLearn
 import tarmorn.Settings
 import tarmorn.data.IdManager
 import tarmorn.data.RelationPath
