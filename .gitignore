@@ -1,0 +1,11 @@
+.idea
+/data
+/build
+*.tar.gz
+/target
+.vscode
+/PyClause
+*.log
+r2h2t_index.json
+baseline
+/out*
