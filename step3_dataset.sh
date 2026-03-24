@@ -4,7 +4,7 @@ set -euo pipefail
 [ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [ruleset]" >&2; exit 1; }
 
 dataset="$1"
-ruleset="${2:-rules-1000-5}"
+ruleset="${2:-rule.txt}"
 
 echo "======================================"
 echo "Step 3: Dataset generation for ${dataset}"

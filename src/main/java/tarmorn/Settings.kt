@@ -39,22 +39,13 @@ object Settings {
     var PATH_VALID: String = "data/{DATASET}/valid.txt"
     // Path to the file that contains the rules that will be refined or will be sued for prediction.
     @JvmField
-    var PATH_RULES: String = "data/{DATASET}/rules/rules-1000-5"
+    var PATH_RULES: String = "data/{DATASET}/rules/rule.txt"
     @JvmField
     var PATH_DEPENDENCY: String = "data/{DATASET}/rules/dependency.txt"
-    @JvmField
-    var PATH_H2B2metric: String = "data/{DATASET}/rules/H2B2metric.json"
-    @JvmField
-    var PATH_RULES_TXT: String = "data/{DATASET}/rules/rule.txt"
-    @JvmField
-    var PATH_H2F2metric: String = "data/{DATASET}/rules/H2F2metric.json"
     // Path to the file that contains the rules that will be used as base,
     // i.e. this rule set will be added to all other rule sets loaded.
     @JvmField
     var PATH_RULES_BASE: String = ""
-    // Path to the output file where the rules / predictions  will be stored.
-    @JvmField
-    var PATH_OUTPUT: String = "data/{DATASET}/application/predictions"
     // The number of worker threads which compute the scores of the constructed rules, should be one less then the number of available cores.
     @JvmField
     var WORKER_THREADS: Int = 20
@@ -216,7 +207,7 @@ object Settings {
 
     // The number of negative examples for which we assume that they exist, however, we have not seen them. Rules with high coverage are favored the higher the chosen number.
     @JvmField
-    var UNSEEN_NEGATIVE_EXAMPLES: Int = 5
+    var UNSEEN_NEGATIVE_EXAMPLES: Int = 1
 
     // The number of negative examples for which we assume that they exist, however, we have not seen them.
     // This number is for each refinements step, including the refinement of a refined rule.
@@ -235,6 +226,9 @@ object Settings {
     // The threshold for the confidence of the rule. Determines which rules are read from a file by the rule reader.
     @JvmField
     var READ_THRESHOLD_CONFIDENCE: Double = 0.0001
+
+    @JvmField
+    var MIN_ABS_LIFT_DEPENDENCY: Double = 0.01
 
     // The maximal size of the rules that are stored when reading them from a file.
     // Determines which rules are read from a file by the rule reader.
@@ -393,15 +387,11 @@ object Settings {
     }
     
     private fun replacePaths() {
-        PATH_OUTPUT = PATH_OUTPUT.replace("{DATASET}", DATASET)
         PATH_RULES = PATH_RULES.replace("{DATASET}", DATASET)
         PATH_TRAINING = PATH_TRAINING.replace("{DATASET}", DATASET)
         PATH_TEST = PATH_TEST.replace("{DATASET}", DATASET)
         PATH_VALID = PATH_VALID.replace("{DATASET}", DATASET)
         PATH_RULES_BASE = PATH_RULES_BASE.replace("{DATASET}", DATASET)
-        PATH_H2B2metric = PATH_H2B2metric.replace("{DATASET}", DATASET)
-        PATH_RULES_TXT = PATH_RULES_TXT.replace("{DATASET}", DATASET)
-        PATH_H2F2metric = PATH_H2F2metric.replace("{DATASET}", DATASET)
         PATH_DEPENDENCY = PATH_DEPENDENCY.replace("{DATASET}", DATASET)
     }
 }

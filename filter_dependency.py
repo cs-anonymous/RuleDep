@@ -218,7 +218,7 @@ def build_active_rule_sets_by_relation(split_to_targets, processed_sp, processed
     return active_rule_sets_by_relation
 
 
-def parse_raw_dependency_file(path, rule_relation_by_id, min_abs_lift):
+def parse_raw_dependency_file(path, rule_relation_by_id):
     pairs_by_relation = defaultdict(list)
     seen_pairs = defaultdict(set)
 
@@ -240,9 +240,6 @@ def parse_raw_dependency_file(path, rule_relation_by_id, min_abs_lift):
             except Exception:
                 continue
 
-            if abs(lift) < float(min_abs_lift):
-                continue
-
             rel1 = rule_relation_by_id.get(id1)
             rel2 = rule_relation_by_id.get(id2)
             if rel1 is None or rel2 is None or rel1 != rel2:
@@ -257,19 +254,20 @@ def parse_raw_dependency_file(path, rule_relation_by_id, min_abs_lift):
     return dict(pairs_by_relation)
 
 
-def rank_and_limit_kept_pairs_by_relation(kept_pairs_by_relation, relation_rule_count_by_id):
+def rank_and_limit_kept_pairs_by_relation(kept_pairs_by_relation, relation_rule_count_by_id, dep_per_rule_multiplier):
     final_pairs = []
     kept_before_limit = 0
+    dep_per_rule_multiplier = max(int(dep_per_rule_multiplier), 0)
 
     for relation, candidates in sorted(kept_pairs_by_relation.items(), key=lambda x: x[0]):
         ranked = sorted(candidates, key=lambda x: (-abs(float(x[2])), int(x[0]), int(x[1])))
         kept_before_limit += len(ranked)
-        limit = max(int(relation_rule_count_by_id.get(int(relation), 0)), 0) * 3
+        limit = max(int(relation_rule_count_by_id.get(int(relation), 0)), 0) * dep_per_rule_multiplier
         if limit > 0:
             ranked = ranked[:limit]
         else:
             ranked = []
-        final_pairs.extend((int(a), int(b)) for a, b, _lift in ranked)
+        final_pairs.extend((int(a), int(b), float(lift)) for a, b, lift in ranked)
 
     return final_pairs, kept_before_limit
 
@@ -313,12 +311,12 @@ def filter_dependency_file(
     rule_relation_by_id,
     relation_rule_count_by_id,
     min_train,
-    min_abs_lift,
+    dep_per_rule_multiplier,
     jobs=1,
     progress_every=10,
     chunk_candidates=50000,
 ):
-    pairs_by_relation = parse_raw_dependency_file(input_path, rule_relation_by_id, min_abs_lift=min_abs_lift)
+    pairs_by_relation = parse_raw_dependency_file(input_path, rule_relation_by_id)
 
     kept_pairs_by_relation = defaultdict(list)
     raw_total = sum(len(v) for v in pairs_by_relation.values())
@@ -333,7 +331,7 @@ def filter_dependency_file(
     print(
         f"{os.path.basename(input_path)}: filtering {raw_total} dependencies across {num_relations} relations "
         f"using {num_tasks} task(s) (jobs={jobs}, chunk_candidates={chunk_candidates}, "
-        f"min_train={int(min_train)}, min_abs_lift={float(min_abs_lift)})"
+        f"min_train={int(min_train)}, dep_per_rule_multiplier={int(dep_per_rule_multiplier)})"
     )
 
     processed_tasks = 0
@@ -374,11 +372,12 @@ def filter_dependency_file(
     kept_pairs, kept_before_limit = rank_and_limit_kept_pairs_by_relation(
         kept_pairs_by_relation,
         relation_rule_count_by_id,
+        dep_per_rule_multiplier,
     )
 
     with open(output_path, "w", encoding="utf-8") as f:
-        for a, b in kept_pairs:
-            f.write(f"{int(a)}\t{int(b)}\n")
+        for a, b, lift in kept_pairs:
+            f.write(f"{int(a)}\t{int(b)}\t{float(lift):.10g}\n")
 
     print(
         f"{os.path.basename(input_path)}: kept {len(kept_pairs)} / {raw_total} dependencies "
@@ -387,14 +386,14 @@ def filter_dependency_file(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Filter dependency files by train support and lift magnitude.")
+    parser = argparse.ArgumentParser(description="Filter dependency files by train support.")
     parser.add_argument("-d", "--dataset", default="codex-m")
     parser.add_argument("--data_root", default="data")
     parser.add_argument("--rule_file", default="")
     parser.add_argument("--synergy_file", default="")
     parser.add_argument("--redundancy_file", default="")
     parser.add_argument("--min_train", type=int, default=5)
-    parser.add_argument("--min_abs_lift", type=float, default=0.01)
+    parser.add_argument("--dep_per_rule_multiplier", type=int, default=2, help="Keep at most this many dependencies per rule for each relation after ranking by |lift|.")
     parser.add_argument("--jobs", type=int, default=os.cpu_count(), help="Number of worker processes for relation-level filtering.")
     parser.add_argument(
         "--progress_every",
@@ -414,7 +413,7 @@ def main():
     rules_dir = os.path.join(dataset_dir, "rules")
     application_dir = os.path.join(dataset_dir, "application")
 
-    rule_file = args.rule_file or os.path.join(rules_dir, "rules-1000-5")
+    rule_file = args.rule_file or os.path.join(rules_dir, "rule.txt")
     synergy_file = args.synergy_file or os.path.join(rules_dir, "synergy.txt")
     redundancy_file = args.redundancy_file or os.path.join(rules_dir, "redundancy.txt")
 
@@ -440,7 +439,7 @@ def main():
             rule_relation_by_id,
             relation_rule_count_by_id,
             min_train=args.min_train,
-            min_abs_lift=args.min_abs_lift,
+            dep_per_rule_multiplier=args.dep_per_rule_multiplier,
             jobs=args.jobs,
             progress_every=args.progress_every,
             chunk_candidates=args.chunk_candidates,
@@ -454,7 +453,7 @@ def main():
             rule_relation_by_id,
             relation_rule_count_by_id,
             min_train=args.min_train,
-            min_abs_lift=args.min_abs_lift,
+            dep_per_rule_multiplier=args.dep_per_rule_multiplier,
             jobs=args.jobs,
             progress_every=args.progress_every,
             chunk_candidates=args.chunk_candidates,

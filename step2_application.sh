@@ -4,7 +4,7 @@ set -euo pipefail
 [ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [ruleset] [topk] [worker_threads] [num_top_rules]" >&2; exit 1; }
 
 dataset="$1"
-ruleset="${2:-rules-1000-5}"
+ruleset="${2:-rule.txt}"
 topk="${3:-100}"
 worker_threads="${4:-20}"
 num_top_rules="${5:-200}"

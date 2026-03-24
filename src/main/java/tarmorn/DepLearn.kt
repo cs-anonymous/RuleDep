@@ -14,6 +14,7 @@ import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.math.abs
 
 /**
  * DepLearn - Dependency-based learning algorithm
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * 2. Reads rules from PATH_RULES (excludes complex rules with &&)
  *    Rule format: bodySize\tsupport\tconfidence\thead <= body1 body2 ...
  * 
- * 3. Converts rules to H2B2metric structure:
+ * 3. Converts rules to an in-memory H2B2metric structure:
  *    - Uses DepAtom instead of MyAtom (no instance storage, direct index lookup)
  *    - H2B2metric: ConcurrentHashMap<DepAtom, ConcurrentHashMap<DepAtom, Metric>>
  *    - headSize is obtained directly from indexes (no need to store in DepAtom)
@@ -175,13 +176,6 @@ object DepLearn {
         loadTripleSet()
 
         readRules(Settings.PATH_RULES)
-
-        saveMetricToJson(
-            metricMap = H2B2ID,
-            outputPath = Settings.PATH_H2B2metric,
-            appendMode = false,
-            isFormulaMap = false
-        )
 
         try {
             compositionPhase()
@@ -710,79 +704,6 @@ object DepLearn {
     }
     
     /**
-     * Save metric map to JSON file - streaming output to avoid memory overflow
-     * @param metricMap The metric map to save (H2B2metric or H2F2metric)
-     * @param outputPath The output JSON file path
-     * @param appendMode Whether to append to existing rules file (true for H2F, false for H2B)
-     * @param isFormulaMap Whether the body type is DepFormula (true) or DepAtom (false)
-     */
-    private fun saveMetricToJson(
-        metricMap: ConcurrentHashMap<DepAtom, ConcurrentHashMap<DepAtom, Int>>,
-        outputPath: String,
-        appendMode: Boolean,
-        isFormulaMap: Boolean
-    ) {
-        val outputFile = File(outputPath)
-        val outputRule = File(Settings.PATH_RULES_TXT)
-        outputFile.parentFile?.mkdirs()
-        outputRule.parentFile?.mkdirs()
-        
-        val metricType = if (isFormulaMap) "H2F2metric" else "H2B2metric"
-        println("Saving $metricType to ${outputFile.absolutePath}...")
-        
-        java.io.BufferedWriter(java.io.FileWriter(outputFile)).use { writer ->
-            java.io.BufferedWriter(java.io.FileWriter(outputRule, appendMode)).use { ruleWriter ->
-                writer.write("{\n")
-                val atomEntries = metricMap.entries.toList()
-
-                atomEntries.forEachIndexed { atomIndex, (atom, bodyMap) ->
-                    val headAtomString = atom.toString().replace("\"", "\\\"").replace("\n", "\\n")
-                    writer.write("  \"$headAtomString\": {\n")
-
-                    val bodyEntries = bodyMap.entries.toList()
-                        .mapNotNull { entry ->
-                            val metric = ID2metric[entry.value] ?: return@mapNotNull null
-                            Triple(entry.key, entry.value, metric)
-                        }
-                        .sortedByDescending { it.third.confidence }
-                    
-                    bodyEntries.forEachIndexed { bodyIndex, (body, ruleId, metric) ->
-                        val bodyString = body.toString().replace("\"", "\\\"").replace("\n", "\\n")
-                        writer.write("    \"$bodyString\": $metric")
-                        if (bodyIndex < bodyEntries.size - 1) writer.write(",")
-                        writer.write("\n")
-                        
-                        // Get rule string based on body type
-                        val bodyRuleString = body.getRuleString()
-                        
-                        // Write rule to text file with lift info for formulas
-                        val liftInfo = if (isFormulaMap) metric.lift else metric.confidence
-                        val ruleLine = "${metric.bodySize}\t${metric.support.toInt()}\t${format5(liftInfo)}\t${atom.getRuleString()} <= $bodyRuleString"
-                        ruleWriter.write(ruleLine)
-                        ruleWriter.write("\n")
-                    }
-
-                    writer.write("  }")
-                    if (atomIndex < atomEntries.size - 1) writer.write(",")
-                    writer.write("\n")
-
-                    if ((atomIndex+1) % 1000 == 0) {
-                        writer.flush()
-                        ruleWriter.flush()
-                        println("[save${metricType}ToJson] Processed ${atomIndex + 1}/${atomEntries.size} head atoms...")
-                    }
-                }
-                writer.write("}\n")
-            }
-        }
-
-        println("Successfully saved $metricType to ${outputFile.absolutePath}")
-        println("Successfully saved rules to ${outputRule.absolutePath}")
-        println("Total head atoms: ${metricMap.size}")
-        println("Total body entries: ${metricMap.values.sumOf { it.size }}")
-    }
-
-    /**
      * Save dependency metrics to file
      * Format: bodySize\tsupp\tlift\tID1\tID2
      *
@@ -794,6 +715,7 @@ object DepLearn {
         val outputFile = File(outputPath)
         outputFile.parentFile?.mkdirs()
         println("Saving depAdj2metric to ${outputFile.absolutePath}...")
+        println("Applying dependency lift threshold: |lift| >= ${Settings.MIN_ABS_LIFT_DEPENDENCY}")
 
         val synergeFile = File(outputFile.parentFile, "synergy.txt")
         val redundancyFile = File(outputFile.parentFile, "redundancy.txt")
@@ -804,6 +726,7 @@ object DepLearn {
 
         val sortedEntries = depAdj2metric.entries
             .flatMap { (id1, inner) -> inner.entries.map { id1 to it } }
+            .filter { abs(it.second.value.lift) >= Settings.MIN_ABS_LIFT_DEPENDENCY }
             .sortedByDescending { it.second.value.confidence }
 
         // PrintWriter(outputFile).use { writer ->
@@ -852,7 +775,7 @@ object DepLearn {
         println("Successfully saved positive dependencies to ${synergeFile.absolutePath}")
         println("Successfully saved negative/zero dependencies to ${redundancyFile.absolutePath}")
         println("Successfully saved dependency json to ${jsonOutputFile.absolutePath}")
-        val totalDeps = depAdj2metric.values.sumOf { it.size }
+        val totalDeps = sortedEntries.size
         println("Positive dependencies (synerge): $positiveDeps")
         println("Negative/zero dependencies (redundancy): $negativeDeps")
         println("Total dependency entries: $totalDeps")

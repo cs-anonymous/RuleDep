@@ -447,6 +447,13 @@ def parse_filtered_dependency_file(dependency_file: str, rule_relation_by_id, de
             except Exception:
                 continue
 
+            lift = 0.0
+            if len(parts) >= 3:
+                try:
+                    lift = float(parts[2])
+                except Exception:
+                    lift = 0.0
+
             rel1 = rule_relation_by_id.get(id1)
             rel2 = rule_relation_by_id.get(id2)
             if rel1 is None or rel2 is None or rel1 != rel2:
@@ -457,7 +464,7 @@ def parse_filtered_dependency_file(dependency_file: str, rule_relation_by_id, de
                 continue
             seen_pairs[rel1].add((a, b))
 
-            dependency_by_relation[rel1].append((a, b, dependency_type))
+            dependency_by_relation[rel1].append((a, b, dependency_type, float(lift)))
             loaded_dependency_count += 1
 
     print(f"Loaded {loaded_dependency_count} dependencies across {len(dependency_by_relation)} relations")
@@ -654,7 +661,13 @@ class LinearAggregator(nn.Module):
             if self.num_relation_rule_types > 0:
                 self.rule_types.weight[: self.num_relation_rule_types].zero_()
             if self.num_relation_dependencies > 0:
-                if self.dependency_sign_constraint:
+                if getattr(args, "init_dep_with_lift", False) and hasattr(self, "dependency_init_values"):
+                    init_values = self.dependency_init_values[: self.num_relation_dependencies].reshape(-1, 1)
+                    if self.dependency_sign_constraint:
+                        self.dependencies.weight[: self.num_relation_dependencies] = torch.sqrt(torch.clamp(init_values.abs(), min=0.0))
+                    else:
+                        self.dependencies.weight[: self.num_relation_dependencies] = init_values
+                elif self.dependency_sign_constraint:
                     self.dependencies.weight[: self.num_relation_dependencies].fill_(0.1)
                 else:
                     self.dependencies.weight[: self.num_relation_dependencies].zero_()
@@ -687,6 +700,7 @@ class LinearAggregator(nn.Module):
         local_pairs = []
         global_pairs_filtered = []
         dependency_signs = []
+        dependency_init_values = []
 
         self.rules = nn.Embedding(self.num_relation_rules + 1, 1, padding_idx=self.pad_local_tok)
         self.bias = nn.Parameter(torch.zeros(1, 1))
@@ -708,7 +722,12 @@ class LinearAggregator(nn.Module):
             rule_type_local = torch.empty((self.num_relation_rules,), dtype=torch.long)
         self.register_buffer("rule_local_to_type_local", rule_type_local)
 
-        for a, b, dependency_type in relation_dependencies:
+        for dep in relation_dependencies:
+            if len(dep) >= 4:
+                a, b, dependency_type, dependency_lift = dep[0], dep[1], dep[2], dep[3]
+            else:
+                a, b, dependency_type = dep[0], dep[1], dep[2]
+                dependency_lift = 0.0
             local_a = int(global_to_local[a].item())
             local_b = int(global_to_local[b].item())
             if local_a == self.pad_local_tok or local_b == self.pad_local_tok:
@@ -716,6 +735,7 @@ class LinearAggregator(nn.Module):
             local_pairs.append((local_a, local_b))
             global_pairs_filtered.append((int(a), int(b), str(dependency_type)))
             dependency_signs.append(1.0 if dependency_type == "synergy" else -1.0)
+            dependency_init_values.append(float(dependency_lift) * 0.1)
 
         self.num_relation_dependencies = len(local_pairs)
         self.num_relation_synergy = self.num_relation_dependencies
@@ -728,13 +748,16 @@ class LinearAggregator(nn.Module):
             pair_a = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
             pair_b = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
             dependency_sign_t = torch.tensor(dependency_signs, dtype=torch.float32)
+            dependency_init_t = torch.tensor(dependency_init_values, dtype=torch.float32)
         else:
             pair_a = torch.empty((0,), dtype=torch.long)
             pair_b = torch.empty((0,), dtype=torch.long)
             dependency_sign_t = torch.empty((0,), dtype=torch.float32)
+            dependency_init_t = torch.empty((0,), dtype=torch.float32)
         self.register_buffer("synergy_pair_a_local", pair_a)
         self.register_buffer("synergy_pair_b_local", pair_b)
         self.register_buffer("dependency_pair_sign", dependency_sign_t)
+        self.register_buffer("dependency_init_values", dependency_init_t)
 
         if dependency_type_candidates is None:
             dependency_type_candidates = []
@@ -849,9 +872,15 @@ class SurprisalAggregator(nn.Module):
             if self.num_relation_rule_types > 0:
                 self.rule_types.weight[: self.num_relation_rule_types].zero_()
             if self.num_relation_dependencies > 0:
+                if getattr(args, "init_dep_with_lift", False) and hasattr(self, "dependency_init_values"):
+                    init_values = self.dependency_init_values[: self.num_relation_dependencies].reshape(-1, 1)
+                    if self.dependency_sign_constraint:
+                        self.dependencies.weight[: self.num_relation_dependencies] = torch.sqrt(torch.clamp(init_values.abs(), min=0.0))
+                    else:
+                        self.dependencies.weight[: self.num_relation_dependencies] = init_values
                 # With sign constraints we square the raw parameter in forward().
                 # Initializing at exactly 0 would make the dependency gradient stay at 0 forever.
-                if self.dependency_sign_constraint:
+                elif self.dependency_sign_constraint:
                     self.dependencies.weight[: self.num_relation_dependencies].fill_(0.1)
                 else:
                     self.dependencies.weight[: self.num_relation_dependencies].zero_()
@@ -884,6 +913,7 @@ class SurprisalAggregator(nn.Module):
         local_pairs = []
         global_pairs_filtered = []
         dependency_signs = []
+        dependency_init_values = []
 
         self.rules = nn.Embedding(self.num_relation_rules + 1, 1, padding_idx=self.pad_local_tok)
         self.bias = nn.Parameter(torch.zeros(1, 1))
@@ -905,7 +935,12 @@ class SurprisalAggregator(nn.Module):
             rule_type_local = torch.empty((self.num_relation_rules,), dtype=torch.long)
         self.register_buffer("rule_local_to_type_local", rule_type_local)
 
-        for a, b, dependency_type in relation_dependencies:
+        for dep in relation_dependencies:
+            if len(dep) >= 4:
+                a, b, dependency_type, dependency_lift = dep[0], dep[1], dep[2], dep[3]
+            else:
+                a, b, dependency_type = dep[0], dep[1], dep[2]
+                dependency_lift = 0.0
             local_a = int(global_to_local[a].item())
             local_b = int(global_to_local[b].item())
             if local_a == self.pad_local_tok or local_b == self.pad_local_tok:
@@ -913,6 +948,7 @@ class SurprisalAggregator(nn.Module):
             local_pairs.append((local_a, local_b))
             global_pairs_filtered.append((int(a), int(b), str(dependency_type)))
             dependency_signs.append(1.0 if dependency_type == "synergy" else -1.0)
+            dependency_init_values.append(float(dependency_lift) * 0.1)
 
         self.num_relation_dependencies = len(local_pairs)
         self.num_relation_synergy = self.num_relation_dependencies
@@ -925,13 +961,16 @@ class SurprisalAggregator(nn.Module):
             pair_a = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
             pair_b = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
             dependency_sign_t = torch.tensor(dependency_signs, dtype=torch.float32)
+            dependency_init_t = torch.tensor(dependency_init_values, dtype=torch.float32)
         else:
             pair_a = torch.empty((0,), dtype=torch.long)
             pair_b = torch.empty((0,), dtype=torch.long)
             dependency_sign_t = torch.empty((0,), dtype=torch.float32)
+            dependency_init_t = torch.empty((0,), dtype=torch.float32)
         self.register_buffer("synergy_pair_a_local", pair_a)
         self.register_buffer("synergy_pair_b_local", pair_b)
         self.register_buffer("dependency_pair_sign", dependency_sign_t)
+        self.register_buffer("dependency_init_values", dependency_init_t)
 
         if dependency_type_candidates is None:
             dependency_type_candidates = []
@@ -1301,6 +1340,24 @@ def compute_train_hit_counts(split_dict, relation_rule_ids, relation_synergy_pai
     return rule_hit_counts, synergy_hit_counts
 
 
+def get_relation_rule_count(relation):
+    return int(len(rule_map.get(int(relation), [])))
+
+
+def is_large_relation(relation):
+    return get_relation_rule_count(relation) > 1_000_000
+
+
+def get_effective_batch_size_for_relation(relation):
+    base_batch_size = int(args.batch_size)
+    relation_rule_count = get_relation_rule_count(relation)
+    if relation_rule_count > 2_000_000:
+    #     return min(base_batch_size, 1024)
+    # if relation_rule_count > 1_000_000:
+        return min(base_batch_size, 2048)
+    return base_batch_size
+
+
 def load_dataloaders(dataset_directory, relation):
     with step_timer("load_dataloaders"):
         data_obj = load(dataset_directory, f"dataset_{relation}.p")
@@ -1313,11 +1370,18 @@ def load_dataloaders(dataset_directory, relation):
 
         train_split = data_obj["train"]
         rules_padded, ys = materialize_compact_split_to_padded(train_split)
+        effective_batch_size = get_effective_batch_size_for_relation(relation)
+        relation_rule_count = get_relation_rule_count(relation)
+        if effective_batch_size != int(args.batch_size):
+            print(
+                f"[batch_size] relation={relation} num_relation_rules={relation_rule_count} "
+                f"base_batch_size={int(args.batch_size)} effective_batch_size={effective_batch_size}"
+            )
 
         train_loader = FastTensorBatchLoader(
             rules_padded,
             ys,
-            batch_size=args.batch_size,
+            batch_size=effective_batch_size,
             shuffle=args.shuffle_train,
             device=args.device,
             preload_to_device=args.device != "cpu",
@@ -1430,18 +1494,19 @@ def get_parser():
     parser.add_argument("--max_epoch", action="store", default=60, help="Epochs to run for each learning rate", type=int)
     parser.add_argument("--evaluate_every", action="store", default="4,2,1", help="Evaluation interval or comma-separated phase intervals, e.g. 4,2,1. Use 0 for no eval in a phase.")
     parser.add_argument("--early_stopping", action="store", default=3, type=int, help="Stop if valid metric does not improve for X consecutive evaluations. -1 disables.")
-    parser.add_argument("--pos", action="store", default=5, help="Scaling of the loss for positive examples", type=int)
+    parser.add_argument("--pos", action="store", default="auto", help="Scaling of the loss for positive examples. Use 'auto' to set neg/pos per relation from the training split.")
     parser.add_argument("--no_sign_constraint", dest="sign_constraint", action="store_false", help="Disable sign constraint for rule weights.")
+    parser.add_argument("--sign_constraint_dependency", dest="sign_constraint_dependency", action="store_true", help="Enable sign constraint for dependency weights.")
     parser.add_argument("--no_sign_constraint_dependency", dest="sign_constraint_dependency", action="store_false", help="Disable sign constraint for dependency weights.")
+    parser.add_argument("--init_dep_with_lift", action="store_true", default=False, help="Initialize dependency weights with 0.1 * lift from filtered dependency files.")
     parser.add_argument("--train_rule_in_dependency_stage", action="store_true", default=False, help=argparse.SUPPRESS)
-    parser.set_defaults(sign_constraint=True, sign_constraint_dependency=True)
+    parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
     parser.add_argument("--synergy_pair_chunk_size", dest="dependency_chunk_size", action="store", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--rule_file", action="store", default="", help="Path to rules file. Default: <data_root>/<dataset>/rules/rules-1000-5")
-    parser.add_argument("--same_checkpoint", action="store_true", default=False, help="Use one unified best-valid checkpoint for all reported metrics. Default uses legacy per-metric selection.")
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
     parser.add_argument("--collect_train_hit_counts", action="store_true", default=True, help="Collect per-rule/per-dependency train hit counts for analysis CSVs (can be slow).")
@@ -1467,12 +1532,57 @@ def parse_csv_schedule(raw_value, cast_fn, name):
     return values
 
 
-def build_dependency_stage_finetune_schedules(stage1_lr_values, stage1_eval_every_values):
-    # Stage 2 starts from the trained stage-1 checkpoint, so keep updates conservative
-    # and validate every epoch to avoid overshooting a good solution.
-    stage2_lr_values = [max(float(v) * 0.1, 1e-5) for v in stage1_lr_values]
-    stage2_eval_every_values = [1 for _ in stage1_eval_every_values]
-    return stage2_lr_values, stage2_eval_every_values
+def resolve_pos_weight(pos_arg, train_split, relation):
+    pos_raw = str(pos_arg).strip()
+    ys = train_split["golds"].float().reshape(-1)
+    num_samples = int(ys.shape[0])
+    num_positive = float(ys.sum().item())
+    num_negative = float(num_samples) - num_positive
+
+    if pos_raw.lower() == "auto":
+        if num_positive <= 0 or num_negative <= 0:
+            pos_weight = 1.0
+            pos_source = "auto_fallback"
+        else:
+            pos_weight = num_negative / num_positive
+            pos_source = "auto"
+    else:
+        try:
+            pos_weight = float(pos_raw)
+        except ValueError as e:
+            raise ValueError(f"Invalid --pos value: {pos_arg}") from e
+        if pos_weight <= 0:
+            raise ValueError(f"--pos must be > 0, got {pos_arg}")
+        pos_source = "manual"
+
+    print(
+        f"[pos_weight] relation={relation} source={pos_source} "
+        f"positive={int(num_positive)} negative={int(num_negative)} "
+        f"pos_weight={pos_weight:.6g}"
+    )
+    return pos_weight, pos_source, int(num_positive), int(num_negative)
+
+
+def build_dependency_stage_training_plan(stage1_lr_values, stage1_eval_every_values, stage1_max_epoch):
+    # Stage 2 starts from the stage-1 combined-best checkpoint, so we bias it toward
+    # conservative dependency finetuning: use only the smallest LR, but keep the
+    # same epoch budget as stage 1 and rely on softer stopping/optimizer settings
+    # for stability instead of simply stretching the schedule.
+    min_lr = min(float(v) for v in stage1_lr_values)
+    stage2_lr_values = [float(min_lr)]
+    stage2_eval_every_values = [1]
+    stage2_max_epoch = int(stage1_max_epoch)
+    return stage2_lr_values, stage2_eval_every_values, stage2_max_epoch
+
+
+def build_dependency_stage_early_stop_plan(base_patience):
+    base_patience = int(base_patience)
+    if base_patience <= 0:
+        return base_patience, 0
+
+    stage2_patience = max(base_patience * 3, 9)
+    stage2_min_epochs_before_stop = max(base_patience * 2, 6)
+    return stage2_patience, stage2_min_epochs_before_stop
 
 
 def build_phase_lengths(max_epoch, num_phases):
@@ -1536,6 +1646,23 @@ def copy_rule_state_from_model(src_model, dst_model):
                 dst_model.rule_types.weight[:n].copy_(src_model.rule_types.weight[:n])
         if hasattr(src_model, "bias") and hasattr(dst_model, "bias"):
             dst_model.bias.copy_(src_model.bias)
+
+
+def copy_rule_state_from_state_dict(src_state_dict, dst_model):
+    if src_state_dict is None:
+        return
+
+    with torch.no_grad():
+        if hasattr(dst_model, "rules") and "rules.weight" in src_state_dict:
+            n = min(int(dst_model.num_relation_rules), int(src_state_dict["rules.weight"].shape[0] - 1))
+            if n > 0:
+                dst_model.rules.weight[:n].copy_(src_state_dict["rules.weight"][:n])
+        if hasattr(dst_model, "rule_types") and "rule_types.weight" in src_state_dict:
+            n = min(int(dst_model.num_relation_rule_types), int(src_state_dict["rule_types.weight"].shape[0] - 1))
+            if n > 0:
+                dst_model.rule_types.weight[:n].copy_(src_state_dict["rule_types.weight"][:n])
+        if hasattr(dst_model, "bias") and "bias" in src_state_dict:
+            dst_model.bias.copy_(src_state_dict["bias"])
 
 
 def freeze_rule_parameters_for_synergy_stage(model):
@@ -1643,10 +1770,41 @@ def build_dependency_type_weight_rows(model, initial_dependency_type_weights):
     ]
 
 
-def build_optimizer_for_model(model, lr):
+def build_optimizer_for_model(model, lr, stage_name="rule"):
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     if len(trainable_params) == 0:
         raise ValueError("No trainable parameters found for optimizer")
+
+    if stage_name == "dependency" and getattr(args, "train_rule_in_dependency_stage", False):
+        inherited_params = []
+        dependency_params = []
+        assigned_param_ids = set()
+
+        def append_param(target_list, param):
+            if param is not None and param.requires_grad and id(param) not in assigned_param_ids:
+                target_list.append(param)
+                assigned_param_ids.add(id(param))
+
+        append_param(inherited_params, getattr(getattr(model, "rules", None), "weight", None))
+        append_param(inherited_params, getattr(getattr(model, "rule_types", None), "weight", None))
+        append_param(inherited_params, getattr(model, "bias", None))
+
+        append_param(dependency_params, getattr(getattr(model, "dependencies", None), "weight", None))
+        append_param(dependency_params, getattr(getattr(model, "dependency_types", None), "weight", None))
+
+        for param in trainable_params:
+            if id(param) not in assigned_param_ids:
+                inherited_params.append(param)
+                assigned_param_ids.add(id(param))
+
+        if dependency_params:
+            inherited_lr = max(float(lr) * 0.1, 1e-5)
+            param_groups = []
+            if inherited_params:
+                param_groups.append({"params": inherited_params, "lr": float(inherited_lr)})
+            param_groups.append({"params": dependency_params, "lr": float(lr)})
+            return torch.optim.Adam(param_groups)
+
     return torch.optim.Adam(trainable_params, lr=lr)
 
 
@@ -1728,7 +1886,27 @@ def evaluate_current_stage_result(relation, model, model_builder, evaluate_every
     }
 
 
-def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos, lr_values, eval_every_values, max_epoch, stage_name):
+def build_model_from_state_dict(relation, model_builder, state_dict):
+    model = model_builder(relation).to(args.device)
+    model.load_state_dict(state_dict, strict=True)
+    return model
+
+
+def run_training_stage(
+    relation,
+    model,
+    model_builder,
+    dataloader,
+    loss_fn,
+    pos,
+    lr_values,
+    eval_every_values,
+    max_epoch,
+    stage_name,
+    checkpoint_selection="directional",
+    early_stopping_patience=None,
+    min_epochs_before_stop=0,
+):
     tail_mrr = MRR(relation=relation, direction="o", model_builder=model_builder)
     head_mrr = MRR(relation=relation, direction="s", model_builder=model_builder)
 
@@ -1736,7 +1914,7 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
     if model.rules.weight.device.type == "cpu":
         raise RuntimeError("GPU-only eval requires CUDA device; please set --device cuda")
 
-    optimizer = build_optimizer_for_model(model, lr_values[0])
+    optimizer = build_optimizer_for_model(model, lr_values[0], stage_name=stage_name)
 
     init_tail = tail_mrr.calc_metrics(model, tail_mrr.test_sp_to_o, tail_mrr.test_processed, direction="o")
     init_head = head_mrr.calc_metrics(model, head_mrr.test_sp_to_o, head_mrr.test_processed, direction="s")
@@ -1745,7 +1923,11 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
     lr_phase_lengths = build_phase_lengths(max_epoch, len(lr_values))
     eval_phase_lengths = build_phase_lengths(max_epoch, len(eval_every_values))
 
-    early_stopping_patience = int(args.early_stopping)
+    if early_stopping_patience is None:
+        early_stopping_patience = int(args.early_stopping)
+    else:
+        early_stopping_patience = int(early_stopping_patience)
+    min_epochs_before_stop = int(min_epochs_before_stop)
     best_valid_combined_raw = -1.0
     no_improve_eval_rounds = 0
     epochs_trained = 0
@@ -1754,8 +1936,6 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
     final_loss = None
     evaluate_every = eval_every_values[0]
     best_state = None
-    best_head_valid = None
-    best_tail_valid = None
     best_valid_epoch = None
 
     # Evaluate the untrained starting point as a valid checkpoint candidate.
@@ -1780,12 +1960,9 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
 
         best_valid_combined_raw = (init_head_valid[3] + init_tail_valid[3]) / 2.0
         best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-        best_head_valid = init_head_valid
-        best_tail_valid = init_tail_valid
         best_valid_epoch = 0
-        if not args.same_checkpoint:
-            head_mrr.update_from_metrics(init_head_valid, model, (pos, float(lr_values[0]), -1))
-            tail_mrr.update_from_metrics(init_tail_valid, model, (pos, float(lr_values[0]), -1))
+        head_mrr.update_from_metrics(init_head_valid, model, (pos, float(lr_values[0]), -1))
+        tail_mrr.update_from_metrics(init_tail_valid, model, (pos, float(lr_values[0]), -1))
 
     pbar = tqdm(range(max_epoch), desc=f"r{relation}-{stage_name}", leave=False)
     for t in pbar:
@@ -1829,21 +2006,23 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
             eval_seconds += perf_counter() - eval_start
 
             if not has_non_finite:
-                if not args.same_checkpoint:
-                    head_mrr.update_from_metrics(current_head_valid, model, (pos, float(current_lr), t))
-                    tail_mrr.update_from_metrics(current_tail_valid, model, (pos, float(current_lr), t))
+                head_mrr.update_from_metrics(current_head_valid, model, (pos, float(current_lr), t))
+                tail_mrr.update_from_metrics(current_tail_valid, model, (pos, float(current_lr), t))
                 valid_combined_raw = (current_head_valid[3] + current_tail_valid[3]) / 2.0
                 if valid_combined_raw > best_valid_combined_raw:
                     best_valid_combined_raw = valid_combined_raw
                     best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-                    best_head_valid = current_head_valid
-                    best_tail_valid = current_tail_valid
                     best_valid_epoch = int(t + 1)
                     no_improve_eval_rounds = 0
                 else:
                     no_improve_eval_rounds += 1
 
-            if (not has_non_finite) and early_stopping_patience > 0 and no_improve_eval_rounds >= early_stopping_patience:
+            if (
+                (not has_non_finite)
+                and early_stopping_patience > 0
+                and epochs_trained >= min_epochs_before_stop
+                and no_improve_eval_rounds >= early_stopping_patience
+            ):
                 pbar.set_postfix(
                     loss=f"{final_loss:.5f}",
                     max_mrr=f"{valid_combined_raw:.5f}",
@@ -1854,65 +2033,13 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
         max_mrr = max(best_valid_combined_raw, 0.0)
         pbar.set_postfix(loss=f"{final_loss:.5f}", max_mrr=f"{max_mrr:.5f}")
 
-    if best_state is None or best_head_valid is None or best_tail_valid is None:
+    if best_state is None:
         raise RuntimeError(f"No valid checkpoint selected for relation {relation} at stage {stage_name}")
 
-    if args.same_checkpoint:
-        model.load_state_dict(best_state, strict=True)
-        head_mrr.nnm = {k: v.detach().cpu().clone() for k, v in best_state.items()}
-        tail_mrr.nnm = {k: v.detach().cpu().clone() for k, v in best_state.items()}
-
-        head_mrr.maximums_v, head_mrr.maximums_v_1, head_mrr.maximums_v_10 = (
-            float(best_head_valid[0]),
-            float(best_head_valid[1]),
-            float(best_head_valid[2]),
-        )
-        head_mrr.maximums_v_raw, head_mrr.maximums_v_1_raw, head_mrr.maximums_v_10_raw = (
-            float(best_head_valid[3]),
-            float(best_head_valid[4]),
-            float(best_head_valid[5]),
-        )
-        tail_mrr.maximums_v, tail_mrr.maximums_v_1, tail_mrr.maximums_v_10 = (
-            float(best_tail_valid[0]),
-            float(best_tail_valid[1]),
-            float(best_tail_valid[2]),
-        )
-        tail_mrr.maximums_v_raw, tail_mrr.maximums_v_1_raw, tail_mrr.maximums_v_10_raw = (
-            float(best_tail_valid[3]),
-            float(best_tail_valid[4]),
-            float(best_tail_valid[5]),
-        )
-
-        with step_timer("epoch_eval_head"):
-            head_test = head_mrr.calc_metrics(model, head_mrr.test_sp_to_o, head_mrr.test_processed, direction=head_mrr.direction)
-        with step_timer("epoch_eval_tail"):
-            tail_test = tail_mrr.calc_metrics(model, tail_mrr.test_sp_to_o, tail_mrr.test_processed, direction=tail_mrr.direction)
-
-        head_mrr.maximums_t, head_mrr.maximums_t_1, head_mrr.maximums_t_10 = (
-            float(head_test[0]),
-            float(head_test[1]),
-            float(head_test[2]),
-        )
-        head_mrr.maximums_t_raw, head_mrr.maximums_t_1_raw, head_mrr.maximums_t_10_raw = (
-            float(head_test[3]),
-            float(head_test[4]),
-            float(head_test[5]),
-        )
-        tail_mrr.maximums_t, tail_mrr.maximums_t_1, tail_mrr.maximums_t_10 = (
-            float(tail_test[0]),
-            float(tail_test[1]),
-            float(tail_test[2]),
-        )
-        tail_mrr.maximums_t_raw, tail_mrr.maximums_t_1_raw, tail_mrr.maximums_t_10_raw = (
-            float(tail_test[3]),
-            float(tail_test[4]),
-            float(tail_test[5]),
-        )
-    else:
-        with step_timer("epoch_eval_head"):
-            head_mrr.finalize_test()
-        with step_timer("epoch_eval_tail"):
-            tail_mrr.finalize_test()
+    with step_timer("epoch_eval_head"):
+        head_mrr.finalize_test()
+    with step_timer("epoch_eval_tail"):
+        tail_mrr.finalize_test()
 
     final_test = {
         "mrr": float(calc_mrr(tail_mrr, head_mrr)[0]),
@@ -1923,13 +2050,38 @@ def run_training_stage(relation, model, model_builder, dataloader, loss_fn, pos,
         "h10_raw": float(calc_mrr(tail_mrr, head_mrr, "maximums_t_10")[1]),
     }
 
+    selected_state_dict = {k: v.detach().cpu().clone() for k, v in best_state.items()}
+    selected_model = build_model_from_state_dict(relation, model_builder, selected_state_dict)
+    selected_stage_result = evaluate_current_stage_result(
+        relation,
+        selected_model,
+        model_builder,
+        evaluate_every=evaluate_every,
+    )
+    selected_test = selected_stage_result["test"]
+
+    if checkpoint_selection == "combined":
+        result_model = selected_stage_result["model"]
+        result_head_mrr = selected_stage_result["head_mrr"]
+        result_tail_mrr = selected_stage_result["tail_mrr"]
+        result_test = selected_test
+    elif checkpoint_selection == "directional":
+        result_model = selected_stage_result["model"]
+        result_head_mrr = head_mrr
+        result_tail_mrr = tail_mrr
+        result_test = final_test
+    else:
+        raise ValueError(f"Unknown checkpoint_selection: {checkpoint_selection}")
+
     return {
-        "model": model,
+        "model": result_model,
         "optimizer": optimizer,
-        "tail_mrr": tail_mrr,
-        "head_mrr": head_mrr,
+        "tail_mrr": result_tail_mrr,
+        "head_mrr": result_head_mrr,
         "test_initial": test_initial,
-        "test": final_test,
+        "test": result_test,
+        "selected_state_dict": selected_state_dict,
+        "selected_test": selected_test,
         "epochs_trained": int(epochs_trained),
         "train_seconds": float(train_seconds),
         "eval_seconds": float(eval_seconds),
@@ -1949,6 +2101,8 @@ def run_dependency_stage(
     lr_values,
     eval_every_values,
     max_epoch,
+    early_stopping_patience,
+    min_epochs_before_stop,
 ):
     if dataloader is None or len(dataloader) == 0:
         raise ValueError(f"Dependency stage received empty dataloader for relation {relation}")
@@ -1967,6 +2121,9 @@ def run_dependency_stage(
         eval_every_values=eval_every_values,
         max_epoch=max_epoch,
         stage_name="dependency",
+        checkpoint_selection="directional",
+        early_stopping_patience=early_stopping_patience,
+        min_epochs_before_stop=min_epochs_before_stop,
     )
 
 
@@ -2000,7 +2157,7 @@ def aggregate_single(relation):
     dataloader, train_split = load_dataloaders(args.directory_preprocessed_datasets, relation)
     load_seconds = perf_counter() - load_start_time
 
-    pos = args.pos
+    pos, pos_source, num_train_positive_samples, num_train_negative_samples = resolve_pos_weight(args.pos, train_split, relation)
     lr_values = parse_csv_schedule(args.lr, float, "lr")
     if any(v <= 0 for v in lr_values):
         raise ValueError(f"All lr values must be > 0, got {lr_values}")
@@ -2018,10 +2175,13 @@ def aggregate_single(relation):
     eval_every_values = parse_csv_schedule(args.evaluate_every, int, "evaluate_every")
     if any(v < 0 for v in eval_every_values):
         raise ValueError(f"All evaluate_every values must be >= 0, got {eval_every_values}")
-    dependency_lr_values, dependency_eval_every_values = build_dependency_stage_finetune_schedules(
-        lr_values, eval_every_values
+    dependency_lr_values, dependency_eval_every_values, dependency_max_epoch = build_dependency_stage_training_plan(
+        lr_values, eval_every_values, max_epoch
     )
     early_stopping_patience = int(args.early_stopping)
+    dependency_early_stopping_patience, dependency_min_epochs_before_stop = build_dependency_stage_early_stop_plan(
+        early_stopping_patience
+    )
 
     rule_model = build_rule_only_model_for_relation(relation)
     with torch.no_grad():
@@ -2045,6 +2205,7 @@ def aggregate_single(relation):
         eval_every_values=eval_every_values,
         max_epoch=max_epoch,
         stage_name="rule",
+        checkpoint_selection="combined",
     )
 
     final_result = stage1_result
@@ -2052,8 +2213,11 @@ def aggregate_single(relation):
     dependency_stage_accepted = None
     selection_reason = "rule stage only"
     stage1_metrics = {
+        "pos_weight": float(pos),
+        "pos_weight_source": pos_source,
         "epochs_trained": int(stage1_result["epochs_trained"]),
         "evaluate_every": int(stage1_result["evaluate_every"]),
+        "checkpoint_selection": "combined_best_valid",
         "best_valid_epoch": int(stage1_result["best_valid_epoch"]),
         "best_valid_combined_raw": float(stage1_result["best_valid_combined_raw"]),
     }
@@ -2061,12 +2225,16 @@ def aggregate_single(relation):
     initial_dependency_weights = np.array([], dtype=np.float32)
     initial_dependency_type_weights = np.array([], dtype=np.float32)
     dependency_pairs = []
-    test_stage_2 = stage1_result["test"]
+    test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
 
     if (args.synergy or args.redundancy):
         dependency_model = build_dependency_model_for_relation(relation)
-        copy_rule_state_from_model(stage1_result["model"], dependency_model)
+        selected_stage1_state_dict = stage1_result.get("selected_state_dict")
+        if selected_stage1_state_dict is not None:
+            copy_rule_state_from_state_dict(selected_stage1_state_dict, dependency_model)
+        else:
+            copy_rule_state_from_model(stage1_result["model"], dependency_model)
         if not getattr(args, "train_rule_in_dependency_stage", False):
             freeze_rule_parameters_for_synergy_stage(dependency_model)
         dependency_model = dependency_model.to(args.device)
@@ -2105,11 +2273,20 @@ def aggregate_single(relation):
                 pos=pos,
                 lr_values=dependency_lr_values,
                 eval_every_values=dependency_eval_every_values,
-                max_epoch=max_epoch,
+                max_epoch=dependency_max_epoch,
+                early_stopping_patience=dependency_early_stopping_patience,
+                min_epochs_before_stop=dependency_min_epochs_before_stop,
             )
             stage2_metrics = {
+                "pos_weight": float(pos),
+                "pos_weight_source": pos_source,
                 "epochs_trained": int(dependency_stage_result["epochs_trained"]),
                 "evaluate_every": int(dependency_stage_result["evaluate_every"]),
+                "max_epoch": int(dependency_max_epoch),
+                "lr_schedule": [float(v) for v in dependency_lr_values],
+                "checkpoint_selection": "head_tail_best_valid",
+                "early_stopping_patience": int(dependency_early_stopping_patience),
+                "min_epochs_before_stop": int(dependency_min_epochs_before_stop),
                 "best_valid_epoch": int(dependency_stage_result["best_valid_epoch"]),
                 "best_valid_combined_raw": float(dependency_stage_result["best_valid_combined_raw"]),
             }
@@ -2140,10 +2317,11 @@ def aggregate_single(relation):
         0.0 if dependency_stage_result is None else dependency_stage_result["eval_seconds"]
     )
     test_stage_4 = final_result["test"] if dependency_stage_result is None else dependency_stage_result["test"]
-
-    mrr, mrr_raw = calc_mrr(tail_mrr, head_mrr)
-    h1, h1_raw = calc_mrr(tail_mrr, head_mrr, "maximums_t_1")
-    h10, h10_raw = calc_mrr(tail_mrr, head_mrr, "maximums_t_10")
+    final_test_metrics = (
+        dependency_stage_result["test"]
+        if (dependency_stage_result is not None and final_result is dependency_stage_result)
+        else stage1_result.get("selected_test", stage1_result["test"])
+    )
 
     rule_hit_counts = {}
     dependency_hit_counts = {}
@@ -2229,6 +2407,10 @@ def aggregate_single(relation):
             num_relation_rules + num_relation_rule_types + num_relation_dependencies + num_relation_dependency_types
         ),
         "train": {
+            "pos_weight": float(pos),
+            "pos_weight_source": pos_source,
+            "num_positive_samples": int(num_train_positive_samples),
+            "num_negative_samples": int(num_train_negative_samples),
             "max_epoch": int(max_epoch),
             "epochs_trained": int(epochs_trained),
             "evaluate_every": int(evaluate_every),
@@ -2269,14 +2451,7 @@ def aggregate_single(relation):
         "test_after_stage1": test_stage_2,
         "test_before_stage2": test_stage_3,
         "test_after_stage2": None if dependency_stage_result is None else test_stage_4,
-        "test": {
-            "mrr": float(mrr),
-            "h1": float(h1),
-            "h10": float(h10),
-            "mrr_raw": float(mrr_raw),
-            "h1_raw": float(h1_raw),
-            "h10_raw": float(h10_raw),
-        },
+        "test": final_test_metrics,
     }
 
     with step_timer("save_outputs"):
@@ -2792,21 +2967,41 @@ def aggregate_multiple():
     args.max_worker_dataloader = 0
 
     relations = _get_all_relations()
+    deferred_large_relations = [relation for relation in relations if is_large_relation(relation)]
+    pooled_relations = [relation for relation in relations if not is_large_relation(relation)]
     relation_test_counts = _get_relation_test_counts()
-    num_processes = min(max(int(args.multiprocess), 2), len(relations)) if relations else 0
+    num_processes = min(max(int(args.multiprocess), 2), len(pooled_relations)) if pooled_relations else 0
 
-    print(f"Start relation sweep, total relations: {len(relations)}, processes: {num_processes}")
+    print(
+        f"Start relation sweep, total relations: {len(relations)}, "
+        f"pooled relations: {len(pooled_relations)}, deferred large relations: {len(deferred_large_relations)}, "
+        f"processes: {num_processes}"
+    )
+    if deferred_large_relations:
+        print(
+            "Deferred large relations (sequential after pooled run): "
+            + ", ".join(
+                f"{relation}[rules={get_relation_rule_count(relation)}]"
+                for relation in deferred_large_relations
+            )
+        )
 
     failed_relations = {}
 
-    if relations:
+    if pooled_relations:
         with mp.get_context("spawn").Pool(processes=num_processes) as pool:
-            results = [pool.apply_async(_run_one_relation, (relation,)) for relation in relations]
-            for relation, result in zip(relations, results):
+            results = [pool.apply_async(_run_one_relation, (relation,)) for relation in pooled_relations]
+            for relation, result in zip(pooled_relations, results):
                 try:
                     result.get()
                 except Exception as e:
                     failed_relations[int(relation)] = str(e)
+
+    for relation in deferred_large_relations:
+        try:
+            aggregate_single(relation)
+        except Exception as e:
+            failed_relations[int(relation)] = str(e)
 
     sweep_seconds = perf_counter() - sweep_start_time
     return _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_seconds)
@@ -2822,7 +3017,7 @@ if "EXPERIMENT_DIR" not in os.environ:
     dependency_bit = 1 if (args.synergy or args.redundancy) else 0
     exp_name = (
         f"exp{args.relation}_{args.model}_{sign_bit}_{sign_dependency_bit}_{dependency_bit}_{args.pos}_"
-        f"{int(args.synergy)}_{int(args.redundancy)}_0"
+        f"{int(args.synergy)}_{int(args.redundancy)}_{int(args.init_dep_with_lift)}"
     )
     os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/aggregation/{exp_name}"
 args.experiment = os.environ["EXPERIMENT_DIR"]
@@ -2874,7 +3069,7 @@ if args.redundancy:
         dependency_map[int(relation)].extend(deps)
 dependency_map = dict(dependency_map)
 dependency_type_candidate_map = {
-    int(relation): sorted({(int(a), int(b)) for a, b, _ in deps})
+    int(relation): sorted({(int(a), int(b)) for a, b, *_rest in deps})
     for relation, deps in dependency_map.items()
 }
 dependency_type_count_by_relation = summarize_dependency_type_candidates(dependency_type_candidate_map)
