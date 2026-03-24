@@ -1,82 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# conda create -n kge python=3.8 -y
-# conda activate kge
-# pip install -r requirements.txt
-# cd kge
-# git checkout a9ecd249ec2d205df59287f64553a1536add4a43
-# pip install -e .
-# cd ..
-# rm -rf kge/data
-# ln -s `pwd`/data kge/data
+if [ "$#" -gt 0 ]; then
+    datasets=("$@")
+else
+    datasets=(
+        "KG20C"
+        "codex-m"
+        "codex-l"
+        "FB15k-237"
+        "WN18RR"
+        "YAGO3-10"
+    )
+fi
 
-# fb15k-237 wnrr codex-m codex-l YAGO3-10 KG20C
+for dataset in "${datasets[@]}"; do
+    echo "=================================================="
+    echo "Running steps 1-5 for ${dataset}"
+    echo "=================================================="
 
-
-
-apply_pyclause_on_split() {
-    local split="$1"
-    local data_dir="$2"
-    local out_dir="$3"
-    local rules_file="$4"
-
-    PATH_TRAINING="${data_dir}/train.txt"
-    FILTER_W_DATA=1
-    if [ "$split" = "test" ]; then
-        PATH_VALID="${data_dir}/valid.txt"
-        PATH_TEST="${data_dir}/test.txt"
-    elif [ "$split" = "valid" ]; then
-        PATH_VALID="${data_dir}/empty.txt"
-        PATH_TEST="${data_dir}/valid.txt"
-    else
-        PATH_VALID="${data_dir}/empty.txt"
-        PATH_TEST="${data_dir}/train.txt"
-        FILTER_W_DATA=0
-    fi
-
-    local applied_out="${out_dir}/applied_rules_${split}.json"
-
-    python apply_pyclause.py --filter-w-data "$FILTER_W_DATA" \
-        --train "$PATH_TRAINING" --valid "$PATH_VALID" --target "$PATH_TEST" \
-        --rules "$rules_file" --output "$applied_out" --topk 100 \
-        --worker-threads 20 --aggregation maxplus --min-correct-predictions 5 \
-        --read-cyclic-rules 1 --read-acyclic1-rules 1 --read-acyclic2-rules 0 \
-        --read-zero-rules 0 --read-uxxc-rules 0 --read-uxxd-rules 0
-}
-
-process_dataset() {
-    local dataset="$1"
-    local repo_dir
-    repo_dir="$(pwd)"
-
-    echo "=== Processing ${dataset} ==="
-    local data_dir="${repo_dir}/data/${dataset}"
-    local out_dir="${data_dir}/expl"
-    local rules_file="${data_dir}/rules/rules-1000"
-
-    mkdir -p "$out_dir"
-
-    for split in train valid test; do
-        apply_pyclause_on_split "$split" "$data_dir" "$out_dir" "$rules_file"
-        python process_rules.py --data_dir "$data_dir" --split "$split" --target_file "${data_dir}/${split}.txt" \
-            --applied_rules_file "${out_dir}/applied_rules_${split}.json" --save_dir "$out_dir"
-    done
-
-    python create_datasets.py -d "$dataset" --applied_rules "${out_dir}/applied_rules_train.json"
-
-    python filter_dependency.py -d "$dataset"
-
-    python aggregation.py -d "$dataset" --relation -1 --multiprocess 2 --synergy --redundancy --no_sign_constraint_dependency --train_rule_in_dependency_stage
-    python aggregation.py -d "$dataset" --relation -1 --multiprocess 2 --synergy --redundancy --no_sign_constraint_dependency --train_rule_in_dependency_stage --pos 10
-    python aggregation.py -d "$dataset" --relation -1 --multiprocess 2 --synergy --redundancy --no_sign_constraint_dependency --train_rule_in_dependency_stage --pos 15
-}
-
-for dataset in fb15k-237 wnrr codex-m codex-l YAGO3-10 KG20C; do
-    process_dataset "$dataset"
+    ./step1_learning.sh "${dataset}" "${SUPPORT_THRESHOLD:-5}" "${SNAPSHOTS:-10,100,400,1000}" "${LEARNING_WORKER_THREADS:-20}"
+    ./step2_application.sh "${dataset}" "${RULESET:-rules-1000-5}" "${TOPK:-100}" "${APPLICATION_WORKER_THREADS:-20}"
+    ./step3_dataset.sh "${dataset}" "${RULESET:-rules-1000-5}"
+    ./step4_dependency.sh "${dataset}" "${RULESET:-rules-1000-5}"
+    ./step5_aggregation.sh "${dataset}" "${RULESET:-rules-1000-5}" "${AGGREGATION_MULTIPROCESS:-2}" "${AGGREGATION_POS_VALUES:-5,10,15}"
 done
-
-
-# python residual_dependency_ranker.py -d codex-m --min_valid 3 --min_abs_score 0.003 --support_smoothing 20 --top_k_per_relation 4096
-# python aggregation.py -d codex-m --relation -1 --multiprocess 3 --synergy --redundancy --no_sign_constraint_dependency --train_rule_in_dependency_stage
-# python scripts/dependency_subset_eval.py --dataset codex-m --experiment-dir data/codex-m/exp-1_LinearAggregator_1_0_1_1_1

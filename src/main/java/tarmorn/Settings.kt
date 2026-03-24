@@ -39,22 +39,22 @@ object Settings {
     var PATH_VALID: String = "data/{DATASET}/valid.txt"
     // Path to the file that contains the rules that will be refined or will be sued for prediction.
     @JvmField
-    var PATH_RULES: String = "data/{DATASET}/rules-1000"
+    var PATH_RULES: String = "data/{DATASET}/rules/rules-1000-5"
     @JvmField
-    var PATH_DEPENDENCY: String = "out/{DATASET}/dependency.txt"
+    var PATH_DEPENDENCY: String = "data/{DATASET}/rules/dependency.txt"
     @JvmField
-    var PATH_H2B2metric: String = "out/{DATASET}/H2B2metric.json"
+    var PATH_H2B2metric: String = "data/{DATASET}/rules/H2B2metric.json"
     @JvmField
-    var PATH_RULES_TXT: String = "out/{DATASET}/rule.txt"
+    var PATH_RULES_TXT: String = "data/{DATASET}/rules/rule.txt"
     @JvmField
-    var PATH_H2F2metric: String = "out/{DATASET}/H2F2metric.json"
+    var PATH_H2F2metric: String = "data/{DATASET}/rules/H2F2metric.json"
     // Path to the file that contains the rules that will be used as base,
     // i.e. this rule set will be added to all other rule sets loaded.
     @JvmField
     var PATH_RULES_BASE: String = ""
     // Path to the output file where the rules / predictions  will be stored.
     @JvmField
-    var PATH_OUTPUT: String = "out/{DATASET}/predictions"
+    var PATH_OUTPUT: String = "data/{DATASET}/application/predictions"
     // The number of worker threads which compute the scores of the constructed rules, should be one less then the number of available cores.
     @JvmField
     var WORKER_THREADS: Int = 20

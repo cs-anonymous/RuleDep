@@ -190,11 +190,11 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
     dataset_dir = os.path.join(args["data_root"], args["dataset"])
     if args["applied_rules"] is None:
-        args["applied_rules"] = os.path.join(dataset_dir, "expl", "applied_rules_train.json")
+        args["applied_rules"] = os.path.join(dataset_dir, "application", "applied_rules_train.json")
     if args["output"] is None:
         args["output"] = os.path.join(dataset_dir, "datasets")
     if args["rule_file"] == "":
-        args["rule_file"] = os.path.join(dataset_dir, "rules", "rules-1000")
+        args["rule_file"] = os.path.join(dataset_dir, "rules", "rules-1000-5")
 
     c = Config()
     c.set("dataset.name", args["dataset"])

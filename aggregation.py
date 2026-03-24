@@ -1440,7 +1440,7 @@ def get_parser():
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
     parser.add_argument("--synergy_pair_chunk_size", dest="dependency_chunk_size", action="store", type=int, help=argparse.SUPPRESS)
-    parser.add_argument("--rule_file", action="store", default="", help="Path to rules file. Default: <data_root>/<dataset>/rules/rules-1000")
+    parser.add_argument("--rule_file", action="store", default="", help="Path to rules file. Default: <data_root>/<dataset>/rules/rules-1000-5")
     parser.add_argument("--same_checkpoint", action="store_true", default=False, help="Use one unified best-valid checkpoint for all reported metrics. Default uses legacy per-metric selection.")
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
@@ -2814,7 +2814,7 @@ def aggregate_multiple():
 args = get_parser().parse_args()
 EVAL_DEVICE = torch.device(args.device)
 dataset_dir = os.path.join(args.data_root, args.dataset)
-args.directory_explanations = f"./{dataset_dir}/expl/"
+args.directory_explanations = f"./{dataset_dir}/application/"
 args.directory_preprocessed_datasets = f"./{dataset_dir}/datasets/"
 if "EXPERIMENT_DIR" not in os.environ:
     sign_bit = 1 if args.sign_constraint else 0
@@ -2824,7 +2824,7 @@ if "EXPERIMENT_DIR" not in os.environ:
         f"exp{args.relation}_{args.model}_{sign_bit}_{sign_dependency_bit}_{dependency_bit}_{args.pos}_"
         f"{int(args.synergy)}_{int(args.redundancy)}_0"
     )
-    os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/{exp_name}"
+    os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/aggregation/{exp_name}"
 args.experiment = os.environ["EXPERIMENT_DIR"]
 
 # Set up experiment folder
@@ -2853,7 +2853,7 @@ processed_po_test = pickle.load(open(args.directory_explanations + "processed_po
 processed_sp_valid = pickle.load(open(args.directory_explanations + "processed_sp_valid.pkl", "rb"))
 processed_po_valid = pickle.load(open(args.directory_explanations + "processed_po_valid.pkl", "rb"))
 
-rule_file = args.rule_file if args.rule_file else f"./{dataset_dir}/rules/rules-1000"
+rule_file = args.rule_file if args.rule_file else f"./{dataset_dir}/rules/rules-1000-5"
 dependency_dir = os.path.dirname(rule_file)
 synergy_filtered_file = os.path.join(dependency_dir, "synergy_filtered.txt")
 redundancy_filtered_file = os.path.join(dependency_dir, "redundancy_filtered.txt")

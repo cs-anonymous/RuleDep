@@ -1,4 +1,5 @@
-# Path to the dataset folder: data/fb15k-237/ and out/fb15k-237/
+# Dataset-centric layout: data/<dataset>/rules, data/<dataset>/application,
+# data/<dataset>/datasets, and data/<dataset>/aggregation.
 DATASET: FB15k-237
 # The number of worker threads which compute the scores of the constructed rules, should be one less then the number of available cores.
 WORKER_THREADS: 30

@@ -872,9 +872,9 @@ start_time = datetime.now()
 
 dataset = args.dataset
 log_step("Parsed arguments")
-rules_path = Path(args.rules if args.rules else f"data/rules/{dataset}.txt")
+rules_path = Path(args.rules if args.rules else f"data/{dataset}/rules/rules-1000-5")
 applied_rules_path = Path(
-    args.applied_rules if args.applied_rules else f"out/{dataset}/applied_rules.json"
+    args.applied_rules if args.applied_rules else f"data/{dataset}/application/applied_rules_test.json"
 )
 
 if args.valid:
@@ -1041,4 +1041,3 @@ elapsed_time = end_time - start_time
 print()
 print(f"Evaluation completed at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
 print(f"Total runtime: {elapsed_time}")
-

@@ -191,13 +191,13 @@ def build_processed_from_applied(applied_rules, entity_id_to_idx, relation_id_to
     return processed_sp, processed_po
 
 
-def load_processed_train(expl_dir, entity_ids, relation_ids):
-    sp_path = os.path.join(expl_dir, "processed_sp_train.pkl")
-    po_path = os.path.join(expl_dir, "processed_po_train.pkl")
+def load_processed_train(application_dir, entity_ids, relation_ids):
+    sp_path = os.path.join(application_dir, "processed_sp_train.pkl")
+    po_path = os.path.join(application_dir, "processed_po_train.pkl")
     if os.path.exists(sp_path) and os.path.exists(po_path):
         return pickle.load(open(sp_path, "rb")), pickle.load(open(po_path, "rb"))
 
-    applied_path = os.path.join(expl_dir, "applied_rules_train.json")
+    applied_path = os.path.join(application_dir, "applied_rules_train.json")
     if not os.path.exists(applied_path):
         raise FileNotFoundError(
             f"Missing processed train explanations ({sp_path}, {po_path}) and fallback source {applied_path}"
@@ -412,9 +412,9 @@ def main():
 
     dataset_dir = os.path.join(args.data_root, args.dataset)
     rules_dir = os.path.join(dataset_dir, "rules")
-    expl_dir = os.path.join(dataset_dir, "expl")
+    application_dir = os.path.join(dataset_dir, "application")
 
-    rule_file = args.rule_file or os.path.join(rules_dir, "rules-1000")
+    rule_file = args.rule_file or os.path.join(rules_dir, "rules-1000-5")
     synergy_file = args.synergy_file or os.path.join(rules_dir, "synergy.txt")
     redundancy_file = args.redundancy_file or os.path.join(rules_dir, "redundancy.txt")
 
@@ -425,7 +425,7 @@ def main():
     if int(args.min_train) > 0:
         entity_ids = read_ids(os.path.join(dataset_dir, "entity_ids.del"))
         train_sp_to_o, train_po_to_s = load_split_targets(os.path.join(dataset_dir, "train.del"))
-        processed_sp_train, processed_po_train = load_processed_train(expl_dir, entity_ids, relation_ids)
+        processed_sp_train, processed_po_train = load_processed_train(application_dir, entity_ids, relation_ids)
         train_active_rule_sets_by_relation = build_active_rule_sets_by_relation(
             (train_sp_to_o, train_po_to_s),
             processed_sp_train,
