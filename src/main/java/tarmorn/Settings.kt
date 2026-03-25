@@ -207,7 +207,7 @@ object Settings {
 
     // The number of negative examples for which we assume that they exist, however, we have not seen them. Rules with high coverage are favored the higher the chosen number.
     @JvmField
-    var UNSEEN_NEGATIVE_EXAMPLES: Int = 1
+    var UNSEEN_NEGATIVE_EXAMPLES: Int = 3
 
     // The number of negative examples for which we assume that they exist, however, we have not seen them.
     // This number is for each refinements step, including the refinement of a refined rule.

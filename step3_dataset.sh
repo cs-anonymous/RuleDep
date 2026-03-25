@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-[ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [ruleset]" >&2; exit 1; }
+[ "$#" -ge 1 ] || { echo "Usage: $0 <dataset>" >&2; exit 1; }
 
 dataset="$1"
-ruleset="${2:-rule.txt}"
 
 echo "======================================"
 echo "Step 3: Dataset generation for ${dataset}"
@@ -23,7 +22,7 @@ done
 
 python create_datasets.py -d "${dataset}" \
     --applied_rules "data/${dataset}/application/applied_rules_train.json" \
-    --rule_file "data/${dataset}/rules/${ruleset}" \
+    --rule_file "data/${dataset}/rules/rule.txt" \
     --output "data/${dataset}/datasets"
 
 echo "Step 3 finished for ${dataset}"

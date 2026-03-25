@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-[ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [ruleset] [topk] [worker_threads] [num_top_rules]" >&2; exit 1; }
+[ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [topk] [worker_threads] [num_top_rules] [query_batch_size]" >&2; exit 1; }
 
 dataset="$1"
-ruleset="${2:-rule.txt}"
-topk="${3:-100}"
-worker_threads="${4:-20}"
-num_top_rules="${5:-200}"
+topk="${2:-100}"
+worker_threads="${3:-20}"
+num_top_rules="${4:-200}"
 
 mkdir -p "data/${dataset}/application"
 : > "data/${dataset}/application/empty.txt"
@@ -16,10 +15,10 @@ echo "======================================"
 echo "Step 2: Application for ${dataset}"
 echo "======================================"
 
-python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/${ruleset}" \
-    --aggregation_function noisyor > "data/${dataset}/application/eval-noisyor.log"
-python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/${ruleset}" \
-    --aggregation_function maxplus > "data/${dataset}/application/eval-maxplus.log"
+# python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
+#     --aggregation_function noisyor > "data/${dataset}/application/eval-noisyor.log"
+# python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
+#     --aggregation_function maxplus > "data/${dataset}/application/eval-maxplus.log"
 
 for split in train valid test; do
     case "${split}" in
@@ -45,7 +44,7 @@ for split in train valid test; do
         --train "data/${dataset}/train.txt" \
         --valid "${valid_file}" \
         --target "${target_file}" \
-        --rules "data/${dataset}/rules/${ruleset}" \
+        --rules "data/${dataset}/rules/rule.txt" \
         --output "data/${dataset}/application/applied_rules_${split}.json" \
         --topk "${topk}" \
         --worker-threads "${worker_threads}" \
@@ -63,13 +62,13 @@ done
 
 python script/eval_base_ranker.py \
     --dataset "${dataset}" \
-    --rules "data/${dataset}/rules/${ruleset}" \
+    --rules "data/${dataset}/rules/rule.txt" \
     --applied_rules "data/${dataset}/application/applied_rules_test.json" \
     --aggregation noisyor > "data/${dataset}/application/eval_base_ranker_noisyor.log"
 
 python script/eval_base_ranker.py \
     --dataset "${dataset}" \
-    --rules "data/${dataset}/rules/${ruleset}" \
+    --rules "data/${dataset}/rules/rule.txt" \
     --applied_rules "data/${dataset}/application/applied_rules_test.json" \
     --aggregation maxplus > "data/${dataset}/application/eval_base_ranker_maxplus.log"
 

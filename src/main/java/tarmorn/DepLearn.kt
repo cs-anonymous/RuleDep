@@ -107,15 +107,24 @@ object DepLearn {
             conf2 = tmpConf
         }
 
-        val lift = metric.surprisal - m1.surprisal - m2.surprisal
-        val maxSurprisal = maxOf(m1.surprisal, m2.surprisal)
-        if (lift > 0 || metric.surprisal < maxSurprisal) {
-            metric.lift = if (lift > 0) lift else metric.surprisal - maxSurprisal
-            val inner = depAdj2metric.computeIfAbsent(id1) { ConcurrentHashMap() }
-            inner[id2] = metric
-            if (metric.lift > 0) positiveCounter.incrementAndGet()
-            else negativeCounter.incrementAndGet()
+        val positiveLift = metric.smoothSurprisal - m1.smoothSurprisal - m2.smoothSurprisal
+        // val negativeLift = metric.rawSurprisal - maxOf(m1.rawSurprisal, m2.rawSurprisal)
+        val negativeLift = metric.rawSurprisal - (m1.rawSurprisal + m2.rawSurprisal) / 2
+
+        metric.lift = when {
+            positiveLift > 0 -> positiveLift
+            negativeLift < 0 -> negativeLift
+            else -> return
         }
+
+        if (abs(metric.lift) < Settings.MIN_ABS_LIFT_DEPENDENCY) {
+            return
+        }
+
+        val inner = depAdj2metric.computeIfAbsent(id1) { ConcurrentHashMap() }
+        inner[id2] = metric
+        if (metric.lift > 0) positiveCounter.incrementAndGet()
+        else negativeCounter.incrementAndGet()
     }
 
     private fun escapeJson(value: String): String {
@@ -715,7 +724,7 @@ object DepLearn {
         val outputFile = File(outputPath)
         outputFile.parentFile?.mkdirs()
         println("Saving depAdj2metric to ${outputFile.absolutePath}...")
-        println("Applying dependency lift threshold: |lift| >= ${Settings.MIN_ABS_LIFT_DEPENDENCY}")
+        println("Dependency entries were filtered during storage: |lift| >= ${Settings.MIN_ABS_LIFT_DEPENDENCY}")
 
         val synergeFile = File(outputFile.parentFile, "synergy.txt")
         val redundancyFile = File(outputFile.parentFile, "redundancy.txt")
@@ -726,7 +735,6 @@ object DepLearn {
 
         val sortedEntries = depAdj2metric.entries
             .flatMap { (id1, inner) -> inner.entries.map { id1 to it } }
-            .filter { abs(it.second.value.lift) >= Settings.MIN_ABS_LIFT_DEPENDENCY }
             .sortedByDescending { it.second.value.confidence }
 
         // PrintWriter(outputFile).use { writer ->

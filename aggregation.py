@@ -1494,7 +1494,7 @@ def get_parser():
     parser.add_argument("--max_epoch", action="store", default=60, help="Epochs to run for each learning rate", type=int)
     parser.add_argument("--evaluate_every", action="store", default="4,2,1", help="Evaluation interval or comma-separated phase intervals, e.g. 4,2,1. Use 0 for no eval in a phase.")
     parser.add_argument("--early_stopping", action="store", default=3, type=int, help="Stop if valid metric does not improve for X consecutive evaluations. -1 disables.")
-    parser.add_argument("--pos", action="store", default="auto", help="Scaling of the loss for positive examples. Use 'auto' to set neg/pos per relation from the training split.")
+    parser.add_argument("--pos", action="store", default="auto_sqrt", help="Scaling of the loss for positive examples. Use 'auto_sqrt' (default) for sqrt(neg/pos), 'auto_ratio' for neg/pos, or provide a positive number.",)
     parser.add_argument("--no_sign_constraint", dest="sign_constraint", action="store_false", help="Disable sign constraint for rule weights.")
     parser.add_argument("--sign_constraint_dependency", dest="sign_constraint_dependency", action="store_true", help="Enable sign constraint for dependency weights.")
     parser.add_argument("--no_sign_constraint_dependency", dest="sign_constraint_dependency", action="store_false", help="Disable sign constraint for dependency weights.")
@@ -1534,18 +1534,24 @@ def parse_csv_schedule(raw_value, cast_fn, name):
 
 def resolve_pos_weight(pos_arg, train_split, relation):
     pos_raw = str(pos_arg).strip()
+    pos_mode = pos_raw.lower()
     ys = train_split["golds"].float().reshape(-1)
     num_samples = int(ys.shape[0])
     num_positive = float(ys.sum().item())
     num_negative = float(num_samples) - num_positive
 
-    if pos_raw.lower() == "auto":
+    if pos_mode in {"auto", "auto_sqrt", "auto_ratio"}:
         if num_positive <= 0 or num_negative <= 0:
             pos_weight = 1.0
-            pos_source = "auto_fallback"
+            pos_source = f"{pos_mode}_fallback"
         else:
-            pos_weight = num_negative / num_positive
-            pos_source = "auto"
+            ratio = num_negative / num_positive
+            if pos_mode == "auto_ratio":
+                pos_weight = ratio
+                pos_source = "auto_ratio"
+            else:
+                pos_weight = math.sqrt(ratio)
+                pos_source = "auto_sqrt"
     else:
         try:
             pos_weight = float(pos_raw)

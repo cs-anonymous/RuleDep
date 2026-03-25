@@ -9,6 +9,30 @@ from kge import Config, Dataset
 from tqdm import tqdm
 
 
+def _init_pool_worker():
+    # Keep every process lightweight and avoid oversubscription.
+    torch.set_num_threads(1)
+    if hasattr(torch, "set_num_interop_threads"):
+        try:
+            torch.set_num_interop_threads(1)
+        except RuntimeError:
+            # Can be raised when interop threads were already set.
+            pass
+
+
+def _is_small_dataset(dataset_name: str, train_key_count: int, num_relations: int) -> bool:
+    name = dataset_name.lower()
+
+    # Explicit name hints first.
+    if any(tag in name for tag in ("codex-s", "small", "toy")):
+        return True
+    if any(tag in name for tag in ("codex-l", "large")):
+        return False
+
+    # Fallback heuristic.
+    return train_key_count < 300_000 and num_relations <= 100
+
+
 def _split_rule_line(line: str):
     parts = line.rstrip("\n").split("\t")
     if len(parts) >= 4:
@@ -198,7 +222,7 @@ if __name__ == "__main__":
 
     c = Config()
     c.set("dataset.name", args["dataset"])
-    dataset = Dataset.create(c)
+    dataset = Dataset.create(c, folder=dataset_dir)
 
     if not os.path.exists(args["output"]):
         os.makedirs(args["output"])
@@ -222,10 +246,22 @@ if __name__ == "__main__":
     PAD_TOK = MAX_RULE_ID + 1
 
     num_relations = dataset.num_relations()
-    num_workers = cpu_count()
+    train_key_count = len(train_sp_to_o) + len(train_po_to_s)
+    small_dataset = _is_small_dataset(args["dataset"], train_key_count, num_relations)
 
-    with Pool(processes=num_workers) as pool:
-        list(tqdm(pool.imap_unordered(generate_dataset, range(num_relations)), total=num_relations))
-
-    # for relation in tqdm(range(dataset.num_relations())):
-    #     generate_dataset(relation)
+    if small_dataset:
+        print(
+            f"[create_datasets] small dataset detected: run serially "
+            f"(dataset={args['dataset']}, train_keys={train_key_count}, relations={num_relations})"
+        )
+        for relation in tqdm(range(num_relations), total=num_relations):
+            generate_dataset(relation)
+    else:
+        num_workers = cpu_count() // 2
+        print(
+            f"[create_datasets] large dataset detected: run multiprocessing "
+            f"(dataset={args['dataset']}, train_keys={train_key_count}, relations={num_relations}, "
+            f"processes={num_workers}, torch_threads_per_process=1)"
+        )
+        with Pool(processes=num_workers, initializer=_init_pool_worker) as pool:
+            list(tqdm(pool.imap_unordered(generate_dataset, range(num_relations)), total=num_relations))

@@ -13,11 +13,25 @@ data class Metric(
     var lift: Double = 0.0
 ) : Comparable<Metric> {
     val coverage: Double = if (headSize > 0) support / headSize else 0.0
-    val confidence: Double =
-        if (bodySize > 0) support / (bodySize + Settings.UNSEEN_NEGATIVE_EXAMPLES) else 0.0
+
+    private fun surprisalFrom(conf: Double): Double {
+        return if (conf < 1.0) minOf(-Math.log(1 - conf), Settings.MAX_SURPRISAL) else Settings.MAX_SURPRISAL
+    }
+
+    val rawConfidence: Double
+        get() = if (bodySize > 0) support / bodySize else 0.0
+
+    val confidence: Double
+        get() = if (bodySize > 0) support / (bodySize + Settings.UNSEEN_NEGATIVE_EXAMPLES) else 0.0
+
+    val rawSurprisal: Double
+        get() = surprisalFrom(rawConfidence)
+
+    val smoothSurprisal: Double
+        get() = surprisalFrom(confidence)
 
     val surprisal: Double
-        get() = if (confidence < 1.0) minOf(-Math.log(1 - confidence), Settings.MAX_SURPRISAL) else Settings.MAX_SURPRISAL
+        get() = smoothSurprisal
 
     val valid: Boolean
         get() = support >= Settings.MIN_SUPP && confidence > Settings.MIN_CONF // && coverage > 0.1

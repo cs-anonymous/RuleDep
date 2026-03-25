@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 import os
 
@@ -76,6 +77,43 @@ def filter_applied_rules_by_topk(applied_rules, topk_lookup):
     return filtered
 
 
+def combine_direction_files(head_path, tail_path, output_path):
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    with open(output_path, "w", encoding="utf-8") as out:
+        out.write('{"head":')
+        with open(head_path, "r", encoding="utf-8") as head_file:
+            out.write(head_file.read())
+        out.write(',"tail":')
+        with open(tail_path, "r", encoding="utf-8") as tail_file:
+            out.write(tail_file.read())
+        out.write("}")
+
+
+def export_direction(ranker, direction, topk, output_path):
+    ranking = ranker.get_ranking(direction=direction, as_string=True)
+    topk_lookup = extract_topk_candidates_from_ranking(ranking, topk)
+    del ranking
+    gc.collect()
+
+    applied_rules = ranker.get_applied_rules(direction=direction)
+    applied_rules = filter_applied_rules_by_topk(applied_rules, topk_lookup)
+    del topk_lookup
+    gc.collect()
+
+    cleaned_rules = sanitize_applied_rules(applied_rules)
+    del applied_rules
+    gc.collect()
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(cleaned_rules, f, ensure_ascii=False)
+
+    del cleaned_rules
+    gc.collect()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="AnyBURL Apply-like output using PyClause ranking + rule features"
@@ -136,29 +174,23 @@ def main():
     ranker = RankingHandler(options=opts.get("ranking_handler"))
     ranker.calculate_ranking(loader=loader)
 
-    # ranking used as authoritative top-k candidate list per query
-    head_ranking = ranker.get_ranking(direction="head", as_string=True)
-    tail_ranking = ranker.get_ranking(direction="tail", as_string=True)
-
-    # applied rules from PyClause (rule ids align with rules file line numbers, 1-based)
-    head_applied_rules = ranker.get_applied_rules(direction="head")
-    tail_applied_rules = ranker.get_applied_rules(direction="tail")
-
-    head_topk = extract_topk_candidates_from_ranking(head_ranking, args.topk)
-    tail_topk = extract_topk_candidates_from_ranking(tail_ranking, args.topk)
-
-    head_applied_rules = filter_applied_rules_by_topk(head_applied_rules, head_topk)
-    tail_applied_rules = filter_applied_rules_by_topk(tail_applied_rules, tail_topk)
-
-    applied_payload = {
-        "head": sanitize_applied_rules(head_applied_rules),
-        "tail": sanitize_applied_rules(tail_applied_rules),
-    }
     output_dir = os.path.dirname(args.output)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-    with open(args.output, "w", encoding="utf-8") as f:
-        json.dump(applied_payload, f, ensure_ascii=False)
+
+    base, ext = os.path.splitext(args.output)
+    if not ext:
+        ext = ".json"
+    head_output = f"{base}_head{ext}"
+    tail_output = f"{base}_tail{ext}"
+
+    print(f"Exporting head applied rules to {head_output}")
+    export_direction(ranker, "head", args.topk, head_output)
+
+    print(f"Exporting tail applied rules to {tail_output}")
+    export_direction(ranker, "tail", args.topk, tail_output)
+
+    combine_direction_files(head_output, tail_output, args.output)
 
 
 if __name__ == "__main__":
