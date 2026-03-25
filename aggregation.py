@@ -21,7 +21,6 @@ from os.path import exists
 from pprint import pformat
 from time import perf_counter
 
-import kge
 import numpy as np
 import torch
 from torch import multiprocessing as mp
@@ -320,6 +319,90 @@ def read_ids(file_path):
         raw = f.read().splitlines()
     return [line.split("\t")[1] for line in raw]
 
+
+class LocalKvsIndex:
+    def __init__(self, mapping):
+        self._mapping = mapping
+
+    def __getitem__(self, key):
+        return self._mapping[key]
+
+    def get(self, key, default_return_value=None):
+        return self._mapping.get(key, default_return_value)
+
+    def keys(self):
+        return self._mapping.keys()
+
+    def values(self):
+        return self._mapping.values()
+
+    def items(self):
+        return self._mapping.items()
+
+    def __len__(self):
+        return len(self._mapping)
+
+
+class LocalDataset:
+    def __init__(self, folder):
+        self.folder = folder
+        self._triples = {}
+        self._indexes = {}
+        self._entity_ids = None
+        self._relation_ids = None
+
+    def _load_triples(self, split):
+        path = os.path.join(self.folder, f"{split}.del")
+        triples_np = np.loadtxt(path, usecols=(0, 1, 2), dtype=np.int32)
+        if triples_np.ndim == 1:
+            triples_np = triples_np.reshape(1, 3)
+        return torch.from_numpy(triples_np)
+
+    def split(self, split):
+        if split not in self._triples:
+            self._triples[split] = self._load_triples(split)
+        return self._triples[split]
+
+    @staticmethod
+    def _build_kvs_index(triples, key_cols, value_col):
+        buckets = defaultdict(list)
+        triples_np = triples.cpu().numpy()
+        for row in triples_np:
+            key = tuple(int(row[col]) for col in key_cols)
+            buckets[key].append(int(row[value_col]))
+        return LocalKvsIndex({
+            key: torch.tensor(values, dtype=torch.long)
+            for key, values in buckets.items()
+        })
+
+    def index(self, name):
+        if name not in self._indexes:
+            split_name, key, _to, value = name.split("_")
+            if (key, value) == ("sp", "o"):
+                self._indexes[name] = self._build_kvs_index(self.split(split_name), [0, 1], 2)
+            elif (key, value) == ("po", "s"):
+                self._indexes[name] = self._build_kvs_index(self.split(split_name), [1, 2], 0)
+            elif (key, value) == ("so", "p"):
+                self._indexes[name] = self._build_kvs_index(self.split(split_name), [0, 2], 1)
+            else:
+                raise ValueError(f"Unsupported local index: {name}")
+        return self._indexes[name]
+
+    def entity_ids(self):
+        if self._entity_ids is None:
+            self._entity_ids = read_ids(os.path.join(self.folder, "entity_ids.del"))
+        return self._entity_ids
+
+    def relation_ids(self):
+        if self._relation_ids is None:
+            self._relation_ids = read_ids(os.path.join(self.folder, "relation_ids.del"))
+        return self._relation_ids
+
+    def num_entities(self):
+        return len(self.entity_ids())
+
+    def num_relations(self):
+        return len(self.relation_ids())
 
 def split_rule_line(line: str):
     parts = line.rstrip("\n").split("\t")
@@ -1854,7 +1937,11 @@ def evaluate_current_stage_result(relation, model, model_builder, evaluate_every
     head_mrr.nnm = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
     tail_mrr.nnm = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
     head_mrr.maximums_v, head_mrr.maximums_v_raw = float(head_valid[0]), float(head_valid[3])
+    head_mrr.maximums_v_1, head_mrr.maximums_v_10 = float(head_valid[1]), float(head_valid[2])
+    head_mrr.maximums_v_1_raw, head_mrr.maximums_v_10_raw = float(head_valid[4]), float(head_valid[5])
     tail_mrr.maximums_v, tail_mrr.maximums_v_raw = float(tail_valid[0]), float(tail_valid[3])
+    tail_mrr.maximums_v_1, tail_mrr.maximums_v_10 = float(tail_valid[1]), float(tail_valid[2])
+    tail_mrr.maximums_v_1_raw, tail_mrr.maximums_v_10_raw = float(tail_valid[4]), float(tail_valid[5])
     head_mrr.maximums_t, head_mrr.maximums_t_1, head_mrr.maximums_t_10 = (
         float(head_test[0]),
         float(head_test[1]),
@@ -2213,11 +2300,13 @@ def aggregate_single(relation):
         stage_name="rule",
         checkpoint_selection="combined",
     )
+    best_valid_stage1 = build_best_valid_metrics(stage1_result)
 
     final_result = stage1_result
     dependency_stage_result = None
     dependency_stage_accepted = None
     selection_reason = "rule stage only"
+    selection_metric_name = "best_valid_mrr"
     stage1_metrics = {
         "pos_weight": float(pos),
         "pos_weight_source": pos_source,
@@ -2227,6 +2316,7 @@ def aggregate_single(relation):
         "best_valid_epoch": int(stage1_result["best_valid_epoch"]),
         "best_valid_combined_raw": float(stage1_result["best_valid_combined_raw"]),
     }
+    best_valid_stage2 = None
     stage2_metrics = None
     initial_dependency_weights = np.array([], dtype=np.float32)
     initial_dependency_type_weights = np.array([], dtype=np.float32)
@@ -2283,6 +2373,7 @@ def aggregate_single(relation):
                 early_stopping_patience=dependency_early_stopping_patience,
                 min_epochs_before_stop=dependency_min_epochs_before_stop,
             )
+            best_valid_stage2 = build_best_valid_metrics(dependency_stage_result)
             stage2_metrics = {
                 "pos_weight": float(pos),
                 "pos_weight_source": pos_source,
@@ -2297,15 +2388,15 @@ def aggregate_single(relation):
                 "best_valid_combined_raw": float(dependency_stage_result["best_valid_combined_raw"]),
             }
 
-            rule_best_valid_combined_raw = float(stage1_result["best_valid_combined_raw"])
-            dependency_best_valid_combined_raw = float(dependency_stage_result["best_valid_combined_raw"])
-            dependency_stage_accepted = dependency_best_valid_combined_raw > rule_best_valid_combined_raw
+            rule_best_valid_mrr = float(best_valid_stage1["mrr"])
+            dependency_best_valid_mrr = float(best_valid_stage2["mrr"])
+            dependency_stage_accepted = dependency_best_valid_mrr > rule_best_valid_mrr
             if dependency_stage_accepted:
                 final_result = dependency_stage_result
-                selection_reason = "accepted dependency stage because its best valid combined raw exceeded the rule-only stage"
+                selection_reason = "accepted dependency stage because its best valid mrr exceeded the rule-only stage"
             else:
                 final_result = stage1_result
-                selection_reason = "rejected dependency stage because its best valid combined raw did not exceed the rule-only stage"
+                selection_reason = "rejected dependency stage because its best valid mrr did not exceed the rule-only stage"
         else:
             final_result = stage1_result
             dependency_stage_accepted = False
@@ -2393,8 +2484,6 @@ def aggregate_single(relation):
     num_relation_dependency_types = int(getattr(nnm, "num_relation_dependency_types", 0))
     num_relation_dependency_type_source_pairs = int(getattr(nnm, "num_relation_dependency_type_source_pairs", 0))
 
-    best_valid_stage1 = build_best_valid_metrics(stage1_result)
-    best_valid_stage2 = build_best_valid_metrics(dependency_stage_result)
     relation_total_seconds = perf_counter() - relation_start_time
     other_seconds = relation_total_seconds - load_seconds - train_seconds - eval_seconds
     if other_seconds < 0:
@@ -2437,9 +2526,14 @@ def aggregate_single(relation):
             "selected_stage": (
                 "dependency" if (dependency_stage_result is not None and final_result is dependency_stage_result) else "rule_only"
             ),
+            "selection_metric": selection_metric_name,
             "dependency_stage_attempted": bool(dependency_stage_result is not None),
             "dependency_stage_accepted": (
                 None if dependency_stage_result is None else bool(dependency_stage_accepted)
+            ),
+            "rule_best_valid_mrr": float(best_valid_stage1["mrr"]),
+            "dependency_best_valid_mrr": (
+                None if best_valid_stage2 is None else float(best_valid_stage2["mrr"])
             ),
             "rule_best_valid_combined_raw": float(stage1_result["best_valid_combined_raw"]),
             "dependency_best_valid_combined_raw": (
@@ -2623,6 +2717,14 @@ def _load_dependency_subset_rows(metric_files):
             continue
 
         dep_best_valid_raw = metrics["model_selection"].get("dependency_best_valid_combined_raw")
+        rule_best_valid_mrr = metrics["model_selection"].get("rule_best_valid_mrr")
+        dep_best_valid_mrr = metrics["model_selection"].get("dependency_best_valid_mrr")
+        if rule_best_valid_mrr is None:
+            best_valid_stage1 = metrics.get("best_valid_stage1") or {}
+            rule_best_valid_mrr = best_valid_stage1.get("mrr")
+        if dep_best_valid_mrr is None:
+            best_valid_stage2 = metrics.get("best_valid_stage2") or {}
+            dep_best_valid_mrr = best_valid_stage2.get("mrr")
         dependency_trial_path = os.path.join(args.experiment, f"dependency-trial-{relation}.csv")
         relation_label = relation_ids[relation] if 0 <= relation < len(relation_ids) else str(relation)
         row = {
@@ -2632,16 +2734,24 @@ def _load_dependency_subset_rows(metric_files):
             "selected_stage": metrics["model_selection"].get("selected_stage"),
             "dep_attempted": bool(metrics["model_selection"].get("dependency_stage_attempted")),
             "dep_accepted": metrics["model_selection"].get("dependency_stage_accepted"),
+            "rule_best_valid_mrr": None if rule_best_valid_mrr is None else float(rule_best_valid_mrr),
+            "dep_best_valid_mrr": None if dep_best_valid_mrr is None else float(dep_best_valid_mrr),
             "rule_best_valid_raw": float(metrics["model_selection"]["rule_best_valid_combined_raw"]),
             "dep_best_valid_raw": None if dep_best_valid_raw is None else float(dep_best_valid_raw),
+            "rule_stage_mrr": float(rule_stage["mrr"]),
+            "final_mrr": float(final_stage["mrr"]),
             "rule_stage_test_raw": float(rule_stage["mrr_raw"]),
             "final_test_raw": float(final_stage["mrr_raw"]),
             "num_rules": int(metrics.get("num_relation_rules", 0)),
             "num_deps": int(_count_csv_data_rows(dependency_trial_path)),
             "num_deps_available": int(metrics.get("num_relation_dependencies", 0)),
         }
-        row["valid_gain"] = (row["dep_best_valid_raw"] if row["dep_best_valid_raw"] is not None else row["rule_best_valid_raw"]) - row["rule_best_valid_raw"]
-        row["test_gain_vs_stage1"] = row["final_test_raw"] - row["rule_stage_test_raw"]
+        rule_valid_metric = row["rule_best_valid_mrr"] if row["rule_best_valid_mrr"] is not None else row["rule_best_valid_raw"]
+        dep_valid_metric = row["dep_best_valid_mrr"] if row["dep_best_valid_mrr"] is not None else row["dep_best_valid_raw"]
+        row["valid_gain"] = None if rule_valid_metric is None else float(
+            (dep_valid_metric if dep_valid_metric is not None else rule_valid_metric) - rule_valid_metric
+        )
+        row["test_gain_vs_stage1"] = row["final_mrr"] - row["rule_stage_mrr"]
         row["dep_per_rule"] = float(row["num_deps"] / max(row["num_rules"], 1))
         rows.append(row)
     return sorted(rows, key=lambda x: x["relation"])
@@ -2661,14 +2771,14 @@ def _summarize_subset_rows(rows, name):
     weighted_rows = [row for row in rows if int(row.get("num_test", 0)) > 0]
     total_weight = sum(int(row["num_test"]) for row in weighted_rows)
     if total_weight > 0:
-        rule_raw = float(sum(row["rule_stage_test_raw"] * row["num_test"] for row in weighted_rows) / total_weight)
-        final_raw = float(sum(row["final_test_raw"] * row["num_test"] for row in weighted_rows) / total_weight)
+        rule_stage_mrr = float(sum(row["rule_stage_mrr"] * row["num_test"] for row in weighted_rows) / total_weight)
+        final_mrr = float(sum(row["final_mrr"] * row["num_test"] for row in weighted_rows) / total_weight)
     else:
-        rule_raw = None
-        final_raw = None
+        rule_stage_mrr = None
+        final_mrr = None
 
-    gain = None if rule_raw is None or final_raw is None else float(final_raw - rule_raw)
-    relative_gain = None if gain is None or abs(rule_raw) < 1e-12 else float(gain / rule_raw)
+    gain = None if rule_stage_mrr is None or final_mrr is None else float(final_mrr - rule_stage_mrr)
+    relative_gain = None if gain is None or abs(rule_stage_mrr) < 1e-12 else float(gain / rule_stage_mrr)
     return {
         "subset": name,
         "num_relations": int(len(rows)),
@@ -2676,8 +2786,8 @@ def _summarize_subset_rows(rows, name):
         "num_dependency_attempted": int(sum(1 for row in rows if row.get("dep_attempted"))),
         "num_dependency_accepted": int(sum(1 for row in rows if row.get("dep_accepted") is True)),
         "num_relations_with_dependency_rows": int(sum(1 for row in rows if int(row.get("num_deps", 0)) > 0)),
-        "rule_stage_raw": rule_raw,
-        "final_raw": final_raw,
+        "rule_stage_mrr": rule_stage_mrr,
+        "final_mrr": final_mrr,
         "gain_vs_stage1": gain,
         "relative_gain_vs_stage1": relative_gain,
     }
@@ -2693,6 +2803,7 @@ def _build_subset_payload(rows, name):
         "num_rules": _median_of_rows(rows, "num_rules"),
         "num_deps": _median_of_rows(rows, "num_deps"),
         "dep_per_rule": _median_of_rows(rows, "dep_per_rule"),
+        "rule_best_valid_mrr": _median_of_rows(rows, "rule_best_valid_mrr"),
         "rule_best_valid_raw": _median_of_rows(rows, "rule_best_valid_raw"),
     }
     ranked_rows = sorted(rows, key=lambda row: row["test_gain_vs_stage1"], reverse=True)
@@ -2703,8 +2814,8 @@ def _build_subset_payload(rows, name):
                 "relation": int(row["relation"]),
                 "rel_name": row["rel_name"],
                 "test_gain_vs_stage1": float(row["test_gain_vs_stage1"]),
-                "rule_stage_test_raw": float(row["rule_stage_test_raw"]),
-                "final_test_raw": float(row["final_test_raw"]),
+                "rule_stage_mrr": float(row["rule_stage_mrr"]),
+                "final_mrr": float(row["final_mrr"]),
                 "num_triples": row.get("num_triples"),
                 "avg_tails_per_sp": row.get("avg_tails_per_sp"),
                 "avg_heads_per_po": row.get("avg_heads_per_po"),
@@ -3036,9 +3147,7 @@ shutil.copy(__file__, args.experiment)
 with open(f"{args.experiment}/config.json", "w") as f:
     json.dump(vars(args), f, indent=4)
 
-c = kge.Config()
-c.set("dataset.name", args.dataset)
-dataset = kge.Dataset.create(c)
+dataset = LocalDataset(dataset_dir)
 
 test_sp_to_o = dataset.index("test_sp_to_o")
 test_po_to_s = dataset.index("test_po_to_s")

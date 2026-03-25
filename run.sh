@@ -33,5 +33,5 @@ for dataset in "${datasets[@]}"; do
     # ./step2_application.sh "${dataset}" "${TOPK:-100}" "${APPLICATION_WORKER_THREADS:-20}"
     # ./step3_dataset.sh "${dataset}"
     ./step4_dependency.sh "${dataset}"
-    # ./step5_aggregation.sh "${dataset}" "${AGGREGATION_MULTIPROCESS:-2}"
+    ./step5_aggregation.sh "${dataset}" "${AGGREGATION_MULTIPROCESS:-2}"
 done

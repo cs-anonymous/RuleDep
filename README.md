@@ -16,6 +16,25 @@ The default dataset list in `run.sh` is:
 - `WN18RR`
 - `YAGO3-10`
 
+
+```
+conda create -n ruledep python=3.8
+pip install -r requirements.txt
+git clone https://github.com/uma-pi1/kge.git
+cd kge
+git checkout a9ecd249ec2d205df59287f64553a1536add4a43
+pip install -e .
+mv data data.bac
+ln -s ../data data
+cd ..
+
+git clone https://github.com/cs-anonymous/PyClause.git
+cd PyClause
+git checkout cc3ef7c0aee51825d7d741b7ec03a0974f7c1619
+pip install -e .
+cd ..
+```
+
 ## Common Usage
 
 Run one dataset end to end:

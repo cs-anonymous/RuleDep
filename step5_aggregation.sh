@@ -28,15 +28,16 @@ run_aggregation_with_control() {
     shift
 
     run_aggregation "${model}" "$@"
-    run_aggregation "${model}" "$@" --pos auto_ratio
 }
 
-for model in LinearAggregator SurprisalAggregator; do
+# SurprisalAggregator
+for model in LinearAggregator; do
     run_aggregation_with_control "${model}" --synergy --redundancy
     run_aggregation_with_control "${model}" --synergy
     run_aggregation_with_control "${model}" --redundancy
     run_aggregation_with_control "${model}" --synergy --redundancy --sign_constraint_dependency
     run_aggregation_with_control "${model}" --synergy --redundancy --init_dep_with_lift
+    run_aggregation_with_control "${model}" --synergy --redundancy --pos auto_ratio
 done
 
 echo "Step 5 finished for ${dataset}"

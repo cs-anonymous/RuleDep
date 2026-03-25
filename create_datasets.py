@@ -2,10 +2,10 @@ import argparse
 import os
 import pickle
 import re
+from collections import defaultdict
 from multiprocessing import Pool, cpu_count
 
 import torch
-from kge import Config, Dataset
 from tqdm import tqdm
 
 
@@ -67,6 +67,76 @@ def read_ids(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         raw = f.read().splitlines()
     return [line.split("\t")[1] for line in raw]
+
+
+def read_index_triples(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) != 3:
+                parts = line.split()
+            if len(parts) != 3:
+                continue
+            yield tuple(int(part) for part in parts)
+
+
+class LocalKvsIndex:
+    def __init__(self, mapping):
+        self._mapping = mapping
+
+    def keys(self):
+        return self._mapping.keys()
+
+    def __contains__(self, key):
+        return key in self._mapping
+
+    def __getitem__(self, key):
+        return self._mapping[key]
+
+    def __len__(self):
+        return len(self._mapping)
+
+
+class LocalDataset:
+    def __init__(self, folder):
+        self.folder = folder
+        self._indexes = {}
+        self._entity_ids = None
+        self._relation_ids = None
+
+    def _build_kvs_index(self, split, key_cols, value_col):
+        buckets = defaultdict(list)
+        for triple in read_index_triples(os.path.join(self.folder, f"{split}.del")):
+            key = tuple(triple[col] for col in key_cols)
+            buckets[key].append(triple[value_col])
+        return LocalKvsIndex(buckets)
+
+    def index(self, name):
+        if name not in self._indexes:
+            split_name, key, _to, value = name.split("_")
+            if (key, value) == ("sp", "o"):
+                self._indexes[name] = self._build_kvs_index(split_name, [0, 1], 2)
+            elif (key, value) == ("po", "s"):
+                self._indexes[name] = self._build_kvs_index(split_name, [1, 2], 0)
+            else:
+                raise ValueError(f"Unsupported local index: {name}")
+        return self._indexes[name]
+
+    def entity_ids(self):
+        if self._entity_ids is None:
+            self._entity_ids = read_ids(os.path.join(self.folder, "entity_ids.del"))
+        return self._entity_ids
+
+    def relation_ids(self):
+        if self._relation_ids is None:
+            self._relation_ids = read_ids(os.path.join(self.folder, "relation_ids.del"))
+        return self._relation_ids
+
+    def num_relations(self):
+        return len(self.relation_ids())
 
 
 def load_applied_rules(path):
@@ -202,7 +272,7 @@ def generate_dataset(relation):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Creates datasets for bce")
-    parser.add_argument("-d", "--dataset", help="Name of the dataset (loaded with libkge)", default="codex-m")
+    parser.add_argument("-d", "--dataset", help="Name of the dataset", default="codex-m")
     parser.add_argument("--data_root", help="Dataset root folder", default="data")
     parser.add_argument(
         "--applied_rules",
@@ -220,9 +290,7 @@ if __name__ == "__main__":
     if args["rule_file"] == "":
         args["rule_file"] = os.path.join(dataset_dir, "rules", "rules-1000-5")
 
-    c = Config()
-    c.set("dataset.name", args["dataset"])
-    dataset = Dataset.create(c, folder=dataset_dir)
+    dataset = LocalDataset(dataset_dir)
 
     if not os.path.exists(args["output"]):
         os.makedirs(args["output"])
