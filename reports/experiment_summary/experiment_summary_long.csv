@@ -1,0 +1,97 @@
+dataset,source_group,config_id,config_label,stage_or_source,label,status,mrr,h1,h10,completed_relations,total_relations,path
+KG20C,application,,,app_rules_maxplus,rules + maxplus,done,0.214810,0.142857,0.360768,,,data/KG20C/application/eval-maxplus.log
+KG20C,application,,,app_rules_noisyor,rules + noisyor,done,0.229772,0.156686,0.375940,,,data/KG20C/application/eval-noisyor.log
+KG20C,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.193172,0.127282,0.321160,,,data/KG20C/application/eval_base_ranker_maxplus.log
+KG20C,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.220200,0.147825,0.363588,,,data/KG20C/application/eval_base_ranker_noisyor.log
+KG20C,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.210781,0.130773,0.355263,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+KG20C,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.212952,0.132787,0.355397,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+KG20C,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.210781,0.130773,0.355263,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+KG20C,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.212398,0.132519,0.354458,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+KG20C,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,done,0.210781,0.130773,0.355263,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+KG20C,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,done,0.211151,0.131310,0.353652,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+KG20C,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,done,0.210781,0.130773,0.355263,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+KG20C,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,done,0.212917,0.133056,0.353921,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+KG20C,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,done,0.210781,0.130773,0.355263,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+KG20C,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,done,0.211750,0.131310,0.353383,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+KG20C,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,done,0.211184,0.130773,0.353786,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+KG20C,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,done,0.213856,0.133190,0.356337,5,5,data/KG20C/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+codex-m,application,,,app_rules_maxplus,rules + maxplus,done,0.319487,0.248909,0.455145,,,data/codex-m/application/eval-maxplus.log
+codex-m,application,,,app_rules_noisyor,rules + noisyor,done,0.300655,0.226457,0.447532,,,data/codex-m/application/eval-noisyor.log
+codex-m,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.315554,0.245951,0.447289,,,data/codex-m/application/eval_base_ranker_maxplus.log
+codex-m,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.291040,0.218698,0.432451,,,data/codex-m/application/eval_base_ranker_noisyor.log
+codex-m,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.340449,0.272282,0.475609,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+codex-m,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.342837,0.273252,0.479003,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+codex-m,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.340449,0.272282,0.475609,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+codex-m,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.342675,0.273737,0.478615,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+codex-m,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,done,0.340449,0.272282,0.475609,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+codex-m,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,done,0.342571,0.274222,0.478130,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+codex-m,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,done,0.340449,0.272282,0.475609,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+codex-m,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,done,0.335609,0.267336,0.470323,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+codex-m,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,done,0.340449,0.272282,0.475609,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+codex-m,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,done,0.334068,0.265736,0.467753,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+codex-m,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,done,0.339785,0.269276,0.478712,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+codex-m,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,done,0.342314,0.271361,0.482931,51,51,data/codex-m/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+WN18RR,application,,,app_rules_maxplus,rules + maxplus,done,0.482515,0.447671,0.552808,,,data/WN18RR/application/eval-maxplus.log
+WN18RR,application,,,app_rules_noisyor,rules + noisyor,done,0.482057,0.445118,0.558551,,,data/WN18RR/application/eval-noisyor.log
+WN18RR,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.465257,0.432195,0.531589,,,data/WN18RR/application/eval_base_ranker_maxplus.log
+WN18RR,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.471740,0.436343,0.543076,,,data/WN18RR/application/eval_base_ranker_noisyor.log
+WN18RR,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.470921,0.430121,0.540523,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+WN18RR,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.470843,0.429802,0.541321,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+WN18RR,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.470921,0.430121,0.540523,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+WN18RR,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.470748,0.429802,0.541161,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+WN18RR,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,done,0.470921,0.430121,0.540523,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+WN18RR,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,done,0.470619,0.429962,0.541321,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+WN18RR,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,done,0.470921,0.430121,0.540523,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+WN18RR,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,done,0.470683,0.429802,0.541161,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+WN18RR,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,done,0.470921,0.430121,0.540523,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+WN18RR,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,done,0.470965,0.430121,0.541161,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+WN18RR,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,done,0.470549,0.429483,0.541481,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+WN18RR,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,done,0.471935,0.430919,0.542757,11,11,data/WN18RR/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+FB15k-237,application,,,app_rules_maxplus,rules + maxplus,done,0.329486,0.244747,0.502614,,,data/FB15k-237/application/eval-maxplus.log
+FB15k-237,application,,,app_rules_noisyor,rules + noisyor,done,0.337685,0.252468,0.506743,,,data/FB15k-237/application/eval-noisyor.log
+FB15k-237,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.324158,0.240154,0.494723,,,data/FB15k-237/application/eval_base_ranker_maxplus.log
+FB15k-237,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.327127,0.244454,0.490032,,,data/FB15k-237/application/eval_base_ranker_noisyor.log
+FB15k-237,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.344251,0.257842,0.516271,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+FB15k-237,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.347334,0.262655,0.514927,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+FB15k-237,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.344251,0.257842,0.516271,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+FB15k-237,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.346808,0.261629,0.517321,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+FB15k-237,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,done,0.344251,0.257842,0.516271,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+FB15k-237,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,done,0.345998,0.259797,0.517981,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+FB15k-237,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,done,0.344251,0.257842,0.516271,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+FB15k-237,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,done,0.335601,0.252834,0.501246,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+FB15k-237,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,done,0.344251,0.257842,0.516271,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+FB15k-237,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,done,0.330956,0.248070,0.493966,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+FB15k-237,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,done,0.346382,0.258013,0.523331,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+FB15k-237,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,done,0.349374,0.262826,0.523869,237,237,data/FB15k-237/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+codex-l,application,,,app_rules_maxplus,rules + maxplus,done,0.311458,0.253609,0.425185,,,data/codex-l/application/eval-maxplus.log
+codex-l,application,,,app_rules_noisyor,rules + noisyor,done,0.302914,0.241771,0.423993,,,data/codex-l/application/eval-noisyor.log
+codex-l,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.309344,0.251992,0.420711,,,data/codex-l/application/eval_base_ranker_maxplus.log
+codex-l,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.301760,0.241036,0.421870,,,data/codex-l/application/eval_base_ranker_noisyor.log
+codex-l,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.330477,0.270150,0.446195,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+codex-l,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.333180,0.273122,0.448024,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+codex-l,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.330477,0.270150,0.446195,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+codex-l,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.333066,0.272747,0.448269,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+codex-l,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,done,0.330477,0.270150,0.446195,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+codex-l,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,done,0.332845,0.272698,0.447845,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+codex-l,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,done,0.330477,0.270150,0.446195,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+codex-l,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,done,0.332669,0.272796,0.446865,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_1_1_auto_sqrt_1_1_0
+codex-l,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,done,0.330477,0.270150,0.446195,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+codex-l,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,done,0.331830,0.271457,0.446930,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_1
+codex-l,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,done,0.326902,0.265056,0.445983,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+codex-l,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,done,0.329876,0.268485,0.446816,69,69,data/codex-l/aggregation/exp-1_LinearAggregator_1_0_1_auto_ratio_1_1_0
+YAGO3-10,application,,,app_rules_maxplus,rules + maxplus,incomplete,,,,,,data/YAGO3-10/application/eval-maxplus.log
+YAGO3-10,application,,,app_rules_noisyor,rules + noisyor,done,0.529551,0.449900,0.675400,,,data/YAGO3-10/application/eval-noisyor.log
+YAGO3-10,application,,,app_base_ranker_maxplus,base ranker + maxplus,done,0.550335,0.481500,0.676400,,,data/YAGO3-10/application/eval_base_ranker_maxplus.log
+YAGO3-10,application,,,app_base_ranker_noisyor,base ranker + noisyor,done,0.524496,0.446300,0.668200,,,data/YAGO3-10/application/eval_base_ranker_noisyor.log
+YAGO3-10,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage1,aggregation stage1,done,0.569984,0.497500,0.700400,37,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+YAGO3-10,aggregation,cfg_synergy_redundancy,synergy + redundancy | auto_sqrt,stage2,aggregation stage2,done,0.571988,0.497900,0.707700,37,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_1_0
+YAGO3-10,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage1,aggregation stage1,done,0.569984,0.497500,0.700400,37,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+YAGO3-10,aggregation,cfg_synergy_only,synergy only | auto_sqrt,stage2,aggregation stage2,done,0.573592,0.499600,0.704900,37,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_1_0_0
+YAGO3-10,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage1,aggregation stage1,partial,,,,22,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+YAGO3-10,aggregation,cfg_redundancy_only,redundancy only | auto_sqrt,stage2,aggregation stage2,partial,,,,22,37,data/YAGO3-10/aggregation/exp-1_LinearAggregator_1_0_1_auto_sqrt_0_1_0
+YAGO3-10,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage1,aggregation stage1,not_started,,,,0,37,
+YAGO3-10,aggregation,cfg_dep_sign,synergy + redundancy + dependency sign | auto_sqrt,stage2,aggregation stage2,not_started,,,,0,37,
+YAGO3-10,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage1,aggregation stage1,not_started,,,,0,37,
+YAGO3-10,aggregation,cfg_lift_init,synergy + redundancy + lift init | auto_sqrt,stage2,aggregation stage2,not_started,,,,0,37,
+YAGO3-10,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage1,aggregation stage1,not_started,,,,0,37,
+YAGO3-10,aggregation,cfg_auto_ratio,synergy + redundancy | auto_ratio,stage2,aggregation stage2,not_started,,,,0,37,

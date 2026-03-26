@@ -1594,13 +1594,6 @@ def get_parser():
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
     parser.add_argument("--collect_train_hit_counts", action="store_true", default=True, help="Collect per-rule/per-dependency train hit counts for analysis CSVs (can be slow).")
     parser.add_argument("--no_collect_train_hit_counts", dest="collect_train_hit_counts", action="store_false", help="Disable per-rule/per-dependency train hit count collection.")
-    parser.add_argument("--subset_shape_splits", action="store", default="train.del", help="Comma-separated splits used to compute dependency-friendly subset shape features.")
-    parser.add_argument("--subset_min_train", action="store", default=0, type=int, help="Minimum train triples for dependency-friendly subset.")
-    parser.add_argument("--subset_min_objects", action="store", default=100, type=int, help="Minimum unique objects for dependency-friendly subset.")
-    parser.add_argument("--subset_min_avg_tails", action="store", default=1.1, type=float, help="Minimum avg tails per (subject, relation) for dependency-friendly subset.")
-    parser.add_argument("--subset_max_avg_tails", action="store", default=1.8, type=float, help="Maximum avg tails per (subject, relation) for dependency-friendly subset.")
-    parser.add_argument("--subset_emit_strict", action="store_true", default=False, help="Also emit a stricter dependency-friendly subset with a higher train-count threshold.")
-    parser.add_argument("--subset_strict_min_train", action="store", default=2000, type=int, help="Minimum train triples for the strict dependency-friendly subset.")
     return parser
 
 
@@ -2645,302 +2638,6 @@ def _get_relation_test_counts():
     return {int(i): int(c) for i, c in enumerate(counts.tolist())}
 
 
-def _parse_subset_shape_splits(raw_value):
-    return [part.strip() for part in str(raw_value).split(",") if part.strip()]
-
-
-def _count_csv_data_rows(path):
-    if not os.path.exists(path):
-        return 0
-    with open(path, "r", encoding="utf-8") as f:
-        return max(sum(1 for _ in f) - 1, 0)
-
-
-def _compute_relation_shape_stats(dataset_dir, splits):
-    sp = defaultdict(lambda: defaultdict(set))
-    po = defaultdict(lambda: defaultdict(set))
-    triples_by_rel = defaultdict(int)
-    subj_by_rel = defaultdict(set)
-    obj_by_rel = defaultdict(set)
-
-    for split in splits:
-        split_path = os.path.join(dataset_dir, split)
-        if not os.path.exists(split_path):
-            raise FileNotFoundError(f"Subset shape split not found: {split_path}")
-        with open(split_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                s, p, o = map(int, line.split("\t"))
-                sp[p][s].add(o)
-                po[p][o].add(s)
-                triples_by_rel[p] += 1
-                subj_by_rel[p].add(s)
-                obj_by_rel[p].add(o)
-
-    stats = {}
-    for rel in sorted(triples_by_rel):
-        sp_counts = [len(v) for v in sp[rel].values()]
-        po_counts = [len(v) for v in po[rel].values()]
-        stats[int(rel)] = {
-            "num_triples": int(triples_by_rel[rel]),
-            "num_subjects": int(len(subj_by_rel[rel])),
-            "num_objects": int(len(obj_by_rel[rel])),
-            "avg_tails_per_sp": float(sum(sp_counts) / len(sp_counts)) if sp_counts else None,
-            "avg_heads_per_po": float(sum(po_counts) / len(po_counts)) if po_counts else None,
-            "max_tails_per_sp": int(max(sp_counts)) if sp_counts else None,
-            "max_heads_per_po": int(max(po_counts)) if po_counts else None,
-        }
-    return stats
-
-
-def _safe_metric_dict(metric_obj, *fallbacks):
-    if metric_obj is not None:
-        return metric_obj
-    for fallback in fallbacks:
-        if fallback is not None:
-            return fallback
-    return None
-
-
-def _load_dependency_subset_rows(metric_files):
-    rows = []
-    for path in sorted(metric_files):
-        with open(path, "r") as f:
-            metrics = json.load(f)
-
-        relation = int(metrics["relation"])
-        rule_stage = _safe_metric_dict(metrics.get("test_after_stage1"), metrics.get("test_stage_2_rule_trained"), metrics.get("test_initial"))
-        final_stage = _safe_metric_dict(metrics.get("test"), metrics.get("test_after_stage2"), rule_stage)
-        if rule_stage is None or final_stage is None:
-            continue
-
-        dep_best_valid_raw = metrics["model_selection"].get("dependency_best_valid_combined_raw")
-        rule_best_valid_mrr = metrics["model_selection"].get("rule_best_valid_mrr")
-        dep_best_valid_mrr = metrics["model_selection"].get("dependency_best_valid_mrr")
-        if rule_best_valid_mrr is None:
-            best_valid_stage1 = metrics.get("best_valid_stage1") or {}
-            rule_best_valid_mrr = best_valid_stage1.get("mrr")
-        if dep_best_valid_mrr is None:
-            best_valid_stage2 = metrics.get("best_valid_stage2") or {}
-            dep_best_valid_mrr = best_valid_stage2.get("mrr")
-        dependency_trial_path = os.path.join(args.experiment, f"dependency-trial-{relation}.csv")
-        relation_label = relation_ids[relation] if 0 <= relation < len(relation_ids) else str(relation)
-        row = {
-            "relation": int(relation),
-            "rel_name": relation_label,
-            "num_test": int(metrics.get("num_test_samples", 0)),
-            "selected_stage": metrics["model_selection"].get("selected_stage"),
-            "dep_attempted": bool(metrics["model_selection"].get("dependency_stage_attempted")),
-            "dep_accepted": metrics["model_selection"].get("dependency_stage_accepted"),
-            "rule_best_valid_mrr": None if rule_best_valid_mrr is None else float(rule_best_valid_mrr),
-            "dep_best_valid_mrr": None if dep_best_valid_mrr is None else float(dep_best_valid_mrr),
-            "rule_best_valid_raw": float(metrics["model_selection"]["rule_best_valid_combined_raw"]),
-            "dep_best_valid_raw": None if dep_best_valid_raw is None else float(dep_best_valid_raw),
-            "rule_stage_mrr": float(rule_stage["mrr"]),
-            "final_mrr": float(final_stage["mrr"]),
-            "rule_stage_test_raw": float(rule_stage["mrr_raw"]),
-            "final_test_raw": float(final_stage["mrr_raw"]),
-            "num_rules": int(metrics.get("num_relation_rules", 0)),
-            "num_deps": int(_count_csv_data_rows(dependency_trial_path)),
-            "num_deps_available": int(metrics.get("num_relation_dependencies", 0)),
-        }
-        rule_valid_metric = row["rule_best_valid_mrr"] if row["rule_best_valid_mrr"] is not None else row["rule_best_valid_raw"]
-        dep_valid_metric = row["dep_best_valid_mrr"] if row["dep_best_valid_mrr"] is not None else row["dep_best_valid_raw"]
-        row["valid_gain"] = None if rule_valid_metric is None else float(
-            (dep_valid_metric if dep_valid_metric is not None else rule_valid_metric) - rule_valid_metric
-        )
-        row["test_gain_vs_stage1"] = row["final_mrr"] - row["rule_stage_mrr"]
-        row["dep_per_rule"] = float(row["num_deps"] / max(row["num_rules"], 1))
-        rows.append(row)
-    return sorted(rows, key=lambda x: x["relation"])
-
-
-def _median_of_rows(rows, key):
-    values = [float(row[key]) for row in rows if row.get(key) is not None]
-    if not values:
-        return None
-    return float(np.median(np.asarray(values, dtype=np.float64)))
-
-
-def _summarize_subset_rows(rows, name):
-    if not rows:
-        return None
-
-    weighted_rows = [row for row in rows if int(row.get("num_test", 0)) > 0]
-    total_weight = sum(int(row["num_test"]) for row in weighted_rows)
-    if total_weight > 0:
-        rule_stage_mrr = float(sum(row["rule_stage_mrr"] * row["num_test"] for row in weighted_rows) / total_weight)
-        final_mrr = float(sum(row["final_mrr"] * row["num_test"] for row in weighted_rows) / total_weight)
-    else:
-        rule_stage_mrr = None
-        final_mrr = None
-
-    gain = None if rule_stage_mrr is None or final_mrr is None else float(final_mrr - rule_stage_mrr)
-    relative_gain = None if gain is None or abs(rule_stage_mrr) < 1e-12 else float(gain / rule_stage_mrr)
-    return {
-        "subset": name,
-        "num_relations": int(len(rows)),
-        "num_test": int(total_weight),
-        "num_dependency_attempted": int(sum(1 for row in rows if row.get("dep_attempted"))),
-        "num_dependency_accepted": int(sum(1 for row in rows if row.get("dep_accepted") is True)),
-        "num_relations_with_dependency_rows": int(sum(1 for row in rows if int(row.get("num_deps", 0)) > 0)),
-        "rule_stage_mrr": rule_stage_mrr,
-        "final_mrr": final_mrr,
-        "gain_vs_stage1": gain,
-        "relative_gain_vs_stage1": relative_gain,
-    }
-
-
-def _build_subset_payload(rows, name):
-    feature_medians = {
-        "num_triples": _median_of_rows(rows, "num_triples"),
-        "num_subjects": _median_of_rows(rows, "num_subjects"),
-        "num_objects": _median_of_rows(rows, "num_objects"),
-        "avg_tails_per_sp": _median_of_rows(rows, "avg_tails_per_sp"),
-        "avg_heads_per_po": _median_of_rows(rows, "avg_heads_per_po"),
-        "num_rules": _median_of_rows(rows, "num_rules"),
-        "num_deps": _median_of_rows(rows, "num_deps"),
-        "dep_per_rule": _median_of_rows(rows, "dep_per_rule"),
-        "rule_best_valid_mrr": _median_of_rows(rows, "rule_best_valid_mrr"),
-        "rule_best_valid_raw": _median_of_rows(rows, "rule_best_valid_raw"),
-    }
-    ranked_rows = sorted(rows, key=lambda row: row["test_gain_vs_stage1"], reverse=True)
-    top_rows = []
-    for row in ranked_rows[: min(25, len(ranked_rows))]:
-        top_rows.append(
-            {
-                "relation": int(row["relation"]),
-                "rel_name": row["rel_name"],
-                "test_gain_vs_stage1": float(row["test_gain_vs_stage1"]),
-                "rule_stage_mrr": float(row["rule_stage_mrr"]),
-                "final_mrr": float(row["final_mrr"]),
-                "num_triples": row.get("num_triples"),
-                "avg_tails_per_sp": row.get("avg_tails_per_sp"),
-                "avg_heads_per_po": row.get("avg_heads_per_po"),
-                "num_rules": int(row["num_rules"]),
-                "num_deps": int(row["num_deps"]),
-                "dep_per_rule": float(row["dep_per_rule"]),
-            }
-        )
-    return {
-        "summary": _summarize_subset_rows(rows, name),
-        "relations": [int(row["relation"]) for row in rows],
-        "relation_names": [row["rel_name"] for row in rows],
-        "feature_medians": feature_medians,
-        "top_relations_by_test_gain": top_rows,
-    }
-
-
-def _build_dependency_subset_metrics(metric_files):
-    shape_splits = _parse_subset_shape_splits(args.subset_shape_splits)
-    shape_stats = _compute_relation_shape_stats(dataset_dir, shape_splits)
-    metric_rows = _load_dependency_subset_rows(metric_files)
-
-    merged_rows = []
-    for row in metric_rows:
-        merged = dict(row)
-        merged.update(shape_stats.get(row["relation"], {}))
-        merged_rows.append(merged)
-
-    dependency_friendly_rows = [
-        row
-        for row in merged_rows
-        if row.get("num_triples") is not None
-        and int(row["num_triples"]) >= int(args.subset_min_train)
-        and int(row["num_objects"]) >= int(args.subset_min_objects)
-        and row.get("avg_tails_per_sp") is not None
-        and float(args.subset_min_avg_tails) <= float(row["avg_tails_per_sp"]) <= float(args.subset_max_avg_tails)
-    ]
-    moderate_dense_rows = [
-        row
-        for row in merged_rows
-        if row.get("num_triples") is not None
-        and int(row["num_triples"]) >= 200
-        and int(row.get("num_objects", 0)) >= 50
-        and int(row.get("num_deps_available", 0)) >= 100
-        and row.get("avg_tails_per_sp") is not None
-        and 1.0 <= float(row["avg_tails_per_sp"]) <= 2.0
-    ]
-    high_dependency_dense_rows = [
-        row
-        for row in merged_rows
-        if row.get("num_triples") is not None
-        and int(row["num_triples"]) >= 200
-        and int(row.get("num_objects", 0)) >= 20
-        and float(row.get("dep_per_rule", 0.0)) >= 1.0
-        and row.get("avg_tails_per_sp") is not None
-        and float(row["avg_tails_per_sp"]) >= 1.2
-    ]
-
-    dependency_friendly_relation_ids = {int(row["relation"]) for row in dependency_friendly_rows}
-    moderate_dense_relation_ids = {int(row["relation"]) for row in moderate_dense_rows}
-    high_dependency_dense_relation_ids = {int(row["relation"]) for row in high_dependency_dense_rows}
-    static_union_relation_ids = moderate_dense_relation_ids | high_dependency_dense_relation_ids
-    static_union_rows = [row for row in merged_rows if int(row["relation"]) in static_union_relation_ids]
-
-    for row in merged_rows:
-        relation = int(row["relation"])
-        row["in_dependency_friendly_train_only"] = relation in dependency_friendly_relation_ids
-        row["in_dependency_friendly_moderate_dense"] = relation in moderate_dense_relation_ids
-        row["in_dependency_friendly_high_dependency_dense"] = relation in high_dependency_dense_relation_ids
-        row["in_dependency_friendly_static_union"] = relation in static_union_relation_ids
-
-    subsets = {
-        "all_relations": _build_subset_payload(merged_rows, "all_relations"),
-        "dependency_friendly_train_only": _build_subset_payload(dependency_friendly_rows, "dependency_friendly_train_only"),
-        "dependency_friendly_moderate_dense": _build_subset_payload(moderate_dense_rows, "dependency_friendly_moderate_dense"),
-        "dependency_friendly_high_dependency_dense": _build_subset_payload(high_dependency_dense_rows, "dependency_friendly_high_dependency_dense"),
-        "dependency_friendly_static_union": _build_subset_payload(static_union_rows, "dependency_friendly_static_union"),
-    }
-    if args.subset_emit_strict:
-        strict_rows = [row for row in dependency_friendly_rows if int(row["num_triples"]) >= int(args.subset_strict_min_train)]
-        subsets["dependency_friendly_train_only_strict"] = _build_subset_payload(strict_rows, "dependency_friendly_train_only_strict")
-
-    return {
-        "experiment": args.experiment,
-        "dataset": args.dataset,
-        "shape_splits": shape_splits,
-        "dependency_friendly_rule": {
-            "min_train": int(args.subset_min_train),
-            "min_objects": int(args.subset_min_objects),
-            "min_avg_tails_per_sp": float(args.subset_min_avg_tails),
-            "max_avg_tails_per_sp": float(args.subset_max_avg_tails),
-        },
-        "static_subset_rules": {
-            "dependency_friendly_moderate_dense": {
-                "min_train": 200,
-                "min_objects": 50,
-                "min_dependencies": 100,
-                "min_avg_tails_per_sp": 1.0,
-                "max_avg_tails_per_sp": 2.0,
-            },
-            "dependency_friendly_high_dependency_dense": {
-                "min_train": 200,
-                "min_objects": 20,
-                "min_dep_per_rule": 1.0,
-                "min_avg_tails_per_sp": 1.2,
-            },
-            "dependency_friendly_static_union": {
-                "rule": "moderate_dense OR high_dependency_dense",
-            },
-        },
-        "strict_min_train": int(args.subset_strict_min_train) if args.subset_emit_strict else None,
-        "relation_rows": merged_rows,
-        "subsets": subsets,
-    }
-
-
-def _write_dependency_subset_metrics(metric_files):
-    out_path = os.path.join(args.experiment, "metrics-subset.json")
-    subset_result = _build_dependency_subset_metrics(metric_files)
-    with open(out_path, "w") as f:
-        json.dump(subset_result, f, indent=4, ensure_ascii=False)
-    print(f"Subset summary saved to {out_path}")
-    return subset_result
-
-
 def _merge_metric_files(metric_files, relation_test_counts):
     rows_by_stage = {
         "test_before_stage1": [],
@@ -3019,7 +2716,6 @@ def _merge_metric_files(metric_files, relation_test_counts):
 def _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_seconds):
     metric_files = sorted(glob.glob(os.path.join(args.experiment, "metric-*.json")))
     merged = _merge_metric_files(metric_files, relation_test_counts)
-    subset_result = _write_dependency_subset_metrics(metric_files)
 
     time_keys = ["total", "load_dataloaders", "train", "eval", "other"]
     summed_time_seconds = {k: 0.0 for k in time_keys}
@@ -3038,7 +2734,6 @@ def _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_secon
         "dataset": args.dataset,
         "failed_relations": failed_relations,
         "summary": merged,
-        "subset_summaries": {name: payload["summary"] for name, payload in subset_result["subsets"].items()},
         "time_seconds": summed_time_seconds,
     }
 
@@ -3227,6 +2922,5 @@ if __name__ == "__main__":
         print(json.dumps(result["summary"], indent=2))
     else:
         metrics = aggregate_single(args.relation)
-        _write_dependency_subset_metrics(sorted(glob.glob(os.path.join(args.experiment, "metric-*.json"))))
         print(pformat(metrics))
     print_step_profile()
