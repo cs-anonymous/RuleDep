@@ -16,6 +16,8 @@ import gc
 import shutil
 import uuid
 import warnings
+import functools
+from functools import partial
 from datetime import datetime
 from os.path import exists
 from pprint import pformat
@@ -733,6 +735,125 @@ def compute_dependency_type_score(active_matrix, pair_a_local, pair_b_local, pai
     return torch.log1p(type_counts) @ type_weights.reshape(-1, 1)
 
 
+@functools.lru_cache(maxsize=64)
+def get_upper_triangle_position_pairs(num_positions):
+    if num_positions <= 1:
+        empty = torch.empty((0,), dtype=torch.long)
+        return empty, empty
+    pair_pos = torch.triu_indices(num_positions, num_positions, offset=1)
+    return pair_pos[0].cpu(), pair_pos[1].cpu()
+
+
+def compute_dependency_pair_score_from_local_rules(
+    local_rule_ids,
+    valid_mask,
+    pair_keys_sorted,
+    pair_indices_sorted,
+    pair_weights,
+    pair_lookup_stride,
+    pair_pos_chunk,
+    output_dtype,
+    normalization_mode="none",
+):
+    batch_size, seq_len = local_rule_ids.shape
+    if batch_size <= 0 or seq_len <= 1 or pair_keys_sorted.numel() == 0:
+        return torch.zeros((batch_size, 1), dtype=output_dtype, device=local_rule_ids.device)
+
+    pos_a_cpu, pos_b_cpu = get_upper_triangle_position_pairs(int(seq_len))
+    if pos_a_cpu.numel() == 0:
+        return torch.zeros((batch_size, 1), dtype=output_dtype, device=local_rule_ids.device)
+
+    pos_a_all = pos_a_cpu.to(local_rule_ids.device)
+    pos_b_all = pos_b_cpu.to(local_rule_ids.device)
+    pair_pos_chunk = max(int(pair_pos_chunk), 1)
+
+    degree_counts = None
+    if normalization_mode != "none":
+        degree_counts = torch.zeros((batch_size, seq_len), dtype=output_dtype, device=local_rule_ids.device)
+
+        for start in range(0, int(pos_a_all.numel()), pair_pos_chunk):
+            end = min(start + pair_pos_chunk, int(pos_a_all.numel()))
+            pos_a = pos_a_all[start:end]
+            pos_b = pos_b_all[start:end]
+
+            a_ids = local_rule_ids[:, pos_a]
+            b_ids = local_rule_ids[:, pos_b]
+            valid_pairs = valid_mask[:, pos_a] & valid_mask[:, pos_b] & (a_ids != b_ids)
+            if not bool(valid_pairs.any().item()):
+                continue
+
+            lo = torch.minimum(a_ids, b_ids).long()
+            hi = torch.maximum(a_ids, b_ids).long()
+            pair_keys = lo * int(pair_lookup_stride) + hi
+            lookup_idx = torch.searchsorted(pair_keys_sorted, pair_keys)
+            safe_lookup_idx = lookup_idx.clamp(max=max(int(pair_keys_sorted.numel()) - 1, 0))
+            found_pairs = valid_pairs & (lookup_idx < int(pair_keys_sorted.numel())) & (pair_keys_sorted[safe_lookup_idx] == pair_keys)
+            if not bool(found_pairs.any().item()):
+                continue
+
+            pair_hits = found_pairs.to(output_dtype)
+            scatter_a = pos_a.unsqueeze(0).expand(batch_size, -1)
+            scatter_b = pos_b.unsqueeze(0).expand(batch_size, -1)
+            degree_counts.scatter_add_(1, scatter_a, pair_hits)
+            degree_counts.scatter_add_(1, scatter_b, pair_hits)
+
+    dependency_score = torch.zeros((batch_size, 1), dtype=output_dtype, device=local_rule_ids.device)
+    for start in range(0, int(pos_a_all.numel()), pair_pos_chunk):
+        end = min(start + pair_pos_chunk, int(pos_a_all.numel()))
+        pos_a = pos_a_all[start:end]
+        pos_b = pos_b_all[start:end]
+
+        a_ids = local_rule_ids[:, pos_a]
+        b_ids = local_rule_ids[:, pos_b]
+        valid_pairs = valid_mask[:, pos_a] & valid_mask[:, pos_b] & (a_ids != b_ids)
+        if not bool(valid_pairs.any().item()):
+            continue
+
+        lo = torch.minimum(a_ids, b_ids).long()
+        hi = torch.maximum(a_ids, b_ids).long()
+        pair_keys = lo * int(pair_lookup_stride) + hi
+        lookup_idx = torch.searchsorted(pair_keys_sorted, pair_keys)
+        safe_lookup_idx = lookup_idx.clamp(max=max(int(pair_keys_sorted.numel()) - 1, 0))
+        found_pairs = valid_pairs & (lookup_idx < int(pair_keys_sorted.numel())) & (pair_keys_sorted[safe_lookup_idx] == pair_keys)
+        if not bool(found_pairs.any().item()):
+            continue
+
+        pair_indices = pair_indices_sorted[safe_lookup_idx]
+        pair_weight_chunk = pair_weights[pair_indices]
+        pair_scale = found_pairs.to(output_dtype)
+
+        if normalization_mode == "max_count":
+            deg_a = degree_counts[:, pos_a]
+            deg_b = degree_counts[:, pos_b]
+            pair_scale = pair_scale / torch.clamp(torch.maximum(deg_a, deg_b), min=1.0)
+        elif normalization_mode == "sqrt_count":
+            deg_a = degree_counts[:, pos_a]
+            deg_b = degree_counts[:, pos_b]
+            pair_scale = pair_scale / torch.sqrt(torch.clamp(deg_a * deg_b, min=1.0))
+
+        dependency_score = dependency_score + (pair_scale * pair_weight_chunk.to(output_dtype)).sum(dim=1, keepdim=True)
+
+    return dependency_score
+
+
+def compute_dependency_batch_pair_scales(pair_a_active, pair_b_active, num_relation_rules, output_dtype, mode):
+    if pair_a_active.numel() == 0:
+        return torch.empty((0,), dtype=output_dtype, device=pair_a_active.device)
+
+    degree = torch.zeros((num_relation_rules,), dtype=output_dtype, device=pair_a_active.device)
+    ones = torch.ones((int(pair_a_active.numel()),), dtype=output_dtype, device=pair_a_active.device)
+    degree.scatter_add_(0, pair_a_active, ones)
+    degree.scatter_add_(0, pair_b_active, ones)
+
+    deg_a = degree[pair_a_active]
+    deg_b = degree[pair_b_active]
+    if mode == "batch_max_count":
+        return 1.0 / torch.clamp(torch.maximum(deg_a, deg_b), min=1.0)
+    if mode == "batch_sqrt_count":
+        return 1.0 / torch.sqrt(torch.clamp(deg_a * deg_b, min=1.0))
+    raise ValueError(f"Unsupported batch dependency normalization mode: {mode}")
+
+
 class LinearAggregator(nn.Module):
     def init_weights(self):
         with torch.no_grad():
@@ -830,15 +951,38 @@ class LinearAggregator(nn.Module):
             self.dependencies = nn.Embedding(self.num_relation_dependencies + 1, 1, padding_idx=self.pad_dependency_tok)
             pair_a = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
             pair_b = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
+            pair_keys = torch.minimum(pair_a, pair_b).long() * int(self.num_relation_rules + 1) + torch.maximum(pair_a, pair_b).long()
+            pair_keys_sorted, pair_sort_idx = torch.sort(pair_keys)
+            pair_indices_sorted = pair_sort_idx.long()
+            dependency_rule_degree_t = torch.zeros((self.num_relation_rules,), dtype=torch.float32)
+            degree_ones = torch.ones((self.num_relation_dependencies,), dtype=torch.float32)
+            dependency_rule_degree_t.scatter_add_(0, pair_a, degree_ones)
+            dependency_rule_degree_t.scatter_add_(0, pair_b, degree_ones)
+            dependency_pair_global_max_scale_t = 1.0 / torch.clamp(
+                torch.maximum(dependency_rule_degree_t[pair_a], dependency_rule_degree_t[pair_b]), min=1.0
+            )
+            dependency_pair_global_sqrt_scale_t = 1.0 / torch.sqrt(
+                torch.clamp(dependency_rule_degree_t[pair_a] * dependency_rule_degree_t[pair_b], min=1.0)
+            )
             dependency_sign_t = torch.tensor(dependency_signs, dtype=torch.float32)
             dependency_init_t = torch.tensor(dependency_init_values, dtype=torch.float32)
         else:
             pair_a = torch.empty((0,), dtype=torch.long)
             pair_b = torch.empty((0,), dtype=torch.long)
+            pair_keys_sorted = torch.empty((0,), dtype=torch.long)
+            pair_indices_sorted = torch.empty((0,), dtype=torch.long)
+            dependency_rule_degree_t = torch.empty((0,), dtype=torch.float32)
+            dependency_pair_global_max_scale_t = torch.empty((0,), dtype=torch.float32)
+            dependency_pair_global_sqrt_scale_t = torch.empty((0,), dtype=torch.float32)
             dependency_sign_t = torch.empty((0,), dtype=torch.float32)
             dependency_init_t = torch.empty((0,), dtype=torch.float32)
         self.register_buffer("synergy_pair_a_local", pair_a)
         self.register_buffer("synergy_pair_b_local", pair_b)
+        self.register_buffer("dependency_pair_keys_local_sorted", pair_keys_sorted)
+        self.register_buffer("dependency_pair_indices_sorted", pair_indices_sorted)
+        self.register_buffer("dependency_rule_degree_local", dependency_rule_degree_t)
+        self.register_buffer("dependency_pair_global_max_scale", dependency_pair_global_max_scale_t)
+        self.register_buffer("dependency_pair_global_sqrt_scale", dependency_pair_global_sqrt_scale_t)
         self.register_buffer("dependency_pair_sign", dependency_sign_t)
         self.register_buffer("dependency_init_values", dependency_init_t)
 
@@ -897,32 +1041,62 @@ class LinearAggregator(nn.Module):
             active_matrix[row_idx[active], local_rule_ids[active]] = True
 
             pair_chunk = max(int(getattr(args, "dependency_chunk_size", 0)), 1)
+            pair_norm_mode = str(getattr(args, "dependency_pair_overlap_normalization", "none")).strip().lower()
+            pair_pos_chunk = max(int(getattr(args, "dependency_pair_position_chunk", 1024)), 1)
 
             if self.num_relation_dependencies > 0:
                 dependency_w_all = self.dependencies.weight[: self.num_relation_dependencies, 0]
                 if self.dependency_sign_constraint:
                     dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
 
-                dependency_score = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
-                active_rules_in_batch = active_matrix.any(dim=0)
-                active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
-                    self.synergy_pair_b_local
-                ]
-                active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
+                if pair_norm_mode in ("max_count", "sqrt_count"):
+                    dependency_score = compute_dependency_pair_score_from_local_rules(
+                        local_rule_ids=local_rule_ids.long(),
+                        valid_mask=active,
+                        pair_keys_sorted=self.dependency_pair_keys_local_sorted,
+                        pair_indices_sorted=self.dependency_pair_indices_sorted,
+                        pair_weights=dependency_w_all,
+                        pair_lookup_stride=self.num_relation_rules + 1,
+                        pair_pos_chunk=pair_pos_chunk,
+                        output_dtype=logits.dtype,
+                        normalization_mode=pair_norm_mode,
+                    )
+                else:
+                    dependency_score = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
+                    active_rules_in_batch = active_matrix.any(dim=0)
+                    active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
+                        self.synergy_pair_b_local
+                    ]
+                    active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
 
-                if active_pair_idx.numel() > 0:
-                    pair_a_active = self.synergy_pair_a_local[active_pair_idx]
-                    pair_b_active = self.synergy_pair_b_local[active_pair_idx]
-                    dependency_w_active = dependency_w_all[active_pair_idx]
+                    if active_pair_idx.numel() > 0:
+                        pair_a_active = self.synergy_pair_a_local[active_pair_idx]
+                        pair_b_active = self.synergy_pair_b_local[active_pair_idx]
+                        dependency_w_active = dependency_w_all[active_pair_idx]
+                        pair_scale_active = None
+                        if pair_norm_mode == "batch_max_count" or pair_norm_mode == "batch_sqrt_count":
+                            pair_scale_active = compute_dependency_batch_pair_scales(
+                                pair_a_active,
+                                pair_b_active,
+                                self.num_relation_rules,
+                                logits.dtype,
+                                pair_norm_mode,
+                            )
+                        elif pair_norm_mode == "global_max_count":
+                            pair_scale_active = self.dependency_pair_global_max_scale[active_pair_idx].to(logits.dtype)
+                        elif pair_norm_mode == "global_sqrt_count":
+                            pair_scale_active = self.dependency_pair_global_sqrt_scale[active_pair_idx].to(logits.dtype)
 
-                    active_pair_count = int(active_pair_idx.numel())
-                    for start in range(0, active_pair_count, pair_chunk):
-                        end = min(start + pair_chunk, active_pair_count)
-                        a_local = pair_a_active[start:end]
-                        b_local = pair_b_active[start:end]
-                        pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
-                        w_chunk = dependency_w_active[start:end].reshape(1, -1)
-                        dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
+                        active_pair_count = int(active_pair_idx.numel())
+                        for start in range(0, active_pair_count, pair_chunk):
+                            end = min(start + pair_chunk, active_pair_count)
+                            a_local = pair_a_active[start:end]
+                            b_local = pair_b_active[start:end]
+                            pair_active_chunk = (active_matrix[:, a_local] & active_matrix[:, b_local]).to(logits.dtype)
+                            w_chunk = dependency_w_active[start:end].reshape(1, -1)
+                            if pair_scale_active is not None:
+                                w_chunk = w_chunk * pair_scale_active[start:end].reshape(1, -1)
+                            dependency_score = dependency_score + (pair_active_chunk * w_chunk).sum(dim=1, keepdim=True)
                 logits = logits + dependency_score
 
             if self.num_relation_dependency_types > 0:
@@ -1043,15 +1217,38 @@ class SurprisalAggregator(nn.Module):
             self.dependencies = nn.Embedding(self.num_relation_dependencies + 1, 1, padding_idx=self.pad_dependency_tok)
             pair_a = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
             pair_b = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
+            pair_keys = torch.minimum(pair_a, pair_b).long() * int(self.num_relation_rules + 1) + torch.maximum(pair_a, pair_b).long()
+            pair_keys_sorted, pair_sort_idx = torch.sort(pair_keys)
+            pair_indices_sorted = pair_sort_idx.long()
+            dependency_rule_degree_t = torch.zeros((self.num_relation_rules,), dtype=torch.float32)
+            degree_ones = torch.ones((self.num_relation_dependencies,), dtype=torch.float32)
+            dependency_rule_degree_t.scatter_add_(0, pair_a, degree_ones)
+            dependency_rule_degree_t.scatter_add_(0, pair_b, degree_ones)
+            dependency_pair_global_max_scale_t = 1.0 / torch.clamp(
+                torch.maximum(dependency_rule_degree_t[pair_a], dependency_rule_degree_t[pair_b]), min=1.0
+            )
+            dependency_pair_global_sqrt_scale_t = 1.0 / torch.sqrt(
+                torch.clamp(dependency_rule_degree_t[pair_a] * dependency_rule_degree_t[pair_b], min=1.0)
+            )
             dependency_sign_t = torch.tensor(dependency_signs, dtype=torch.float32)
             dependency_init_t = torch.tensor(dependency_init_values, dtype=torch.float32)
         else:
             pair_a = torch.empty((0,), dtype=torch.long)
             pair_b = torch.empty((0,), dtype=torch.long)
+            pair_keys_sorted = torch.empty((0,), dtype=torch.long)
+            pair_indices_sorted = torch.empty((0,), dtype=torch.long)
+            dependency_rule_degree_t = torch.empty((0,), dtype=torch.float32)
+            dependency_pair_global_max_scale_t = torch.empty((0,), dtype=torch.float32)
+            dependency_pair_global_sqrt_scale_t = torch.empty((0,), dtype=torch.float32)
             dependency_sign_t = torch.empty((0,), dtype=torch.float32)
             dependency_init_t = torch.empty((0,), dtype=torch.float32)
         self.register_buffer("synergy_pair_a_local", pair_a)
         self.register_buffer("synergy_pair_b_local", pair_b)
+        self.register_buffer("dependency_pair_keys_local_sorted", pair_keys_sorted)
+        self.register_buffer("dependency_pair_indices_sorted", pair_indices_sorted)
+        self.register_buffer("dependency_rule_degree_local", dependency_rule_degree_t)
+        self.register_buffer("dependency_pair_global_max_scale", dependency_pair_global_max_scale_t)
+        self.register_buffer("dependency_pair_global_sqrt_scale", dependency_pair_global_sqrt_scale_t)
         self.register_buffer("dependency_pair_sign", dependency_sign_t)
         self.register_buffer("dependency_init_values", dependency_init_t)
 
@@ -1110,6 +1307,8 @@ class SurprisalAggregator(nn.Module):
             active_matrix[row_idx[active], local_rule_ids[active]] = True
 
             pair_chunk = max(int(getattr(args, "dependency_chunk_size", 0)), 1)
+            pair_norm_mode = str(getattr(args, "dependency_pair_overlap_normalization", "none")).strip().lower()
+            pair_pos_chunk = max(int(getattr(args, "dependency_pair_position_chunk", 1024)), 1)
 
             if self.num_relation_dependencies > 0:
                 dependency_w_all = self.dependencies.weight[: self.num_relation_dependencies, 0]
@@ -1117,26 +1316,54 @@ class SurprisalAggregator(nn.Module):
                 if self.dependency_sign_constraint:
                     dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
 
-                dependency_score = torch.zeros((batch_size, 1), dtype=rule_w.dtype, device=local_rule_ids.device)
-                active_rules_in_batch = active_matrix.any(dim=0)
-                active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
-                    self.synergy_pair_b_local
-                ]
-                active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
+                if pair_norm_mode in ("max_count", "sqrt_count"):
+                    dependency_score = compute_dependency_pair_score_from_local_rules(
+                        local_rule_ids=local_rule_ids.long(),
+                        valid_mask=active,
+                        pair_keys_sorted=self.dependency_pair_keys_local_sorted,
+                        pair_indices_sorted=self.dependency_pair_indices_sorted,
+                        pair_weights=dependency_w_all,
+                        pair_lookup_stride=self.num_relation_rules + 1,
+                        pair_pos_chunk=pair_pos_chunk,
+                        output_dtype=score.dtype,
+                        normalization_mode=pair_norm_mode,
+                    )
+                else:
+                    dependency_score = torch.zeros((batch_size, 1), dtype=rule_w.dtype, device=local_rule_ids.device)
+                    active_rules_in_batch = active_matrix.any(dim=0)
+                    active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
+                        self.synergy_pair_b_local
+                    ]
+                    active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
 
-                if active_pair_idx.numel() > 0:
-                    pair_a_active = self.synergy_pair_a_local[active_pair_idx]
-                    pair_b_active = self.synergy_pair_b_local[active_pair_idx]
-                    dependency_w_active = dependency_w_all[active_pair_idx]
+                    if active_pair_idx.numel() > 0:
+                        pair_a_active = self.synergy_pair_a_local[active_pair_idx]
+                        pair_b_active = self.synergy_pair_b_local[active_pair_idx]
+                        dependency_w_active = dependency_w_all[active_pair_idx]
+                        pair_scale_active = None
+                        if pair_norm_mode == "batch_max_count" or pair_norm_mode == "batch_sqrt_count":
+                            pair_scale_active = compute_dependency_batch_pair_scales(
+                                pair_a_active,
+                                pair_b_active,
+                                self.num_relation_rules,
+                                score.dtype,
+                                pair_norm_mode,
+                            )
+                        elif pair_norm_mode == "global_max_count":
+                            pair_scale_active = self.dependency_pair_global_max_scale[active_pair_idx].to(score.dtype)
+                        elif pair_norm_mode == "global_sqrt_count":
+                            pair_scale_active = self.dependency_pair_global_sqrt_scale[active_pair_idx].to(score.dtype)
 
-                    active_pair_count = int(active_pair_idx.numel())
-                    for start in range(0, active_pair_count, pair_chunk):
-                        end = min(start + pair_chunk, active_pair_count)
-                        a_local = pair_a_active[start:end]
-                        b_local = pair_b_active[start:end]
-                        pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
-                        w_chunk = dependency_w_active[start:end].reshape(1, -1)
-                        dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
+                        active_pair_count = int(active_pair_idx.numel())
+                        for start in range(0, active_pair_count, pair_chunk):
+                            end = min(start + pair_chunk, active_pair_count)
+                            a_local = pair_a_active[start:end]
+                            b_local = pair_b_active[start:end]
+                            pair_active_chunk = (active_matrix[:, a_local] & active_matrix[:, b_local]).to(score.dtype)
+                            w_chunk = dependency_w_active[start:end].reshape(1, -1)
+                            if pair_scale_active is not None:
+                                w_chunk = w_chunk * pair_scale_active[start:end].reshape(1, -1)
+                            dependency_score = dependency_score + (pair_active_chunk * w_chunk).sum(dim=1, keepdim=True)
                 score = score + dependency_score
 
             if self.num_relation_dependency_types > 0:
@@ -1202,21 +1429,61 @@ def build_rule_only_model_for_relation(relation):
     raise ValueError(f"Unknown model: {args.model}")
 
 
-def build_dependency_model_for_relation(relation):
+def normalize_dependency_candidate(candidate):
+    if candidate is None:
+        return {
+            "label": "default",
+            "use_pairs": bool(getattr(args, "dependency_pairs", True)),
+            "use_types": bool(getattr(args, "dependency_types", True)),
+            "allowed_kinds": None,
+            "train_rules": bool(getattr(args, "train_rule_in_dependency_stage", False)),
+        }
+
+    allowed_kinds = candidate.get("allowed_kinds")
+    if allowed_kinds is not None:
+        allowed_kinds = tuple(sorted({str(kind) for kind in allowed_kinds}))
+        if len(allowed_kinds) == 0:
+            allowed_kinds = None
+
+    return {
+        "label": str(candidate.get("label", "custom")),
+        "use_pairs": bool(candidate.get("use_pairs", True)),
+        "use_types": bool(candidate.get("use_types", True)),
+        "allowed_kinds": allowed_kinds,
+        "train_rules": bool(candidate.get("train_rules", getattr(args, "train_rule_in_dependency_stage", False))),
+    }
+
+
+def get_relation_dependency_features(relation, candidate=None):
+    candidate = normalize_dependency_candidate(candidate)
+    relation_dependencies_all = list(dependency_map.get(relation, []))
+    allowed_kinds = candidate["allowed_kinds"]
+    if allowed_kinds is not None:
+        relation_dependencies_all = [dep for dep in relation_dependencies_all if str(dep[2]) in allowed_kinds]
+
+    relation_dependencies = relation_dependencies_all if candidate["use_pairs"] else []
+    dependency_type_candidates = (
+        sorted({(int(a), int(b)) for a, b, *_rest in relation_dependencies_all}) if candidate["use_types"] else []
+    )
+    return relation_dependencies, dependency_type_candidates
+
+
+def build_dependency_model_for_relation(relation, candidate=None):
+    relation_dependencies, dependency_type_candidates = get_relation_dependency_features(relation, candidate)
     if args.model == "LinearAggregator":
         return LinearAggregator(
             relation=relation,
             sign_constraint=args.sign_constraint,
-            relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_type_candidate_map.get(relation, []),
+            relation_dependencies=relation_dependencies,
+            dependency_type_candidates=dependency_type_candidates,
             dependency_sign_constraint=args.sign_constraint_dependency,
         )
     if args.model == "SurprisalAggregator":
         return SurprisalAggregator(
             relation=relation,
             sign_constraint=args.sign_constraint,
-            relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_type_candidate_map.get(relation, []),
+            relation_dependencies=relation_dependencies,
+            dependency_type_candidates=dependency_type_candidates,
             dependency_sign_constraint=args.sign_constraint_dependency,
         )
     raise ValueError(f"Unknown model: {args.model}")
@@ -1475,6 +1742,75 @@ def load_dataloaders(dataset_directory, relation):
         return train_loader, train_split
 
 
+def build_relation_pairwise_queries(relation):
+    cache_key = int(relation)
+    if cache_key in RELATION_PAIRWISE_QUERY_CACHE:
+        return RELATION_PAIRWISE_QUERY_CACHE[cache_key]
+
+    queries = []
+    relation = int(relation)
+
+    def append_queries(split_to_targets, processed, keys):
+        for key in keys:
+            processed_entry = processed.get(key, None)
+            golds = split_to_targets.get(key, None)
+            if processed_entry is None or golds is None:
+                continue
+
+            gold_set = set(int(x) for x in (golds.tolist() if hasattr(golds, "tolist") else golds))
+            candidates = processed_entry.get("candidates", [])
+            rules_per_candidate = processed_entry.get("rules", [])
+
+            kept_rules = []
+            labels = []
+            max_len = 0
+            for prediction, rule_ids in zip(candidates, rules_per_candidate):
+                if len(rule_ids) == 0:
+                    continue
+                rule_ids_int = [int(rid) for rid in rule_ids]
+                kept_rules.append(rule_ids_int)
+                labels.append(int(prediction in gold_set))
+                if len(rule_ids_int) > max_len:
+                    max_len = len(rule_ids_int)
+
+            if len(kept_rules) == 0 or max_len <= 0:
+                continue
+
+            label_t = torch.tensor(labels, dtype=torch.bool)
+            num_pos = int(label_t.sum().item())
+            num_neg = int(label_t.shape[0] - num_pos)
+            if num_pos <= 0 or num_neg <= 0:
+                continue
+
+            padded = torch.full((len(kept_rules), max_len), PAD_TOK, dtype=torch.int32)
+            for row_idx, rule_ids in enumerate(kept_rules):
+                padded[row_idx, : len(rule_ids)] = torch.tensor(rule_ids, dtype=torch.int32)
+
+            queries.append(
+                {
+                    "rules": padded,
+                    "labels": label_t,
+                    "num_candidates": int(label_t.shape[0]),
+                    "num_positive": int(num_pos),
+                    "num_negative": int(num_neg),
+                }
+            )
+
+    append_queries(
+        train_sp_to_o,
+        processed_sp_train,
+        relation_keys["train_o"].get(relation, []),
+    )
+    append_queries(
+        train_po_to_s,
+        processed_po_train,
+        relation_keys["train_s"].get(relation, []),
+    )
+
+    RELATION_PAIRWISE_QUERY_CACHE[cache_key] = queries
+    return queries
+
+
 def get_effective_rule_weights(model):
     with torch.no_grad():
         raw = model.rules.weight[: model.num_relation_rules, 0].detach().cpu()
@@ -1583,7 +1919,108 @@ def get_parser():
     parser.add_argument("--no_sign_constraint_dependency", dest="sign_constraint_dependency", action="store_false", help="Disable sign constraint for dependency weights.")
     parser.add_argument("--init_dep_with_lift", action="store_true", default=False, help="Initialize dependency weights with 0.1 * lift from filtered dependency files.")
     parser.add_argument("--train_rule_in_dependency_stage", action="store_true", default=False, help=argparse.SUPPRESS)
+    parser.add_argument("--dependency_lr", action="store", default="", help="Optional stage-2 dependency LR schedule. Empty keeps the conservative min-lr finetune.")
+    parser.add_argument("--dependency_evaluate_every", action="store", default="", help="Optional stage-2 dependency eval schedule.")
+    parser.add_argument("--dependency_max_epoch", action="store", default=0, type=int, help="Optional stage-2 dependency max epoch override. 0 keeps stage-1 max_epoch.")
+    parser.add_argument("--dependency_early_stopping", action="store", default=None, type=int, help="Optional stage-2 early stopping patience override. Use -1 to disable.")
+    parser.add_argument("--dependency_min_epochs_before_stop", action="store", default=-1, type=int, help="Optional stage-2 minimum epochs before early stop. -1 keeps the auto plan.")
+    parser.add_argument("--dependency_checkpoint_selection", action="store", default="directional", choices=["directional", "combined"], help="Checkpoint selection used inside stage-2 dependency training.")
+    parser.add_argument("--dependency_accept_min_mrr_delta", action="store", default=0.0, type=float, help="Require at least this valid MRR gain before accepting the dependency stage.")
+    parser.add_argument(
+        "--dependency_candidate_selection_epsilon",
+        action="store",
+        default=0.0,
+        type=float,
+        help="If multiple dependency candidates are within this valid-MRR window of the best one, prefer the simpler candidate.",
+    )
+    parser.add_argument(
+        "--dependency_inherited_lr_scale",
+        action="store",
+        default=0.1,
+        type=float,
+        help="Scale applied to inherited rule/bias parameter groups during stage-2 joint training.",
+    )
+    parser.add_argument(
+        "--dependency_skip_init_checkpoint",
+        action="store_true",
+        default=False,
+        help="Do not treat the epoch-0 model as a valid checkpoint candidate during stage 2.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_finetune_epochs",
+        action="store",
+        default=0,
+        type=int,
+        help="Optional number of extra pairwise ranking fine-tune epochs after dependency BCE training.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_topk_neg",
+        action="store",
+        default=8,
+        type=int,
+        help="Number of hardest negatives per query used by stage-2 pairwise fine-tuning.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_query_batch_size",
+        action="store",
+        default=8,
+        type=int,
+        help="How many queries to accumulate per optimizer step during pairwise fine-tuning.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_margin",
+        action="store",
+        default=0.0,
+        type=float,
+        help="Margin used by pairwise fine-tuning. 0 switches to softplus ranking loss.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_pos_limit",
+        action="store",
+        default=4,
+        type=int,
+        help="Optional cap on the number of lowest-scoring positives used per query in pairwise fine-tuning. <=0 keeps all positives.",
+    )
+    parser.add_argument(
+        "--dependency_pairwise_train_rules",
+        action="store_true",
+        default=False,
+        help="Allow pairwise fine-tuning to keep updating inherited rule/bias parameters. Default keeps pairwise focused on dependency parameters only.",
+    )
+    parser.add_argument("--dependency_pairs", dest="dependency_pairs", action="store_true", help="Use pairwise dependency features in stage 2.")
+    parser.add_argument("--no_dependency_pairs", dest="dependency_pairs", action="store_false", help="Disable pairwise dependency features in stage 2.")
+    parser.add_argument("--dependency_types", dest="dependency_types", action="store_true", help="Use dependency-type count features in stage 2.")
+    parser.add_argument("--no_dependency_types", dest="dependency_types", action="store_false", help="Disable dependency-type count features in stage 2.")
+    parser.add_argument(
+        "--dependency_pair_overlap_normalization",
+        action="store",
+        default="none",
+        choices=[
+            "none",
+            "max_count",
+            "sqrt_count",
+            "batch_max_count",
+            "batch_sqrt_count",
+            "global_max_count",
+            "global_sqrt_count",
+        ],
+        help="Optional normalization for dependency pair scores. max/sqrt_count are exact sample-local modes; batch_* approximates overlap using active pairs in the current batch; global_* uses static relation-level dependency degrees.",
+    )
+    parser.add_argument(
+        "--dependency_pair_position_chunk",
+        action="store",
+        default=1024,
+        type=int,
+        help="Chunk size for sample-local dependency pair normalization over rule-position pairs.",
+    )
+    parser.add_argument(
+        "--dependency_candidate_variants",
+        action="store",
+        default="",
+        help="Optional comma-separated stage-2 candidate list. Variant format: <kinds>_<features>_<rules>, e.g. sr_pair_joint,sr_full_joint,s_pair_joint. kinds in {sr,s,r}, features in {pair,full,types}, rules in {joint,freeze}.",
+    )
     parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
+    parser.set_defaults(dependency_pairs=True, dependency_types=True)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
@@ -1606,6 +2043,73 @@ def parse_csv_schedule(raw_value, cast_fn, name):
     except Exception as e:
         raise ValueError(f"Invalid {name}: {raw_value}") from e
     return values
+
+
+def parse_dependency_candidate_variants(raw_value):
+    raw_value = str(raw_value).strip()
+    if raw_value == "":
+        return []
+
+    candidates = []
+    for raw_variant in [part.strip() for part in raw_value.split(",") if part.strip() != ""]:
+        parts = [p.strip().lower() for p in raw_variant.split("_") if p.strip() != ""]
+        if len(parts) < 2 or len(parts) > 3:
+            raise ValueError(
+                f"Invalid dependency candidate variant '{raw_variant}'. Expected <kinds>_<features>_<rules>."
+            )
+        kinds_key = parts[0]
+        feature_key = parts[1]
+        rule_key = parts[2] if len(parts) == 3 else "joint"
+
+        kind_map = {
+            "sr": ("synergy", "redundancy"),
+            "s": ("synergy",),
+            "r": ("redundancy",),
+        }
+        if kinds_key not in kind_map:
+            raise ValueError(f"Invalid dependency candidate kinds '{kinds_key}' in '{raw_variant}'")
+
+        feature_map = {
+            "pair": (True, False),
+            "full": (True, True),
+            "types": (False, True),
+        }
+        if feature_key not in feature_map:
+            raise ValueError(f"Invalid dependency candidate feature mode '{feature_key}' in '{raw_variant}'")
+
+        if rule_key not in {"joint", "freeze"}:
+            raise ValueError(f"Invalid dependency candidate rule mode '{rule_key}' in '{raw_variant}'")
+
+        use_pairs, use_types = feature_map[feature_key]
+        candidates.append(
+            {
+                "label": raw_variant,
+                "allowed_kinds": kind_map[kinds_key],
+                "use_pairs": use_pairs,
+                "use_types": use_types,
+                "train_rules": (rule_key == "joint"),
+            }
+        )
+    return candidates
+
+
+def build_dependency_candidate_complexity_key(candidate, candidate_summary=None):
+    use_pairs = bool(candidate.get("use_pairs", True))
+    use_types = bool(candidate.get("use_types", False))
+    if use_pairs and not use_types:
+        feature_mode_rank = 0
+    elif use_pairs and use_types:
+        feature_mode_rank = 1
+    else:
+        feature_mode_rank = 2
+
+    train_rules_rank = 1 if bool(candidate.get("train_rules", True)) else 0
+
+    return (
+        int(feature_mode_rank),
+        int(train_rules_rank),
+        str(candidate.get("label", "")),
+    )
 
 
 def resolve_pos_weight(pos_arg, train_split, relation):
@@ -1646,18 +2150,44 @@ def resolve_pos_weight(pos_arg, train_split, relation):
 
 
 def build_dependency_stage_training_plan(stage1_lr_values, stage1_eval_every_values, stage1_max_epoch):
+    dependency_lr_raw = str(getattr(args, "dependency_lr", "")).strip()
+    if dependency_lr_raw:
+        stage2_lr_values = parse_csv_schedule(dependency_lr_raw, float, "dependency_lr")
+    else:
+        stage2_lr_values = None
+
+    dependency_eval_raw = str(getattr(args, "dependency_evaluate_every", "")).strip()
+    if dependency_eval_raw:
+        stage2_eval_every_values = parse_csv_schedule(
+            dependency_eval_raw, int, "dependency_evaluate_every"
+        )
+    else:
+        stage2_eval_every_values = None
+
+    dependency_max_epoch_override = int(getattr(args, "dependency_max_epoch", 0))
+
     # Stage 2 starts from the stage-1 combined-best checkpoint, so we bias it toward
     # conservative dependency finetuning: use only the smallest LR, but keep the
     # same epoch budget as stage 1 and rely on softer stopping/optimizer settings
     # for stability instead of simply stretching the schedule.
-    min_lr = min(float(v) for v in stage1_lr_values)
-    stage2_lr_values = [float(min_lr)]
-    stage2_eval_every_values = [1]
-    stage2_max_epoch = int(stage1_max_epoch)
+    if stage2_lr_values is None:
+        min_lr = min(float(v) for v in stage1_lr_values)
+        stage2_lr_values = [float(min_lr)]
+    if stage2_eval_every_values is None:
+        stage2_eval_every_values = [1]
+    stage2_max_epoch = dependency_max_epoch_override if dependency_max_epoch_override > 0 else int(stage1_max_epoch)
     return stage2_lr_values, stage2_eval_every_values, stage2_max_epoch
 
 
 def build_dependency_stage_early_stop_plan(base_patience):
+    dependency_early_stopping_override = getattr(args, "dependency_early_stopping", None)
+    if dependency_early_stopping_override is not None:
+        stage2_patience = int(dependency_early_stopping_override)
+        min_epoch_override = int(getattr(args, "dependency_min_epochs_before_stop", -1))
+        if min_epoch_override >= 0:
+            return stage2_patience, min_epoch_override
+        return stage2_patience, 0 if stage2_patience <= 0 else max(stage2_patience * 2, 6)
+
     base_patience = int(base_patience)
     if base_patience <= 0:
         return base_patience, 0
@@ -1857,7 +2387,7 @@ def build_optimizer_for_model(model, lr, stage_name="rule"):
     if len(trainable_params) == 0:
         raise ValueError("No trainable parameters found for optimizer")
 
-    if stage_name == "dependency" and getattr(args, "train_rule_in_dependency_stage", False):
+    if stage_name.startswith("dependency") and getattr(args, "train_rule_in_dependency_stage", False):
         inherited_params = []
         dependency_params = []
         assigned_param_ids = set()
@@ -1880,7 +2410,8 @@ def build_optimizer_for_model(model, lr, stage_name="rule"):
                 assigned_param_ids.add(id(param))
 
         if dependency_params:
-            inherited_lr = max(float(lr) * 0.1, 1e-5)
+            inherited_lr_scale = max(float(getattr(args, "dependency_inherited_lr_scale", 0.1)), 0.0)
+            inherited_lr = max(float(lr) * inherited_lr_scale, 1e-5)
             param_groups = []
             if inherited_params:
                 param_groups.append({"params": inherited_params, "lr": float(inherited_lr)})
@@ -2024,31 +2555,33 @@ def run_training_stage(
     best_state = None
     best_valid_epoch = None
 
-    # Evaluate the untrained starting point as a valid checkpoint candidate.
-    has_non_finite = False
-    for _name, p in model.named_parameters():
-        if not torch.isfinite(p).all():
-            has_non_finite = True
-            break
-    if has_non_finite:
-        print(f"[WARN] relation={relation} stage={stage_name}: non-finite params at init valid eval, skip init checkpoint")
-    else:
-        eval_start = perf_counter()
-        with step_timer("epoch0_eval_head"):
-            init_head_valid = head_mrr.calc_metrics(
-                model, head_mrr.valid_sp_to_o, head_mrr.valid_processed, direction=head_mrr.direction, filter_test=True
-            )
-        with step_timer("epoch0_eval_tail"):
-            init_tail_valid = tail_mrr.calc_metrics(
-                model, tail_mrr.valid_sp_to_o, tail_mrr.valid_processed, direction=tail_mrr.direction, filter_test=True
-            )
-        eval_seconds += perf_counter() - eval_start
+    skip_init_checkpoint = bool(stage_name == "dependency" and getattr(args, "dependency_skip_init_checkpoint", False))
+    if not skip_init_checkpoint:
+        # Evaluate the untrained starting point as a valid checkpoint candidate.
+        has_non_finite = False
+        for _name, p in model.named_parameters():
+            if not torch.isfinite(p).all():
+                has_non_finite = True
+                break
+        if has_non_finite:
+            print(f"[WARN] relation={relation} stage={stage_name}: non-finite params at init valid eval, skip init checkpoint")
+        else:
+            eval_start = perf_counter()
+            with step_timer("epoch0_eval_head"):
+                init_head_valid = head_mrr.calc_metrics(
+                    model, head_mrr.valid_sp_to_o, head_mrr.valid_processed, direction=head_mrr.direction, filter_test=True
+                )
+            with step_timer("epoch0_eval_tail"):
+                init_tail_valid = tail_mrr.calc_metrics(
+                    model, tail_mrr.valid_sp_to_o, tail_mrr.valid_processed, direction=tail_mrr.direction, filter_test=True
+                )
+            eval_seconds += perf_counter() - eval_start
 
-        best_valid_combined_raw = (init_head_valid[3] + init_tail_valid[3]) / 2.0
-        best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-        best_valid_epoch = 0
-        head_mrr.update_from_metrics(init_head_valid, model, (pos, float(lr_values[0]), -1))
-        tail_mrr.update_from_metrics(init_tail_valid, model, (pos, float(lr_values[0]), -1))
+            best_valid_combined_raw = (init_head_valid[3] + init_tail_valid[3]) / 2.0
+            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_valid_epoch = 0
+            head_mrr.update_from_metrics(init_head_valid, model, (pos, float(lr_values[0]), -1))
+            tail_mrr.update_from_metrics(init_tail_valid, model, (pos, float(lr_values[0]), -1))
 
     pbar = tqdm(range(max_epoch), desc=f"r{relation}-{stage_name}", leave=False)
     for t in pbar:
@@ -2187,6 +2720,7 @@ def run_dependency_stage(
     lr_values,
     eval_every_values,
     max_epoch,
+    checkpoint_selection,
     early_stopping_patience,
     min_epochs_before_stop,
 ):
@@ -2207,10 +2741,236 @@ def run_dependency_stage(
         eval_every_values=eval_every_values,
         max_epoch=max_epoch,
         stage_name="dependency",
-        checkpoint_selection="directional",
+        checkpoint_selection=checkpoint_selection,
         early_stopping_patience=early_stopping_patience,
         min_epochs_before_stop=min_epochs_before_stop,
     )
+
+
+def compute_pairwise_query_loss(scores, labels, topk_neg, margin=0.0, pos_limit=0):
+    pos_scores = scores[labels]
+    neg_scores = scores[~labels]
+    if pos_scores.numel() == 0 or neg_scores.numel() == 0:
+        return None
+
+    topk_neg = max(int(topk_neg), 1)
+    hard_neg_scores = torch.topk(neg_scores, k=min(int(topk_neg), int(neg_scores.numel()))).values
+
+    pos_limit = int(pos_limit)
+    if pos_limit > 0 and pos_scores.numel() > pos_limit:
+        hardest_pos_idx = torch.topk(-pos_scores, k=pos_limit).indices
+        pos_scores = pos_scores[hardest_pos_idx]
+
+    diff = pos_scores.unsqueeze(1) - hard_neg_scores.unsqueeze(0)
+    if float(margin) > 0.0:
+        return torch.relu(float(margin) - diff).mean()
+    return torch.nn.functional.softplus(-diff).mean()
+
+
+def run_dependency_pairwise_stage(
+    relation,
+    model,
+    model_builder,
+    query_batches,
+    lr_values,
+    eval_every_values,
+    max_epoch,
+    checkpoint_selection,
+    early_stopping_patience,
+    min_epochs_before_stop,
+    topk_neg,
+    margin,
+    pos_limit,
+    query_batch_size,
+):
+    if len(query_batches) == 0 or int(max_epoch) <= 0:
+        return evaluate_current_stage_result(relation, model, model_builder, evaluate_every=1)
+
+    tail_mrr = MRR(relation=relation, direction="o", model_builder=model_builder)
+    head_mrr = MRR(relation=relation, direction="s", model_builder=model_builder)
+
+    model = model.to(args.device)
+    pairwise_train_rules = bool(getattr(args, "dependency_pairwise_train_rules", False))
+    frozen_params = []
+
+    def maybe_freeze(param):
+        if param is not None and param.requires_grad:
+            param.requires_grad_(False)
+            frozen_params.append(param)
+
+    if not pairwise_train_rules:
+        maybe_freeze(getattr(getattr(model, "rules", None), "weight", None))
+        maybe_freeze(getattr(getattr(model, "rule_types", None), "weight", None))
+        maybe_freeze(getattr(model, "bias", None))
+
+    optimizer = build_optimizer_for_model(model, lr_values[0], stage_name="dependency_pairwise")
+
+    init_tail = tail_mrr.calc_metrics(model, tail_mrr.test_sp_to_o, tail_mrr.test_processed, direction="o")
+    init_head = head_mrr.calc_metrics(model, head_mrr.test_sp_to_o, head_mrr.test_processed, direction="s")
+    test_initial = build_test_metrics_from_raw(init_head, init_tail)
+
+    lr_phase_lengths = build_phase_lengths(max_epoch, len(lr_values))
+    eval_phase_lengths = build_phase_lengths(max_epoch, len(eval_every_values))
+
+    early_stopping_patience = int(early_stopping_patience)
+    min_epochs_before_stop = int(min_epochs_before_stop)
+    query_batch_size = max(int(query_batch_size), 1)
+    best_valid_combined_raw = -1.0
+    no_improve_eval_rounds = 0
+    epochs_trained = 0
+    train_seconds = 0.0
+    eval_seconds = 0.0
+    final_loss = None
+    evaluate_every = eval_every_values[0]
+    best_state = None
+    best_valid_epoch = None
+
+    try:
+        pbar = tqdm(range(max_epoch), desc=f"r{relation}-dependency-pairwise", leave=False)
+        for t in pbar:
+            epochs_trained = t + 1
+            _lr_phase_idx, _lr_local_epoch, current_lr = phase_value_for_epoch(t, lr_phase_lengths, lr_values)
+            _eval_phase_idx, eval_local_epoch, current_eval_every = phase_value_for_epoch(
+                t, eval_phase_lengths, eval_every_values
+            )
+            evaluate_every = current_eval_every
+
+            inherited_lr_scale = max(float(getattr(args, "dependency_inherited_lr_scale", 0.1)), 0.0)
+            for param_group in optimizer.param_groups:
+                base_lr = float(current_lr)
+                if float(param_group["lr"]) < max(float(lr_values[0]), 1e-5):
+                    param_group["lr"] = max(base_lr * inherited_lr_scale, 1e-5)
+                else:
+                    param_group["lr"] = base_lr
+
+            query_order = torch.randperm(len(query_batches)).tolist()
+            train_start = perf_counter()
+            total_epoch_loss = 0.0
+            total_epoch_steps = 0
+            with step_timer("epoch_train"):
+                for start in range(0, len(query_order), query_batch_size):
+                    batch_ids = query_order[start : start + query_batch_size]
+                    batch_losses = []
+                    for query_idx in batch_ids:
+                        query = query_batches[query_idx]
+                        rules = query["rules"].long().to(args.device, non_blocking=True)
+                        labels = query["labels"].to(args.device, non_blocking=True)
+                        scores = model(rules).reshape(-1)
+                        query_loss = compute_pairwise_query_loss(
+                            scores,
+                            labels,
+                            topk_neg=topk_neg,
+                            margin=margin,
+                            pos_limit=pos_limit,
+                        )
+                        if query_loss is not None and query_loss.requires_grad:
+                            batch_losses.append(query_loss)
+
+                    if len(batch_losses) == 0:
+                        continue
+                    loss = torch.stack(batch_losses).mean()
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    total_epoch_loss += float(loss.item())
+                    total_epoch_steps += 1
+            train_seconds += perf_counter() - train_start
+            final_loss = 0.0 if total_epoch_steps == 0 else (total_epoch_loss / total_epoch_steps)
+
+            do_eval_in_phase = (current_eval_every > 0) and ((eval_local_epoch % int(current_eval_every)) == 0)
+            do_eval = do_eval_in_phase or (t == max_epoch - 1)
+            if do_eval:
+                eval_start = perf_counter()
+                with step_timer("epoch_eval_head"):
+                    current_head_valid = head_mrr.calc_metrics(
+                        model, head_mrr.valid_sp_to_o, head_mrr.valid_processed, direction=head_mrr.direction, filter_test=True
+                    )
+                with step_timer("epoch_eval_tail"):
+                    current_tail_valid = tail_mrr.calc_metrics(
+                        model, tail_mrr.valid_sp_to_o, tail_mrr.valid_processed, direction=tail_mrr.direction, filter_test=True
+                    )
+                eval_seconds += perf_counter() - eval_start
+
+                head_mrr.update_from_metrics(current_head_valid, model, ("pairwise", float(current_lr), t))
+                tail_mrr.update_from_metrics(current_tail_valid, model, ("pairwise", float(current_lr), t))
+                valid_combined_raw = (current_head_valid[3] + current_tail_valid[3]) / 2.0
+                if valid_combined_raw > best_valid_combined_raw:
+                    best_valid_combined_raw = valid_combined_raw
+                    best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+                    best_valid_epoch = int(t + 1)
+                    no_improve_eval_rounds = 0
+                else:
+                    no_improve_eval_rounds += 1
+
+                if (
+                    early_stopping_patience > 0
+                    and epochs_trained >= min_epochs_before_stop
+                    and no_improve_eval_rounds >= early_stopping_patience
+                ):
+                    pbar.set_postfix(loss=f"{final_loss:.5f}", max_mrr=f"{valid_combined_raw:.5f}", lr=f"{current_lr:.6g}")
+                    break
+
+            pbar.set_postfix(loss=f"{final_loss:.5f}", max_mrr=f"{max(best_valid_combined_raw, 0.0):.5f}")
+    finally:
+        for param in frozen_params:
+            param.requires_grad_(True)
+
+    if best_state is None:
+        return evaluate_current_stage_result(relation, model, model_builder, evaluate_every=evaluate_every)
+
+    with step_timer("epoch_eval_head"):
+        head_mrr.finalize_test()
+    with step_timer("epoch_eval_tail"):
+        tail_mrr.finalize_test()
+
+    final_test = {
+        "mrr": float(calc_mrr(tail_mrr, head_mrr)[0]),
+        "h1": float(calc_mrr(tail_mrr, head_mrr, "maximums_t_1")[0]),
+        "h10": float(calc_mrr(tail_mrr, head_mrr, "maximums_t_10")[0]),
+        "mrr_raw": float(calc_mrr(tail_mrr, head_mrr)[1]),
+        "h1_raw": float(calc_mrr(tail_mrr, head_mrr, "maximums_t_1")[1]),
+        "h10_raw": float(calc_mrr(tail_mrr, head_mrr, "maximums_t_10")[1]),
+    }
+
+    selected_state_dict = {k: v.detach().cpu().clone() for k, v in best_state.items()}
+    selected_model = build_model_from_state_dict(relation, model_builder, selected_state_dict)
+    selected_stage_result = evaluate_current_stage_result(
+        relation,
+        selected_model,
+        model_builder,
+        evaluate_every=evaluate_every,
+    )
+    selected_test = selected_stage_result["test"]
+
+    if checkpoint_selection == "combined":
+        result_model = selected_stage_result["model"]
+        result_head_mrr = selected_stage_result["head_mrr"]
+        result_tail_mrr = selected_stage_result["tail_mrr"]
+        result_test = selected_test
+    elif checkpoint_selection == "directional":
+        result_model = selected_stage_result["model"]
+        result_head_mrr = head_mrr
+        result_tail_mrr = tail_mrr
+        result_test = final_test
+    else:
+        raise ValueError(f"Unknown checkpoint_selection: {checkpoint_selection}")
+
+    return {
+        "model": result_model,
+        "optimizer": optimizer,
+        "tail_mrr": result_tail_mrr,
+        "head_mrr": result_head_mrr,
+        "test_initial": test_initial,
+        "test": result_test,
+        "selected_state_dict": selected_state_dict,
+        "selected_test": selected_test,
+        "epochs_trained": int(epochs_trained),
+        "train_seconds": float(train_seconds),
+        "eval_seconds": float(eval_seconds),
+        "evaluate_every": int(evaluate_every),
+        "best_valid_epoch": None if best_valid_epoch is None else int(best_valid_epoch),
+        "best_valid_combined_raw": float(best_valid_combined_raw),
+    }
 
 
 def aggregate_single(relation):
@@ -2316,27 +3076,70 @@ def aggregate_single(relation):
     dependency_pairs = []
     test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
+    dependency_candidate_summaries = []
+    dependency_stage_train_seconds = 0.0
+    dependency_stage_eval_seconds = 0.0
+    dependency_stage_feature_counts = {"pairs": 0, "types": 0}
 
     if (args.synergy or args.redundancy):
-        dependency_model = build_dependency_model_for_relation(relation)
-        selected_stage1_state_dict = stage1_result.get("selected_state_dict")
-        if selected_stage1_state_dict is not None:
-            copy_rule_state_from_state_dict(selected_stage1_state_dict, dependency_model)
+        dependency_candidates = parse_dependency_candidate_variants(getattr(args, "dependency_candidate_variants", ""))
+        if len(dependency_candidates) == 0:
+            dependency_candidates = [normalize_dependency_candidate(None)]
         else:
-            copy_rule_state_from_model(stage1_result["model"], dependency_model)
-        if not getattr(args, "train_rule_in_dependency_stage", False):
-            freeze_rule_parameters_for_synergy_stage(dependency_model)
-        dependency_model = dependency_model.to(args.device)
+            dependency_candidates = [normalize_dependency_candidate(candidate) for candidate in dependency_candidates]
 
-        dependency_pairs = list(getattr(dependency_model, "relation_dependency_pairs_global", []))
-        has_dependency_features = (
-            getattr(dependency_model, "num_relation_dependencies", 0) > 0
-            or getattr(dependency_model, "num_relation_dependency_types", 0) > 0
+        dependency_trials = []
+        selected_stage1_state_dict = stage1_result.get("selected_state_dict")
+        rule_best_valid_mrr = float(best_valid_stage1["mrr"])
+        dependency_accept_min_mrr_delta = float(getattr(args, "dependency_accept_min_mrr_delta", 0.0))
+        dependency_candidate_selection_epsilon = max(
+            float(getattr(args, "dependency_candidate_selection_epsilon", 0.0)),
+            0.0,
         )
-        if has_dependency_features:
+        dependency_pairwise_finetune_epochs = max(int(getattr(args, "dependency_pairwise_finetune_epochs", 0)), 0)
+        relation_pairwise_queries = (
+            build_relation_pairwise_queries(relation) if dependency_pairwise_finetune_epochs > 0 else []
+        )
+
+        for candidate in dependency_candidates:
+            candidate_relation_dependencies, candidate_dependency_type_candidates = get_relation_dependency_features(
+                relation, candidate
+            )
+            candidate_summary = {
+                "label": str(candidate["label"]),
+                "allowed_kinds": (
+                    None if candidate["allowed_kinds"] is None else list(candidate["allowed_kinds"])
+                ),
+                "use_pairs": bool(candidate["use_pairs"]),
+                "use_types": bool(candidate["use_types"]),
+                "train_rules": bool(candidate["train_rules"]),
+                "num_relation_dependencies": int(len(candidate_relation_dependencies)),
+                "num_relation_dependency_types": int(len(candidate_dependency_type_candidates)),
+            }
+            has_dependency_features = (
+                len(candidate_relation_dependencies) > 0 or len(candidate_dependency_type_candidates) > 0
+            )
+            if not has_dependency_features:
+                candidate_summary["skipped"] = True
+                candidate_summary["reason"] = "no relation-local dependency features remained after filtering"
+                dependency_candidate_summaries.append(candidate_summary)
+                continue
+
+            dependency_model = build_dependency_model_for_relation(relation, candidate)
+            if selected_stage1_state_dict is not None:
+                copy_rule_state_from_state_dict(selected_stage1_state_dict, dependency_model)
+            else:
+                copy_rule_state_from_model(stage1_result["model"], dependency_model)
+            if not candidate["train_rules"]:
+                freeze_rule_parameters_for_synergy_stage(dependency_model)
+            dependency_model = dependency_model.to(args.device)
+
+            candidate_dependency_pairs = list(getattr(dependency_model, "relation_dependency_pairs_global", []))
+            candidate_initial_dependency_weights = np.array([], dtype=np.float32)
+            candidate_initial_dependency_type_weights = np.array([], dtype=np.float32)
             with torch.no_grad():
                 if getattr(dependency_model, "num_relation_dependencies", 0) > 0:
-                    initial_dependency_weights = (
+                    candidate_initial_dependency_weights = (
                         dependency_model.dependencies.weight[: dependency_model.num_relation_dependencies, 0]
                         .detach()
                         .cpu()
@@ -2344,52 +3147,176 @@ def aggregate_single(relation):
                         .copy()
                     )
                 if getattr(dependency_model, "num_relation_dependency_types", 0) > 0:
-                    initial_dependency_type_weights = (
+                    candidate_initial_dependency_type_weights = (
                         dependency_model.dependency_types.weight[: dependency_model.num_relation_dependency_types, 0]
                         .detach()
                         .cpu()
                         .numpy()
                         .copy()
                     )
-            test_stage_3 = evaluate_model_on_test(relation, dependency_model, build_dependency_model_for_relation)
 
-            dependency_stage_result = run_dependency_stage(
+            candidate_builder = partial(build_dependency_model_for_relation, candidate=candidate)
+            candidate_test_before = evaluate_model_on_test(relation, dependency_model, candidate_builder)
+            candidate_stage_result = run_dependency_stage(
                 relation=relation,
                 model=dependency_model,
-                model_builder=build_dependency_model_for_relation,
+                model_builder=candidate_builder,
                 dataloader=train_dataloader,
                 loss_fn=loss_fn,
                 pos=pos,
                 lr_values=dependency_lr_values,
                 eval_every_values=dependency_eval_every_values,
                 max_epoch=dependency_max_epoch,
+                checkpoint_selection=args.dependency_checkpoint_selection,
                 early_stopping_patience=dependency_early_stopping_patience,
                 min_epochs_before_stop=dependency_min_epochs_before_stop,
             )
-            best_valid_stage2 = build_best_valid_metrics(dependency_stage_result)
+            pairwise_stage_result = None
+            if dependency_pairwise_finetune_epochs > 0 and len(relation_pairwise_queries) > 0:
+                pairwise_stage_result = run_dependency_pairwise_stage(
+                    relation=relation,
+                    model=candidate_stage_result["model"],
+                    model_builder=candidate_builder,
+                    query_batches=relation_pairwise_queries,
+                    lr_values=dependency_lr_values,
+                    eval_every_values=dependency_eval_every_values,
+                    max_epoch=dependency_pairwise_finetune_epochs,
+                    checkpoint_selection=args.dependency_checkpoint_selection,
+                    early_stopping_patience=dependency_early_stopping_patience,
+                    min_epochs_before_stop=min(
+                        dependency_min_epochs_before_stop,
+                        dependency_pairwise_finetune_epochs,
+                    ),
+                    topk_neg=int(getattr(args, "dependency_pairwise_topk_neg", 8)),
+                    margin=float(getattr(args, "dependency_pairwise_margin", 0.0)),
+                    pos_limit=int(getattr(args, "dependency_pairwise_pos_limit", 4)),
+                    query_batch_size=int(getattr(args, "dependency_pairwise_query_batch_size", 8)),
+                )
+                candidate_stage_result = pairwise_stage_result
+            dependency_stage_train_seconds += float(candidate_stage_result["train_seconds"])
+            dependency_stage_eval_seconds += float(candidate_stage_result["eval_seconds"])
+            candidate_best_valid_stage2 = build_best_valid_metrics(candidate_stage_result)
+            candidate_dependency_best_valid_mrr = float(candidate_best_valid_stage2["mrr"])
+            candidate_stage_accepted = candidate_dependency_best_valid_mrr >= (
+                rule_best_valid_mrr + dependency_accept_min_mrr_delta
+            )
+
+            candidate_summary.update(
+                {
+                    "skipped": False,
+                    "accepted": bool(candidate_stage_accepted),
+                    "best_valid_mrr": float(candidate_dependency_best_valid_mrr),
+                    "best_valid_mrr_delta": float(candidate_dependency_best_valid_mrr - rule_best_valid_mrr),
+                    "best_valid_combined_raw": float(candidate_stage_result["best_valid_combined_raw"]),
+                    "best_valid_epoch": int(candidate_stage_result["best_valid_epoch"]),
+                    "epochs_trained": int(candidate_stage_result["epochs_trained"]),
+                    "evaluate_every": int(candidate_stage_result["evaluate_every"]),
+                    "pairwise_finetune_epochs": int(dependency_pairwise_finetune_epochs),
+                    "pairwise_finetune_applied": bool(pairwise_stage_result is not None),
+                    "num_pairwise_queries": int(len(relation_pairwise_queries)),
+                }
+            )
+            dependency_candidate_summaries.append(candidate_summary)
+
+            candidate_trial = {
+                "candidate": candidate,
+                "candidate_summary": candidate_summary,
+                "stage_result": candidate_stage_result,
+                "best_valid": candidate_best_valid_stage2,
+                "test_before": candidate_test_before,
+                "dependency_pairs": candidate_dependency_pairs,
+                "initial_dependency_weights": candidate_initial_dependency_weights,
+                "initial_dependency_type_weights": candidate_initial_dependency_type_weights,
+                "num_relation_dependency_types": int(getattr(dependency_model, "num_relation_dependency_types", 0)),
+            }
+            dependency_trials.append(candidate_trial)
+
+        best_dependency_trial = None
+        if len(dependency_trials) > 0:
+            best_dependency_valid_mrr = max(float(trial["best_valid"]["mrr"]) for trial in dependency_trials)
+            shortlisted_trials = [
+                trial
+                for trial in dependency_trials
+                if float(trial["best_valid"]["mrr"]) >= (best_dependency_valid_mrr - dependency_candidate_selection_epsilon)
+            ]
+            if len(shortlisted_trials) == 0:
+                shortlisted_trials = dependency_trials
+
+            def dependency_trial_selection_key(trial):
+                complexity_key = build_dependency_candidate_complexity_key(
+                    trial["candidate"], trial["candidate_summary"]
+                )
+                return (
+                    complexity_key,
+                    -float(trial["best_valid"]["mrr"]),
+                    -float(trial["stage_result"]["best_valid_combined_raw"]),
+                    str(trial["candidate"]["label"]),
+                )
+
+            best_dependency_trial = min(shortlisted_trials, key=dependency_trial_selection_key)
+
+        if best_dependency_trial is not None:
+            dependency_stage_result = best_dependency_trial["stage_result"]
+            best_valid_stage2 = best_dependency_trial["best_valid"]
+            dependency_pairs = list(best_dependency_trial["dependency_pairs"])
+            initial_dependency_weights = best_dependency_trial["initial_dependency_weights"]
+            initial_dependency_type_weights = best_dependency_trial["initial_dependency_type_weights"]
+            test_stage_3 = best_dependency_trial["test_before"]
+            dependency_stage_feature_counts = {
+                "pairs": int(len(best_dependency_trial["dependency_pairs"])),
+                "types": int(best_dependency_trial["num_relation_dependency_types"]),
+            }
             stage2_metrics = {
+                "candidate_label": str(best_dependency_trial["candidate"]["label"]),
+                "candidate_allowed_kinds": (
+                    None
+                    if best_dependency_trial["candidate"]["allowed_kinds"] is None
+                    else list(best_dependency_trial["candidate"]["allowed_kinds"])
+                ),
+                "candidate_use_pairs": bool(best_dependency_trial["candidate"]["use_pairs"]),
+                "candidate_use_types": bool(best_dependency_trial["candidate"]["use_types"]),
+                "candidate_train_rules": bool(best_dependency_trial["candidate"]["train_rules"]),
+                "candidate_variants": dependency_candidate_summaries,
                 "pos_weight": float(pos),
                 "pos_weight_source": pos_source,
                 "epochs_trained": int(dependency_stage_result["epochs_trained"]),
                 "evaluate_every": int(dependency_stage_result["evaluate_every"]),
                 "max_epoch": int(dependency_max_epoch),
                 "lr_schedule": [float(v) for v in dependency_lr_values],
-                "checkpoint_selection": "head_tail_best_valid",
+                "checkpoint_selection": str(args.dependency_checkpoint_selection),
                 "early_stopping_patience": int(dependency_early_stopping_patience),
                 "min_epochs_before_stop": int(dependency_min_epochs_before_stop),
+                "candidate_selection_epsilon": float(dependency_candidate_selection_epsilon),
+                "inherited_lr_scale": float(getattr(args, "dependency_inherited_lr_scale", 0.1)),
+                "skip_init_checkpoint": bool(getattr(args, "dependency_skip_init_checkpoint", False)),
+                "candidate_complexity_key": list(
+                    build_dependency_candidate_complexity_key(
+                        best_dependency_trial["candidate"],
+                        best_dependency_trial["candidate_summary"],
+                    )
+                ),
                 "best_valid_epoch": int(dependency_stage_result["best_valid_epoch"]),
                 "best_valid_combined_raw": float(dependency_stage_result["best_valid_combined_raw"]),
             }
 
-            rule_best_valid_mrr = float(best_valid_stage1["mrr"])
             dependency_best_valid_mrr = float(best_valid_stage2["mrr"])
-            dependency_stage_accepted = dependency_best_valid_mrr > rule_best_valid_mrr
+            dependency_stage_accepted = dependency_best_valid_mrr >= (
+                rule_best_valid_mrr + dependency_accept_min_mrr_delta
+            )
             if dependency_stage_accepted:
                 final_result = dependency_stage_result
-                selection_reason = "accepted dependency stage because its best valid mrr exceeded the rule-only stage"
+                selection_reason = (
+                    "accepted dependency stage candidate "
+                    f"{best_dependency_trial['candidate']['label']} because its best valid mrr exceeded the "
+                    f"rule-only stage by at least {dependency_accept_min_mrr_delta:.6g}"
+                )
             else:
                 final_result = stage1_result
-                selection_reason = "rejected dependency stage because its best valid mrr did not exceed the rule-only stage"
+                selection_reason = (
+                    "rejected dependency stage candidate "
+                    f"{best_dependency_trial['candidate']['label']} because its best valid mrr did not exceed the "
+                    f"rule-only stage by at least {dependency_accept_min_mrr_delta:.6g}"
+                )
         else:
             final_result = stage1_result
             dependency_stage_accepted = False
@@ -2400,12 +3327,8 @@ def aggregate_single(relation):
     tail_mrr = final_result["tail_mrr"]
     evaluate_every = final_result["evaluate_every"]
     epochs_trained = final_result["epochs_trained"]
-    train_seconds = stage1_result["train_seconds"] + (
-        0.0 if dependency_stage_result is None else dependency_stage_result["train_seconds"]
-    )
-    eval_seconds = stage1_result["eval_seconds"] + (
-        0.0 if dependency_stage_result is None else dependency_stage_result["eval_seconds"]
-    )
+    train_seconds = stage1_result["train_seconds"] + dependency_stage_train_seconds
+    eval_seconds = stage1_result["eval_seconds"] + dependency_stage_eval_seconds
     test_stage_4 = final_result["test"] if dependency_stage_result is None else dependency_stage_result["test"]
     final_test_metrics = (
         dependency_stage_result["test"]
@@ -2472,10 +3395,14 @@ def aggregate_single(relation):
 
     num_test_samples = int(test_torch[test_torch[:, 1] == relation].shape[0])
     num_relation_rules = int(len(relation_rule_ids))
-    num_relation_dependencies = int(len(dependency_map.get(relation, [])))
+    num_relation_dependencies = int(dependency_stage_feature_counts["pairs"])
     num_relation_rule_types = int(getattr(nnm, "num_relation_rule_types", 0))
-    num_relation_dependency_types = int(getattr(nnm, "num_relation_dependency_types", 0))
-    num_relation_dependency_type_source_pairs = int(getattr(nnm, "num_relation_dependency_type_source_pairs", 0))
+    num_relation_dependency_types = int(dependency_stage_feature_counts["types"])
+    num_relation_dependency_type_source_pairs = int(
+        getattr(dependency_weights_trial_model, "num_relation_dependency_type_source_pairs", 0)
+        if dependency_weights_trial_model is not None
+        else 0
+    )
 
     relation_total_seconds = perf_counter() - relation_start_time
     other_seconds = relation_total_seconds - load_seconds - train_seconds - eval_seconds
@@ -2524,6 +3451,10 @@ def aggregate_single(relation):
             "dependency_stage_accepted": (
                 None if dependency_stage_result is None else bool(dependency_stage_accepted)
             ),
+            "dependency_candidate_label": (
+                None if stage2_metrics is None else str(stage2_metrics.get("candidate_label"))
+            ),
+            "dependency_candidates_tested": dependency_candidate_summaries,
             "rule_best_valid_mrr": float(best_valid_stage1["mrr"]),
             "dependency_best_valid_mrr": (
                 None if best_valid_stage2 is None else float(best_valid_stage2["mrr"])
@@ -2844,6 +3775,8 @@ with open(f"{args.experiment}/config.json", "w") as f:
 
 dataset = LocalDataset(dataset_dir)
 
+train_sp_to_o = dataset.index("train_sp_to_o")
+train_po_to_s = dataset.index("train_po_to_s")
 test_sp_to_o = dataset.index("test_sp_to_o")
 test_po_to_s = dataset.index("test_po_to_s")
 test_torch = dataset.split("test")
@@ -2852,6 +3785,8 @@ valid_sp_to_o = dataset.index("valid_sp_to_o")
 valid_po_to_s = dataset.index("valid_po_to_s")
 
 print("Loading processed explanations...")
+processed_sp_train = pickle.load(open(args.directory_explanations + "processed_sp_train.pkl", "rb"))
+processed_po_train = pickle.load(open(args.directory_explanations + "processed_po_train.pkl", "rb"))
 processed_sp_test = pickle.load(open(args.directory_explanations + "processed_sp_test.pkl", "rb"))
 processed_po_test = pickle.load(open(args.directory_explanations + "processed_po_test.pkl", "rb"))
 
@@ -2907,11 +3842,14 @@ RULE_CONF_TABLE = RULE_CONF_TABLE_CPU.to(EVAL_DEVICE)
 # 优化点：预构建 relation -> keys 索引，避免每次 get_ranks 线性扫描所有 keys。
 print("Building relation key indices...")
 relation_keys = {
+    "train_o": build_relation_key_index(train_sp_to_o, direction="o"),
+    "train_s": build_relation_key_index(train_po_to_s, direction="s"),
     "valid_o": build_relation_key_index(valid_sp_to_o, direction="o"),
     "valid_s": build_relation_key_index(valid_po_to_s, direction="s"),
     "test_o": build_relation_key_index(test_sp_to_o, direction="o"),
     "test_s": build_relation_key_index(test_po_to_s, direction="s"),
 }
+RELATION_PAIRWISE_QUERY_CACHE = {}
 
 if __name__ == "__main__":
     if args.relation == -1:

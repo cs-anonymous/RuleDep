@@ -127,7 +127,10 @@ def main():
     parser.add_argument("--worker-threads", type=int, default=-1)
     parser.add_argument("--aggregation", default="maxplus")
     parser.add_argument("--filter-w-data", type=int, default=1)
+    parser.add_argument("--hard-stop-at", type=int, default=None)
+    parser.add_argument("--adapt-topk", type=int, choices=[0, 1], default=None)
     parser.add_argument("--min-correct-predictions", type=int, default=5)
+    parser.add_argument("--b-max-branching-factor", type=int, default=-1)
     parser.add_argument("--read-cyclic-rules", type=int, default=1)
     parser.add_argument("--read-acyclic1-rules", type=int, default=1)
     parser.add_argument("--read-acyclic2-rules", type=int, default=0)
@@ -149,7 +152,7 @@ def main():
     opts.set("loader.c_min_support", int(args.min_correct_predictions))
     # IMPORTANT: default is 1000, which prunes B-rule DFS branches for efficiency.
     # Set to -1 to disable pruning and get exhaustive rule application (matching manual scan).
-    opts.set("loader.b_max_branching_factor", -1)
+    opts.set("loader.b_max_branching_factor", int(args.b_max_branching_factor))
     if args.worker_threads is not None and int(args.worker_threads) > 0:
         opts.set("loader.num_threads", int(args.worker_threads))
 
@@ -161,6 +164,10 @@ def main():
     # opts.set("ranking_handler.num_top_rules", -1)
     opts.set("ranking_handler.num_top_rules", args.num_top_rules)
     opts.set("ranking_handler.num_threads", args.worker_threads)
+    if args.hard_stop_at is not None:
+        opts.set("ranking_handler.hard_stop_at", int(args.hard_stop_at))
+    if args.adapt_topk is not None:
+        opts.set("ranking_handler.adapt_topk", bool(args.adapt_topk))
     # make sure we do not stop early
     opts.set("ranking_handler.disc_at_least", -1)
 
