@@ -281,6 +281,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--rule_file", help="Path to rules file", default="")
     parser.add_argument("-o", "--output", help="Folder where datasets are written", default=None)
+    parser.add_argument("--num_workers", type=int, default=cpu_count(), help="Worker processes for dataset generation.")
     args = vars(parser.parse_args())
     dataset_dir = os.path.join(args["data_root"], args["dataset"])
     if args["applied_rules"] is None:
@@ -325,7 +326,7 @@ if __name__ == "__main__":
         for relation in tqdm(range(num_relations), total=num_relations):
             generate_dataset(relation)
     else:
-        num_workers = cpu_count() // 2
+        num_workers = max(int(args["num_workers"]), 1)
         print(
             f"[create_datasets] large dataset detected: run multiprocessing "
             f"(dataset={args['dataset']}, train_keys={train_key_count}, relations={num_relations}, "

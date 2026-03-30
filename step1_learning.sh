@@ -5,7 +5,7 @@ set -euo pipefail
 
 default_support_threshold() {
     case "$1" in
-        KG20C|WN18RR) echo 3 ;;
+        KG20C|WN18RR) echo 2 ;;
         *) echo 5 ;;
     esac
 }
@@ -13,7 +13,8 @@ default_support_threshold() {
 dataset="$1"
 support_threshold="${2:-$(default_support_threshold "${dataset}")}"
 snapshots="${3:-10,100,400,1000}"
-worker_threads="${4:-20}"
+default_worker_threads="$(nproc)"
+worker_threads="${4:-${default_worker_threads}}"
 final_snapshot="${snapshots##*,}"
 
 echo "======================================"
@@ -59,7 +60,7 @@ rm -f "${java_log}"
         echo "Created ${input_file}-${support_threshold}"
     done
 
-    cp "rules-${final_snapshot}-${support_threshold}" "rule.txt"
+    mv "rules-${final_snapshot}-${support_threshold}" "rule.txt"
     echo "Created rule.txt from rules-${final_snapshot}-${support_threshold}"
 )
 

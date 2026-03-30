@@ -5,15 +5,17 @@ set -euo pipefail
 
 default_dep_min_supp() {
     case "$1" in
-        KG20C|WN18RR) echo 3 ;;
+        KG20C|WN18RR) echo 2 ;;
         *) echo 5 ;;
     esac
 }
 
 dataset="$1"
+worker_threads="${2:-$(nproc)}"
 
 export DATASET="${dataset}"
 export MIN_SUPP="${MIN_SUPP:-$(default_dep_min_supp "${dataset}")}"
+export WORKER_THREADS="${WORKER_THREADS:-${worker_threads}}"
 export PATH_TRAINING="data/${dataset}/train.txt"
 export PATH_VALID="data/${dataset}/valid.txt"
 export PATH_TEST="data/${dataset}/test.txt"
@@ -31,6 +33,6 @@ mvn -DskipTests compile exec:java > "data/${dataset}/rules/run_deplearn.log" 2>&
     tail -n 120 "data/${dataset}/rules/run_deplearn.log" >&2
     exit 1
 }
-python filter_dependency.py -d "${dataset}"
+python filter_dependency.py -d "${dataset}" --jobs "${worker_threads}"
 
 echo "Step 4 finished for ${dataset}"

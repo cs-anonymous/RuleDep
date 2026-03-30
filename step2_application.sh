@@ -3,10 +3,19 @@ set -euo pipefail
 
 [ "$#" -ge 1 ] || { echo "Usage: $0 <dataset> [topk] [worker_threads] [num_top_rules] [query_batch_size]" >&2; exit 1; }
 
+default_min_correct_predictions() {
+    case "$1" in
+        KG20C|WN18RR) echo 2 ;;
+        *) echo 5 ;;
+    esac
+}
+
 dataset="$1"
 topk="${2:-100}"
-worker_threads="${3:-20}"
+default_worker_threads="$(nproc)"
+worker_threads="${3:-${default_worker_threads}}"
 num_top_rules="${4:-200}"
+min_correct_predictions="${MIN_CORRECT_PREDICTIONS:-$(default_min_correct_predictions "${dataset}")}"
 
 mkdir -p "data/${dataset}/application"
 : > "data/${dataset}/application/empty.txt"
@@ -52,10 +61,11 @@ for split in train valid test; do
         --aggregation maxplus \
         --read-cyclic-rules 1 \
         --read-acyclic1-rules 1 \
-        --read-acyclic2-rules 0 \
+        --read-acyclic2-rules 1 \
         --read-zero-rules 0 \
         --read-uxxc-rules 0 \
-        --read-uxxd-rules 0
+        --read-uxxd-rules 0 \
+        --min-correct-predictions "${min_correct_predictions}"
         
         # --min-correct-predictions 5 \
 done

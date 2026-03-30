@@ -137,6 +137,9 @@ def main():
     parser.add_argument("--num_top_rules", type=int, default=200)
 
     args = parser.parse_args()
+    if args.worker_threads is None or int(args.worker_threads) <= 0:
+        args.worker_threads = max(int(os.cpu_count() or 1), 1)
+
     opts = Options()
     # loader rule selection
     opts.set("loader.load_b_rules", bool(args.read_cyclic_rules))
@@ -150,8 +153,7 @@ def main():
     # IMPORTANT: default is 1000, which prunes B-rule DFS branches for efficiency.
     # Set to -1 to disable pruning and get exhaustive rule application (matching manual scan).
     opts.set("loader.b_max_branching_factor", -1)
-    if args.worker_threads is not None and int(args.worker_threads) > 0:
-        opts.set("loader.num_threads", int(args.worker_threads))
+    opts.set("loader.num_threads", int(args.worker_threads))
 
     # ranking configuration
     opts.set("ranking_handler.collect_rules", True)
@@ -160,7 +162,7 @@ def main():
     opts.set("ranking_handler.filter_w_data", bool(args.filter_w_data))
     # opts.set("ranking_handler.num_top_rules", -1)
     opts.set("ranking_handler.num_top_rules", args.num_top_rules)
-    opts.set("ranking_handler.num_threads", args.worker_threads)
+    opts.set("ranking_handler.num_threads", int(args.worker_threads))
     # make sure we do not stop early
     opts.set("ranking_handler.disc_at_least", -1)
 

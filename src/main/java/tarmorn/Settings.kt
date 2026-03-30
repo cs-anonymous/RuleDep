@@ -193,17 +193,9 @@ object Settings {
     @JvmField
     var SATURATION: Double = 0.99
 
-    // The threshold for the number of correct prediction created with the refined rule.
-    @JvmField
-    var THRESHOLD_CORRECT_PREDICTIONS: Int = 2
-
     // The threshold for the number of correct prediction created with a zero rule.
     @JvmField
     var THRESHOLD_CORRECT_PREDICTIONS_ZERO: Int = 100
-
-    // The threshold for the number of correct predictions. Determines which rules are read from a file and which are ignored.
-    @JvmField
-    var READ_THRESHOLD_CORRECT_PREDICTIONS: Int = 2
 
     // The number of negative examples for which we assume that they exist, however, we have not seen them. Rules with high coverage are favored the higher the chosen number.
     @JvmField
