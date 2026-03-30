@@ -444,6 +444,58 @@ def normalize_rule_type_string(rule_str: str):
     return normalized, rule_type
 
 
+def is_d_rule_struct(rule_str: str) -> bool:
+    parts = rule_str.split("<=", 1)
+    if len(parts) != 2:
+        return False
+    body = parts[1]
+    return body.count("(A,") + body.count(",A)") == 1
+
+
+def is_b_rule_struct(rule_str: str) -> bool:
+    parts = rule_str.split("<=", 1)
+    if len(parts) != 2:
+        return False
+    head = parts[0].strip()
+    return "(X,Y)" in head
+
+
+def classify_rule_type_r3(rule_str: str) -> str:
+    if is_b_rule_struct(rule_str):
+        return "B"
+    if is_d_rule_struct(rule_str):
+        return "Ud"
+    return "Uc"
+
+
+def classify_rule_type_group(rule_type_r3: str, grouping: str):
+    grouping = str(grouping).lower()
+    if grouping == "none":
+        return None
+    if rule_type_r3 is None:
+        return None
+    if grouping == "r2":
+        return "B" if rule_type_r3 == "B" else "U"
+    if grouping == "r3":
+        return str(rule_type_r3)
+    raise ValueError(f"Unknown rule grouping: {grouping}")
+
+
+def classify_dependency_type_group(rule_type_a_r3: str, rule_type_b_r3: str, grouping: str):
+    grouping = str(grouping).lower()
+    if grouping == "none":
+        return None
+    if rule_type_a_r3 is None or rule_type_b_r3 is None:
+        return None
+    if grouping == "d3":
+        coarse_a = "B" if rule_type_a_r3 == "B" else "U"
+        coarse_b = "B" if rule_type_b_r3 == "B" else "U"
+        return tuple(sorted((coarse_a, coarse_b)))
+    if grouping == "d6":
+        return tuple(sorted((str(rule_type_a_r3), str(rule_type_b_r3))))
+    raise ValueError(f"Unknown dependency grouping: {grouping}")
+
+
 def extract_head_relation(rule_str: str):
     head = rule_str.split(" <= ", 1)[0].strip()
     if "(" not in head:
@@ -456,8 +508,8 @@ def parse_rule_file_metadata(rule_file: str, relation_ids):
     rule_map = defaultdict(list)
     rule_conf_by_id = {}
     rule_relation_by_id = {}
-    rule_type_by_id = {}
-    rule_type_members_by_relation = defaultdict(lambda: defaultdict(list))
+    rule_type_r3_by_id = {}
+    rule_type_members_r3_by_relation = defaultdict(lambda: defaultdict(list))
     num_rules = 0
     max_rule_id = 0
 
@@ -485,20 +537,20 @@ def parse_rule_file_metadata(rule_file: str, relation_ids):
             rel = extract_head_relation(parts[3].strip())
             rel_id = relation_to_id.get(rel)
             if rel_id is not None:
-                _normalized_rule, rule_type = normalize_rule_type_string(parts[3].strip())
+                rule_type_r3 = classify_rule_type_r3(parts[3].strip())
                 rule_map[rel_id].append(int(line_no))
                 rule_relation_by_id[int(line_no)] = int(rel_id)
-                rule_type_by_id[int(line_no)] = str(rule_type)
-                rule_type_members_by_relation[int(rel_id)][str(rule_type)].append(int(line_no))
+                rule_type_r3_by_id[int(line_no)] = str(rule_type_r3)
+                rule_type_members_r3_by_relation[int(rel_id)][str(rule_type_r3)].append(int(line_no))
 
     return {
         "rule_map": dict(rule_map),
         "rule_conf_by_id": rule_conf_by_id,
         "rule_relation_by_id": rule_relation_by_id,
-        "rule_type_by_id": dict(rule_type_by_id),
-        "rule_type_members_by_relation": {
+        "rule_type_r3_by_id": dict(rule_type_r3_by_id),
+        "rule_type_members_r3_by_relation": {
             int(relation): {str(rule_type): list(rule_ids) for rule_type, rule_ids in type_map.items()}
-            for relation, type_map in rule_type_members_by_relation.items()
+            for relation, type_map in rule_type_members_r3_by_relation.items()
         },
         "num_rules": int(num_rules),
         "max_rule_id": int(max_rule_id),
@@ -560,13 +612,17 @@ def summarize_dependency_type_candidates(candidate_map):
     total_types = 0
 
     for relation, deps in candidate_map.items():
+        if str(getattr(args, "dependency_grouping", "none")).lower() == "none":
+            relation_type_counts[int(relation)] = 0
+            total_pairs += int(len(deps))
+            continue
         dep_type_set = set()
         for a, b in deps:
-            type_a = rule_type_by_id.get(int(a))
-            type_b = rule_type_by_id.get(int(b))
-            if type_a is None or type_b is None:
+            type_a_r3 = rule_type_r3_by_id.get(int(a))
+            type_b_r3 = rule_type_r3_by_id.get(int(b))
+            dep_type = classify_dependency_type_group(type_a_r3, type_b_r3, args.dependency_grouping)
+            if dep_type is None:
                 continue
-            dep_type = (type_a, type_b) if type_a <= type_b else (type_b, type_a)
             dep_type_set.add(dep_type)
         relation_type_counts[int(relation)] = int(len(dep_type_set))
         total_pairs += int(len(deps))
@@ -645,92 +701,80 @@ def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=Fals
 
 
 def build_relation_rule_type_metadata(relation_rule_ids, relation):
+    if str(getattr(args, "rule_grouping", "none")).lower() == "none":
+        return {
+            "keys": [],
+            "supports": [],
+            "local_ids": [0 for _ in relation_rule_ids] + [0],
+            "pad": 0,
+        }
+
+    relation_type_members = defaultdict(list)
+    local_ids = []
+    for rid in relation_rule_ids:
+        rule_type_r3 = rule_type_r3_by_id.get(int(rid))
+        grouped_type = classify_rule_type_group(rule_type_r3, args.rule_grouping)
+        if grouped_type is not None:
+            relation_type_members[str(grouped_type)].append(int(rid))
+            local_ids.append(str(grouped_type))
+        else:
+            local_ids.append(None)
+
+    selected_keys = sorted(relation_type_members.keys())
+    type_to_local = {key: idx for idx, key in enumerate(selected_keys)}
+    pad_tok = len(selected_keys)
     return {
-        "keys": [],
-        "supports": [],
-        "local_ids": [0 for _ in relation_rule_ids] + [0],
-        "pad": 0,
+        "keys": selected_keys,
+        "supports": [int(len(relation_type_members[key])) for key in selected_keys],
+        "local_ids": [int(type_to_local.get(key, pad_tok)) for key in local_ids] + [int(pad_tok)],
+        "pad": int(pad_tok),
     }
 
 
 def build_relation_dependency_type_metadata(relation_rule_ids, global_to_local, source_pairs):
-    type_counts = defaultdict(int)
-    local_pair_records = []
+    if str(getattr(args, "dependency_grouping", "none")).lower() == "none":
+        return {
+            "keys": [],
+            "supports": [],
+            "pair_a": [],
+            "pair_b": [],
+            "pair_type": [],
+            "pad": 0,
+            "source_pair_count": 0,
+        }
 
-    for a, b in source_pairs:
+    type_counts = defaultdict(int)
+    local_type_ids = []
+
+    for dep in source_pairs:
+        if len(dep) >= 2:
+            a, b = dep[0], dep[1]
+        else:
+            continue
         local_a = int(global_to_local[int(a)].item())
         local_b = int(global_to_local[int(b)].item())
         if local_a == len(relation_rule_ids) or local_b == len(relation_rule_ids):
             continue
-        type_a = rule_type_by_id.get(int(a))
-        type_b = rule_type_by_id.get(int(b))
-        if type_a is None or type_b is None:
+        type_a_r3 = rule_type_r3_by_id.get(int(a))
+        type_b_r3 = rule_type_r3_by_id.get(int(b))
+        dep_type = classify_dependency_type_group(type_a_r3, type_b_r3, args.dependency_grouping)
+        if dep_type is None:
             continue
-        dep_type = (type_a, type_b) if type_a <= type_b else (type_b, type_a)
-        local_pair_records.append((local_a, local_b, dep_type))
+        local_type_ids.append(dep_type)
         type_counts[dep_type] += 1
 
     selected_type_keys = sorted(type_counts)
     type_to_local = {dep_type: idx for idx, dep_type in enumerate(selected_type_keys)}
     pad_type_tok = len(selected_type_keys)
 
-    pair_a = []
-    pair_b = []
-    pair_type = []
-    for local_a, local_b, dep_type in local_pair_records:
-        local_type = type_to_local.get(dep_type)
-        if local_type is None:
-            continue
-        pair_a.append(int(local_a))
-        pair_b.append(int(local_b))
-        pair_type.append(int(local_type))
-
     dep_type_supports = [int(type_counts[dep_type]) for dep_type in selected_type_keys]
     return {
         "keys": selected_type_keys,
         "supports": dep_type_supports,
-        "pair_a": pair_a,
-        "pair_b": pair_b,
-        "pair_type": pair_type,
+        "local_ids": [int(type_to_local.get(dep_type, pad_type_tok)) for dep_type in local_type_ids],
         "pad": pad_type_tok,
-        "source_pair_count": int(len(local_pair_records)),
+        "source_pair_count": int(len(local_type_ids)),
     }
-
-
-def compute_log_count_score(type_ids, valid_mask, num_types, type_weights, output_dtype):
-    if num_types <= 0:
-        return torch.zeros((valid_mask.shape[0], 1), dtype=output_dtype, device=valid_mask.device)
-
-    counts = torch.zeros((valid_mask.shape[0], num_types), dtype=output_dtype, device=valid_mask.device)
-    safe_type_ids = type_ids.masked_fill(~valid_mask, 0)
-    counts.scatter_add_(1, safe_type_ids, valid_mask.to(output_dtype))
-    return torch.log1p(counts) @ type_weights.reshape(-1, 1)
-
-
-def compute_dependency_type_score(active_matrix, pair_a_local, pair_b_local, pair_type_local, type_weights, pair_chunk, output_dtype):
-    num_types = int(type_weights.shape[0])
-    if num_types <= 0 or pair_a_local.numel() == 0:
-        return torch.zeros((active_matrix.shape[0], 1), dtype=output_dtype, device=active_matrix.device)
-
-    type_counts = torch.zeros((active_matrix.shape[0], num_types), dtype=output_dtype, device=active_matrix.device)
-    active_rules_in_batch = active_matrix.any(dim=0)
-    active_pair_mask = active_rules_in_batch[pair_a_local] & active_rules_in_batch[pair_b_local]
-    active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
-
-    if active_pair_idx.numel() == 0:
-        return torch.zeros((active_matrix.shape[0], 1), dtype=output_dtype, device=active_matrix.device)
-
-    for start in range(0, int(active_pair_idx.numel()), pair_chunk):
-        end = min(start + pair_chunk, int(active_pair_idx.numel()))
-        idx_chunk = active_pair_idx[start:end]
-        a_local = pair_a_local[idx_chunk]
-        b_local = pair_b_local[idx_chunk]
-        type_chunk = pair_type_local[idx_chunk]
-        pair_active_chunk = (active_matrix[:, a_local] & active_matrix[:, b_local]).to(output_dtype)
-        scatter_index = type_chunk.unsqueeze(0).expand(active_matrix.shape[0], -1)
-        type_counts.scatter_add_(1, scatter_index, pair_active_chunk)
-
-    return torch.log1p(type_counts) @ type_weights.reshape(-1, 1)
 
 
 class LinearAggregator(nn.Module):
@@ -742,7 +786,7 @@ class LinearAggregator(nn.Module):
                 confs = torch.sqrt(torch.clamp(confs, min=0.0))
             self.rules.weight[: self.num_relation_rules] = confs
             if self.num_relation_rule_types > 0:
-                self.rule_types.weight[: self.num_relation_rule_types].zero_()
+                self.rule_types.weight[: self.num_relation_rule_types].fill_(1.0)
             if self.num_relation_dependencies > 0:
                 if getattr(args, "init_dep_with_lift", False) and hasattr(self, "dependency_init_values"):
                     init_values = self.dependency_init_values[: self.num_relation_dependencies].reshape(-1, 1)
@@ -755,7 +799,7 @@ class LinearAggregator(nn.Module):
                 else:
                     self.dependencies.weight[: self.num_relation_dependencies].zero_()
             if self.num_relation_dependency_types > 0:
-                self.dependency_types.weight[: self.num_relation_dependency_types].zero_()
+                self.dependency_types.weight[: self.num_relation_dependency_types].fill_(1.0)
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.rules.weight[: self.num_relation_rules].reshape(1, -1))
             bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
             self.bias.uniform_(-bound, bound)
@@ -852,16 +896,10 @@ class LinearAggregator(nn.Module):
         self.pad_dependency_type_tok = int(dependency_type_meta["pad"])
         if self.num_relation_dependency_types > 0:
             self.dependency_types = nn.Embedding(self.num_relation_dependency_types + 1, 1, padding_idx=self.pad_dependency_type_tok)
-            dep_type_pair_a = torch.tensor(dependency_type_meta["pair_a"], dtype=torch.long)
-            dep_type_pair_b = torch.tensor(dependency_type_meta["pair_b"], dtype=torch.long)
-            dep_type_pair_t = torch.tensor(dependency_type_meta["pair_type"], dtype=torch.long)
+            dep_type_local = torch.tensor(dependency_type_meta["local_ids"], dtype=torch.long)
         else:
-            dep_type_pair_a = torch.empty((0,), dtype=torch.long)
-            dep_type_pair_b = torch.empty((0,), dtype=torch.long)
-            dep_type_pair_t = torch.empty((0,), dtype=torch.long)
-        self.register_buffer("dependency_type_pair_a_local", dep_type_pair_a)
-        self.register_buffer("dependency_type_pair_b_local", dep_type_pair_b)
-        self.register_buffer("dependency_type_pair_type_local", dep_type_pair_t)
+            dep_type_local = torch.empty((0,), dtype=torch.long)
+        self.register_buffer("dependency_local_to_type_local", dep_type_local)
 
         self.init_weights()
 
@@ -873,19 +911,20 @@ class LinearAggregator(nn.Module):
         local_rules.masked_fill_(mask.unsqueeze(dim=2), 0.0)
         if self.sign_constraint:
             local_rules = local_rules**2
-        logits = local_rules.sum(dim=1)
+        local_rule_values = local_rules.squeeze(dim=2)
 
         if self.num_relation_rule_types > 0:
-            rule_type_ids = self.rule_local_to_type_local[local_rule_ids]
-            valid_rule_types = (~mask) & (rule_type_ids != self.pad_rule_type_tok)
-            rule_type_w = self.rule_types.weight[: self.num_relation_rule_types, 0]
-            logits = logits + compute_log_count_score(
-                rule_type_ids,
-                valid_rule_types,
-                self.num_relation_rule_types,
-                rule_type_w,
-                logits.dtype,
+            rule_type_scale_by_local = torch.ones(
+                (self.num_relation_rules + 1,), dtype=local_rule_values.dtype, device=local_rule_values.device
             )
+            valid_local = self.rule_local_to_type_local != self.pad_rule_type_tok
+            if bool(valid_local.any().item()):
+                rule_type_w = self.rule_types.weight[: self.num_relation_rule_types, 0].to(local_rule_values.dtype)
+                rule_type_scale_by_local[: self.num_relation_rules][valid_local] = rule_type_w[
+                    self.rule_local_to_type_local[valid_local]
+                ]
+            local_rule_values = local_rule_values * rule_type_scale_by_local[local_rule_ids]
+        logits = local_rule_values.sum(dim=1, keepdim=True)
 
         if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
             batch_size = int(local_rules.shape[0])
@@ -902,6 +941,19 @@ class LinearAggregator(nn.Module):
                 dependency_w_all = self.dependencies.weight[: self.num_relation_dependencies, 0]
                 if self.dependency_sign_constraint:
                     dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
+                if self.num_relation_dependency_types > 0:
+                    dep_type_scale_by_local = torch.ones(
+                        (self.num_relation_dependencies,), dtype=dependency_w_all.dtype, device=dependency_w_all.device
+                    )
+                    valid_dep_local = self.dependency_local_to_type_local != self.pad_dependency_type_tok
+                    if bool(valid_dep_local.any().item()):
+                        dependency_type_w = self.dependency_types.weight[: self.num_relation_dependency_types, 0].to(
+                            dependency_w_all.dtype
+                        )
+                        dep_type_scale_by_local[valid_dep_local] = dependency_type_w[
+                            self.dependency_local_to_type_local[valid_dep_local]
+                        ]
+                    dependency_w_all = dependency_w_all * dep_type_scale_by_local
 
                 dependency_score = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
                 active_rules_in_batch = active_matrix.any(dim=0)
@@ -925,18 +977,6 @@ class LinearAggregator(nn.Module):
                         dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
                 logits = logits + dependency_score
 
-            if self.num_relation_dependency_types > 0:
-                dependency_type_w = self.dependency_types.weight[: self.num_relation_dependency_types, 0]
-                logits = logits + compute_dependency_type_score(
-                    active_matrix,
-                    self.dependency_type_pair_a_local,
-                    self.dependency_type_pair_b_local,
-                    self.dependency_type_pair_type_local,
-                    dependency_type_w,
-                    pair_chunk,
-                    logits.dtype,
-                )
-
         logits = logits + self.bias
         return logits
 
@@ -953,7 +993,7 @@ class SurprisalAggregator(nn.Module):
             surprisal = -torch.log(1 - confs)
             self.rules.weight[: self.num_relation_rules] = surprisal
             if self.num_relation_rule_types > 0:
-                self.rule_types.weight[: self.num_relation_rule_types].zero_()
+                self.rule_types.weight[: self.num_relation_rule_types].fill_(1.0)
             if self.num_relation_dependencies > 0:
                 if getattr(args, "init_dep_with_lift", False) and hasattr(self, "dependency_init_values"):
                     init_values = self.dependency_init_values[: self.num_relation_dependencies].reshape(-1, 1)
@@ -968,7 +1008,7 @@ class SurprisalAggregator(nn.Module):
                 else:
                     self.dependencies.weight[: self.num_relation_dependencies].zero_()
             if self.num_relation_dependency_types > 0:
-                self.dependency_types.weight[: self.num_relation_dependency_types].zero_()
+                self.dependency_types.weight[: self.num_relation_dependency_types].fill_(1.0)
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.rules.weight[: self.num_relation_rules].reshape(1, -1))
             bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
             self.bias.uniform_(-bound, bound)
@@ -1065,16 +1105,10 @@ class SurprisalAggregator(nn.Module):
         self.pad_dependency_type_tok = int(dependency_type_meta["pad"])
         if self.num_relation_dependency_types > 0:
             self.dependency_types = nn.Embedding(self.num_relation_dependency_types + 1, 1, padding_idx=self.pad_dependency_type_tok)
-            dep_type_pair_a = torch.tensor(dependency_type_meta["pair_a"], dtype=torch.long)
-            dep_type_pair_b = torch.tensor(dependency_type_meta["pair_b"], dtype=torch.long)
-            dep_type_pair_t = torch.tensor(dependency_type_meta["pair_type"], dtype=torch.long)
+            dep_type_local = torch.tensor(dependency_type_meta["local_ids"], dtype=torch.long)
         else:
-            dep_type_pair_a = torch.empty((0,), dtype=torch.long)
-            dep_type_pair_b = torch.empty((0,), dtype=torch.long)
-            dep_type_pair_t = torch.empty((0,), dtype=torch.long)
-        self.register_buffer("dependency_type_pair_a_local", dep_type_pair_a)
-        self.register_buffer("dependency_type_pair_b_local", dep_type_pair_b)
-        self.register_buffer("dependency_type_pair_type_local", dep_type_pair_t)
+            dep_type_local = torch.empty((0,), dtype=torch.long)
+        self.register_buffer("dependency_local_to_type_local", dep_type_local)
 
         self.init_weights()
 
@@ -1084,21 +1118,20 @@ class SurprisalAggregator(nn.Module):
         rule_w = self.rules(local_rule_ids).squeeze(dim=2)
         rule_w = torch.clamp(rule_w, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
         rule_w.masked_fill_(mask, 0.0)
-        score = rule_w.sum(dim=1, keepdim=True)
-
         if self.num_relation_rule_types > 0:
-            rule_type_ids = self.rule_local_to_type_local[local_rule_ids]
-            valid_rule_types = (~mask) & (rule_type_ids != self.pad_rule_type_tok)
-            rule_type_w = torch.clamp(
-                self.rule_types.weight[: self.num_relation_rule_types, 0], min=self.WEIGHT_MIN, max=self.WEIGHT_MAX
+            rule_type_scale_by_local = torch.ones(
+                (self.num_relation_rules + 1,), dtype=rule_w.dtype, device=rule_w.device
             )
-            score = score + compute_log_count_score(
-                rule_type_ids,
-                valid_rule_types,
-                self.num_relation_rule_types,
-                rule_type_w,
-                score.dtype,
-            )
+            valid_local = self.rule_local_to_type_local != self.pad_rule_type_tok
+            if bool(valid_local.any().item()):
+                rule_type_w = torch.clamp(
+                    self.rule_types.weight[: self.num_relation_rule_types, 0], min=self.WEIGHT_MIN, max=self.WEIGHT_MAX
+                ).to(rule_w.dtype)
+                rule_type_scale_by_local[: self.num_relation_rules][valid_local] = rule_type_w[
+                    self.rule_local_to_type_local[valid_local]
+                ]
+            rule_w = rule_w * rule_type_scale_by_local[local_rule_ids]
+        score = rule_w.sum(dim=1, keepdim=True)
 
         if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
             batch_size = int(local_rule_ids.shape[0])
@@ -1116,6 +1149,21 @@ class SurprisalAggregator(nn.Module):
                 dependency_w_all = torch.clamp(dependency_w_all, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
                 if self.dependency_sign_constraint:
                     dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
+                if self.num_relation_dependency_types > 0:
+                    dep_type_scale_by_local = torch.ones(
+                        (self.num_relation_dependencies,), dtype=dependency_w_all.dtype, device=dependency_w_all.device
+                    )
+                    valid_dep_local = self.dependency_local_to_type_local != self.pad_dependency_type_tok
+                    if bool(valid_dep_local.any().item()):
+                        dependency_type_w = torch.clamp(
+                            self.dependency_types.weight[: self.num_relation_dependency_types, 0],
+                            min=self.WEIGHT_MIN,
+                            max=self.WEIGHT_MAX,
+                        ).to(dependency_w_all.dtype)
+                        dep_type_scale_by_local[valid_dep_local] = dependency_type_w[
+                            self.dependency_local_to_type_local[valid_dep_local]
+                        ]
+                    dependency_w_all = dependency_w_all * dep_type_scale_by_local
 
                 dependency_score = torch.zeros((batch_size, 1), dtype=rule_w.dtype, device=local_rule_ids.device)
                 active_rules_in_batch = active_matrix.any(dim=0)
@@ -1138,22 +1186,6 @@ class SurprisalAggregator(nn.Module):
                         w_chunk = dependency_w_active[start:end].reshape(1, -1)
                         dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
                 score = score + dependency_score
-
-            if self.num_relation_dependency_types > 0:
-                dependency_type_w = torch.clamp(
-                    self.dependency_types.weight[: self.num_relation_dependency_types, 0],
-                    min=self.WEIGHT_MIN,
-                    max=self.WEIGHT_MAX,
-                )
-                score = score + compute_dependency_type_score(
-                    active_matrix,
-                    self.dependency_type_pair_a_local,
-                    self.dependency_type_pair_b_local,
-                    self.dependency_type_pair_type_local,
-                    dependency_type_w,
-                    pair_chunk,
-                    score.dtype,
-                )
 
         if self.sign_constraint:
             score = torch.clamp(score + self.bias, min=0.0)
@@ -1208,7 +1240,7 @@ def build_dependency_model_for_relation(relation):
             relation=relation,
             sign_constraint=args.sign_constraint,
             relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_type_candidate_map.get(relation, []),
+            dependency_type_candidates=dependency_map.get(relation, []),
             dependency_sign_constraint=args.sign_constraint_dependency,
         )
     if args.model == "SurprisalAggregator":
@@ -1216,7 +1248,7 @@ def build_dependency_model_for_relation(relation):
             relation=relation,
             sign_constraint=args.sign_constraint,
             relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_type_candidate_map.get(relation, []),
+            dependency_type_candidates=dependency_map.get(relation, []),
             dependency_sign_constraint=args.sign_constraint_dependency,
         )
     raise ValueError(f"Unknown model: {args.model}")
@@ -1592,6 +1624,20 @@ def get_parser():
     parser.add_argument("--rule_file", action="store", default="", help="Path to rules file. Default: <data_root>/<dataset>/rules/rules-1000-5")
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
+    parser.add_argument(
+        "--rule_grouping",
+        action="store",
+        default="none",
+        choices=["none", "r2", "r3"],
+        help="Rule shared-parameter grouping: none | r2(B/U) | r3(B/Uc/Ud).",
+    )
+    parser.add_argument(
+        "--dependency_grouping",
+        action="store",
+        default="none",
+        choices=["none", "d3", "d6"],
+        help="Dependency shared-parameter grouping: none | d3(BB/BU/UU) | d6(BB/BUc/BUd/UcUc/UcUd/UdUd).",
+    )
     parser.add_argument("--collect_train_hit_counts", action="store_true", default=True, help="Collect per-rule/per-dependency train hit counts for analysis CSVs (can be slow).")
     parser.add_argument("--no_collect_train_hit_counts", dest="collect_train_hit_counts", action="store_false", help="Disable per-rule/per-dependency train hit count collection.")
     return parser
@@ -2539,6 +2585,9 @@ def aggregate_single(relation):
                 "original": initial_bias_value,
                 "trained": trained_bias_value,
             },
+            "rule_type_weights": learned_rule_type_weights,
+            "dependency_type_weights_trial": learned_dependency_type_weights_trial,
+            "dependency_type_weights_final": learned_dependency_type_weights_final,
         },
         "test_before_stage1": test_stage_1,
         "test_after_stage1": test_stage_2,
@@ -2557,12 +2606,6 @@ def aggregate_single(relation):
             writer.writerow(["ruleID", "original", "trained", "train_hit_count"])
             writer.writerows(learned_weights)
 
-        if len(learned_rule_type_weights) > 0:
-            with open(f"{args.experiment}/rule-type-weight-{relation}.csv", "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["rule_type", "support_rules", "original", "trained"])
-                writer.writerows(learned_rule_type_weights)
-
         if len(learned_dependency_weights_trial) > 0:
             with open(f"{args.experiment}/dependency-trial-{relation}.csv", "w", newline="") as f:
                 writer = csv.writer(f)
@@ -2580,12 +2623,6 @@ def aggregate_single(relation):
                 )
                 writer.writerows(learned_dependency_weights_trial)
 
-        if len(learned_dependency_type_weights_trial) > 0:
-            with open(f"{args.experiment}/dependency-type-trial-{relation}.csv", "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["dependency_type", "support_pairs", "original", "trained"])
-                writer.writerows(learned_dependency_type_weights_trial)
-
         if len(learned_dependency_weights_final) > 0:
             with open(f"{args.experiment}/dependency-final-{relation}.csv", "w", newline="") as f:
                 writer = csv.writer(f)
@@ -2602,12 +2639,6 @@ def aggregate_single(relation):
                     ]
                 )
                 writer.writerows(learned_dependency_weights_final)
-
-        if len(learned_dependency_type_weights_final) > 0:
-            with open(f"{args.experiment}/dependency-type-final-{relation}.csv", "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["dependency_type", "support_pairs", "original", "trained"])
-                writer.writerows(learned_dependency_type_weights_final)
 
     # 显式释放 relation 级别对象，尽量降低长跑时显存峰值。
     del train_dataloader, dataloader, train_split
@@ -2829,7 +2860,8 @@ if "EXPERIMENT_DIR" not in os.environ:
     dependency_bit = 1 if (args.synergy or args.redundancy) else 0
     exp_name = (
         f"exp{args.relation}_{args.model}_{sign_bit}_{sign_dependency_bit}_{dependency_bit}_{args.pos}_"
-        f"{int(args.synergy)}_{int(args.redundancy)}_{int(args.init_dep_with_lift)}"
+        f"{int(args.synergy)}_{int(args.redundancy)}_{int(args.init_dep_with_lift)}_"
+        f"{args.rule_grouping}_{args.dependency_grouping}"
     )
     os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/aggregation/{exp_name}"
 args.experiment = os.environ["EXPERIMENT_DIR"]
@@ -2864,8 +2896,8 @@ synergy_filtered_file = os.path.join(dependency_dir, "synergy_filtered.txt")
 redundancy_filtered_file = os.path.join(dependency_dir, "redundancy_filtered.txt")
 relation_ids = read_ids(f"./{dataset_dir}/relation_ids.del")
 rule_meta = parse_rule_file_metadata(rule_file, relation_ids)
-rule_type_by_id = rule_meta["rule_type_by_id"]
-rule_type_members_by_relation = rule_meta["rule_type_members_by_relation"]
+rule_type_r3_by_id = rule_meta["rule_type_r3_by_id"]
+rule_type_members_r3_by_relation = rule_meta["rule_type_members_r3_by_relation"]
 dependency_map = defaultdict(list)
 if args.synergy:
     for relation, deps in parse_filtered_dependency_file(
