@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import pickle
 import re
@@ -146,6 +147,15 @@ def load_applied_rules(path):
         return json.load(f)
 
 
+def _empty_compact_split():
+    return {
+        "rules_flat": torch.tensor([], dtype=torch.int32),
+        "offsets": torch.tensor([0], dtype=torch.int64),
+        "golds": torch.tensor([], dtype=torch.float32).reshape(-1, 1),
+        "num_samples": 0,
+    }
+
+
 def build_processed_from_applied(applied_rules, entity_id_to_idx, relation_id_to_idx):
     processed_sp = {}
     processed_po = {}
@@ -275,17 +285,15 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dataset", help="Name of the dataset", default="codex-m")
     parser.add_argument("--data_root", help="Dataset root folder", default="data")
     parser.add_argument(
-        "--applied_rules",
-        help="Path to applied_rules_train.json",
-        default=None,
+        "--applied_rules_dir",
+        help="Directory containing relation-wise train applied rules: train_<relation>.json",
+        required=True,
     )
     parser.add_argument("--rule_file", help="Path to rules file", default="")
     parser.add_argument("-o", "--output", help="Folder where datasets are written", default=None)
     parser.add_argument("--num_workers", type=int, default=cpu_count(), help="Worker processes for dataset generation.")
     args = vars(parser.parse_args())
     dataset_dir = os.path.join(args["data_root"], args["dataset"])
-    if args["applied_rules"] is None:
-        args["applied_rules"] = os.path.join(dataset_dir, "application", "applied_rules_train.json")
     if args["output"] is None:
         args["output"] = os.path.join(dataset_dir, "datasets")
     if args["rule_file"] == "":
@@ -304,33 +312,45 @@ if __name__ == "__main__":
     entity_id_to_idx = {ent: idx for idx, ent in enumerate(entity_ids)}
     relation_id_to_idx = {rel: idx for idx, rel in enumerate(relation_ids)}
 
-    applied_rules_train = load_applied_rules(args["applied_rules"])
-    processed_sp_train, processed_po_train = build_processed_from_applied(
-        applied_rules_train,
-        entity_id_to_idx,
-        relation_id_to_idx,
-    )
-
     LEN_RULES, MAX_RULE_ID = parse_rule_file_stats(args["rule_file"])
     PAD_TOK = MAX_RULE_ID + 1
 
     num_relations = dataset.num_relations()
-    train_key_count = len(train_sp_to_o) + len(train_po_to_s)
-    small_dataset = _is_small_dataset(args["dataset"], train_key_count, num_relations)
 
-    if small_dataset:
-        print(
-            f"[create_datasets] small dataset detected: run serially "
-            f"(dataset={args['dataset']}, train_keys={train_key_count}, relations={num_relations})"
+    head_pattern = os.path.join(args["applied_rules_dir"], "train_*_head.json")
+    tail_pattern = os.path.join(args["applied_rules_dir"], "train_*_tail.json")
+    if not glob.glob(head_pattern) and not glob.glob(tail_pattern):
+        raise FileNotFoundError(
+            f"No relation-wise head/tail files found under: {args['applied_rules_dir']}"
         )
-        for relation in tqdm(range(num_relations), total=num_relations):
-            generate_dataset(relation)
-    else:
-        num_workers = max(int(args["num_workers"]), 1)
-        print(
-            f"[create_datasets] large dataset detected: run multiprocessing "
-            f"(dataset={args['dataset']}, train_keys={train_key_count}, relations={num_relations}, "
-            f"processes={num_workers}, torch_threads_per_process=1)"
-        )
-        with Pool(processes=num_workers, initializer=_init_pool_worker) as pool:
-            list(tqdm(pool.imap_unordered(generate_dataset, range(num_relations)), total=num_relations))
+
+    print(f"[create_datasets] relation-wise mode: reading train_<relationId>_head/tail.json")
+
+    for relation in tqdm(range(num_relations), total=num_relations):
+        head_path = os.path.join(args["applied_rules_dir"], f"train_{relation}_head.json")
+        tail_path = os.path.join(args["applied_rules_dir"], f"train_{relation}_tail.json")
+
+        if not os.path.exists(head_path) and not os.path.exists(tail_path):
+            train_set = _empty_compact_split()
+        else:
+            applied_rules_train = {
+                "head": load_applied_rules(head_path) if os.path.exists(head_path) else {},
+                "tail": load_applied_rules(tail_path) if os.path.exists(tail_path) else {},
+            }
+            processed_sp_train, processed_po_train = build_processed_from_applied(
+                applied_rules_train,
+                entity_id_to_idx,
+                relation_id_to_idx,
+            )
+            train_set_o = build_compact_split(train_sp_to_o, processed_sp_train, relation)
+            train_set_s = build_compact_split(train_po_to_s, processed_po_train, relation, direction="s")
+            train_set = concat_compact_splits(train_set_o, train_set_s)
+
+        data_obj = {
+            "format": "compact_varlen_int32_v1",
+            "pad_tok": int(PAD_TOK),
+            "num_rules": int(LEN_RULES),
+            "train": train_set,
+        }
+        if args["output"] is not None:
+            save(data_obj, args["output"], f"dataset_{relation}")

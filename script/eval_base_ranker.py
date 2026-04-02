@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import math
 import os
@@ -184,6 +185,74 @@ def _safe_rule_id(value):
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def normalize_applied_payload(payload: dict, direction_hint: str | None) -> dict:
+    if "head" in payload or "tail" in payload:
+        head_map = payload.get("head", {}) if isinstance(payload.get("head", {}), dict) else {}
+        tail_map = payload.get("tail", {}) if isinstance(payload.get("tail", {}), dict) else {}
+        return {"head": head_map, "tail": tail_map}
+
+    if direction_hint == "head":
+        return {"head": payload, "tail": {}}
+    if direction_hint == "tail":
+        return {"head": {}, "tail": payload}
+    raise ValueError("Cannot infer payload direction; expected *_head.json or *_tail.json")
+
+
+def merge_applied_rules(items: list[tuple[dict, str | None]]) -> dict:
+    merged = {"head": {}, "tail": {}}
+    for data, direction_hint in items:
+        normalized = normalize_applied_payload(data, direction_hint)
+        for direction in ("head", "tail"):
+            dir_map = normalized.get(direction, {})
+            if not isinstance(dir_map, dict):
+                continue
+            out_dir = merged[direction]
+            for rel, source_map in dir_map.items():
+                if not isinstance(source_map, dict):
+                    continue
+                out_rel = out_dir.setdefault(rel, {})
+                for source, target_map in source_map.items():
+                    if not isinstance(target_map, dict):
+                        continue
+                    out_source = out_rel.setdefault(source, {})
+                    for target, rule_ids in target_map.items():
+                        if target not in out_source:
+                            out_source[target] = list(rule_ids)
+                        else:
+                            existing = set(int(x) for x in out_source[target])
+                            existing.update(int(x) for x in rule_ids)
+                            out_source[target] = sorted(existing)
+    return merged
+
+
+def load_applied_rules_input(applied_rules_path: Path | None, applied_rules_dir: Path | None, split: str) -> tuple[dict, str]:
+    if applied_rules_path is not None and applied_rules_dir is not None:
+        raise ValueError("Provide only one of --applied_rules or --applied_rules_dir")
+
+    if applied_rules_dir is not None:
+        pattern = str(applied_rules_dir / f"{split}_*.json")
+        files = sorted(glob.glob(pattern))
+        if not files:
+            raise FileNotFoundError(f"No applied_rules files match pattern: {pattern}")
+        payloads = []
+        for fp in files:
+            direction_hint = None
+            if fp.endswith("_head.json"):
+                direction_hint = "head"
+            elif fp.endswith("_tail.json"):
+                direction_hint = "tail"
+            with open(fp, "r", encoding="utf-8") as f:
+                payloads.append((json.load(f), direction_hint))
+        return merge_applied_rules(payloads), f"dir={applied_rules_dir}, split={split}, files={len(files)}"
+
+    if applied_rules_path is None:
+        raise ValueError("Either --applied_rules or --applied_rules_dir is required")
+    if not applied_rules_path.exists():
+        raise FileNotFoundError(f"applied_rules file not found: {applied_rules_path}")
+    with open(applied_rules_path, "r", encoding="utf-8") as f:
+        return json.load(f), f"file={applied_rules_path}"
 
 
 def parse_decay_coeff(aggregation: str) -> Decimal | None:
@@ -844,6 +913,8 @@ argparser = argparse.ArgumentParser(description="Base ranker evaluation using ap
 argparser.add_argument("--dataset", type=str, default="wnrr", help="dataset to use")
 argparser.add_argument("--rules", type=str, default="", help="rules file to use")
 argparser.add_argument("--applied_rules", type=str, default="", help="applied_rules json file")
+argparser.add_argument("--applied_rules_dir", type=str, default="", help="directory containing <split>_<relation>.json")
+argparser.add_argument("--split", type=str, default="test", choices=["train", "valid", "test"], help="split name used with --applied_rules_dir")
 argparser.add_argument("--compare_eval_ranking", type=str, default="", help="eval ranking dump json to compare")
 argparser.add_argument("--valid", action="store_true", help="whether to use valid set for evaluation")
 argparser.add_argument("--test_valid_split", type=str, default="", help="valid/test split suffix")
@@ -875,9 +946,8 @@ start_time = datetime.now()
 dataset = args.dataset
 log_step("Parsed arguments")
 rules_path = Path(args.rules if args.rules else f"data/{dataset}/rules/rules-1000-5")
-applied_rules_path = Path(
-    args.applied_rules if args.applied_rules else f"data/{dataset}/application/applied_rules_test.json"
-)
+applied_rules_path = Path(args.applied_rules) if args.applied_rules else None
+applied_rules_dir = Path(args.applied_rules_dir) if args.applied_rules_dir else None
 
 if args.valid:
     target = f"data/{dataset}/valid{args.test_valid_split}.txt"
@@ -886,11 +956,16 @@ else:
 
 if not rules_path.exists():
     raise FileNotFoundError(f"rules file not found: {rules_path}")
-if not applied_rules_path.exists():
-    raise FileNotFoundError(f"applied_rules file not found: {applied_rules_path}")
 
 log_step(f"Rules path: {rules_path}")
-log_step(f"Applied rules path: {applied_rules_path}")
+if applied_rules_path is not None:
+    log_step(f"Applied rules path: {applied_rules_path}")
+elif applied_rules_dir is not None:
+    log_step(f"Applied rules dir: {applied_rules_dir}, split={args.split}")
+else:
+    default_applied = Path(f"data/{dataset}/application/applied_rules_test.json")
+    applied_rules_path = default_applied
+    log_step(f"Applied rules path (default): {applied_rules_path}")
 
 log_step("Loading rule surprisals...")
 rule_surprisal_map = load_rule_surprisals(
@@ -940,8 +1015,8 @@ if args.tie_handling == "frequency":
         entity_freq = load_entity_freq(train_path)
 
 log_step("Loading applied_rules...")
-with open(applied_rules_path, "r", encoding="utf-8") as f:
-    applied_data = json.load(f)
+applied_data, applied_source_desc = load_applied_rules_input(applied_rules_path, applied_rules_dir, args.split)
+log_step(f"Loaded applied_rules from {applied_source_desc}")
 
 head_applied = applied_data.get("head", {})
 tail_applied = applied_data.get("tail", {})

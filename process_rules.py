@@ -225,10 +225,88 @@ def parse_args():
     parser.add_argument("--data_dir", required=True)
     parser.add_argument("--split", required=True)
     parser.add_argument("--target_file", required=True)
-    parser.add_argument("--applied_rules_file", required=True)
+    parser.add_argument("--applied_rules_dir", required=True)
     parser.add_argument("--save_dir", required=True)
     parser.add_argument("--num_workers", type=int, default=mp.cpu_count())
     return parser.parse_args()
+
+
+def _load_relation_triples(rel_file, p_raw):
+    triples = []
+    with open(rel_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) != 2:
+                continue
+            s_raw, o_raw = parts
+            triples.append((s_raw, p_raw, o_raw))
+    return triples
+
+
+def _preprocess_from_relation_files(target_file, entity_ids, relation_ids, applied_dir, split):
+    entity_id_to_idx = {ent: idx for idx, ent in enumerate(entity_ids)}
+    relation_id_to_idx = {rel: idx for idx, rel in enumerate(relation_ids)}
+
+    processed_sp = {}
+    processed_po = {}
+    longest = 0
+
+    tmp_dir = tempfile.mkdtemp(prefix="process_rules_rel_glob_")
+    try:
+        tasks = _split_target_by_relation(target_file, entity_id_to_idx, relation_id_to_idx, tmp_dir)
+        relation_file_map = {p_raw: rel_file for p_raw, rel_file in tasks}
+
+        for rel_id, p_raw in enumerate(relation_ids):
+            rel_file = relation_file_map.get(p_raw)
+            if rel_file is None:
+                continue
+
+            head_path = os.path.join(applied_dir, f"{split}_{rel_id}_head.json")
+            tail_path = os.path.join(applied_dir, f"{split}_{rel_id}_tail.json")
+            if not os.path.exists(head_path) and not os.path.exists(tail_path):
+                continue
+
+            head_applied = {}
+            tail_applied = {}
+            if os.path.exists(head_path):
+                with open(head_path, "r", encoding="utf-8") as f:
+                    head_applied = json.load(f)
+            if os.path.exists(tail_path):
+                with open(tail_path, "r", encoding="utf-8") as f:
+                    tail_applied = json.load(f)
+
+            triples = _load_relation_triples(rel_file, p_raw)
+            if not triples:
+                continue
+
+            part_sp, part_po, part_longest = _process_triples_iterable(
+                triples,
+                entity_id_to_idx=entity_id_to_idx,
+                relation_id_to_idx=relation_id_to_idx,
+                head_applied=head_applied,
+                tail_applied=tail_applied,
+            )
+            processed_sp.update(part_sp)
+            processed_po.update(part_po)
+            if part_longest > longest:
+                longest = part_longest
+    finally:
+        if os.path.isdir(tmp_dir):
+            for fname in os.listdir(tmp_dir):
+                try:
+                    os.remove(os.path.join(tmp_dir, fname))
+                except OSError:
+                    pass
+            try:
+                os.rmdir(tmp_dir)
+            except OSError:
+                pass
+
+    print(f"Longest rule set for a candidate: {longest}")
+    return processed_sp, processed_po
 
 
 def main():
@@ -241,15 +319,18 @@ def main():
     entity_ids = read_ids(os.path.join(args.data_dir, "entity_ids.del"))
     relation_ids = read_ids(os.path.join(args.data_dir, "relation_ids.del"))
 
-    with open(args.applied_rules_file, "r", encoding="utf-8") as f:
-        applied_rules = json.load(f)
+    marker = os.path.join(args.applied_rules_dir, f"{args.split}_0_head.json")
+    if not os.path.isdir(args.applied_rules_dir):
+        raise FileNotFoundError(f"applied_rules_dir not found: {args.applied_rules_dir}")
+    if not os.path.exists(marker):
+        print(f"Warning: marker file not found (will still continue): {marker}")
 
-    processed_sp, processed_po = preprocess_candidates_from_applied(
+    processed_sp, processed_po = _preprocess_from_relation_files(
         target_file=args.target_file,
         entity_ids=entity_ids,
         relation_ids=relation_ids,
-        applied_rules=applied_rules,
-        num_workers=args.num_workers,
+        applied_dir=args.applied_rules_dir,
+        split=args.split,
     )
 
     with open(os.path.join(args.save_dir, f"processed_sp_{args.split}.pkl"), "wb") as f:
