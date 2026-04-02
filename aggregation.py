@@ -1550,48 +1550,6 @@ def materialize_compact_split_to_padded(split_dict):
     return padded, ys
 
 
-def compute_train_hit_counts(split_dict, relation_rule_ids, relation_synergy_pairs):
-    offsets = split_dict["offsets"].long()
-    rules_flat = split_dict["rules_flat"].long()
-    ys = split_dict["golds"].float()
-
-    rule_hit_counts = {int(rid): 0 for rid in relation_rule_ids}
-    synergy_hit_counts = {(int(a), int(b)): 0 for (a, b) in relation_synergy_pairs}
-
-    rule_set = set(int(rid) for rid in relation_rule_ids)
-
-    synergy_adj = defaultdict(list)
-    for idx, (a, b) in enumerate(relation_synergy_pairs):
-        aa, bb = (int(a), int(b)) if int(a) <= int(b) else (int(b), int(a))
-        synergy_adj[aa].append((bb, idx))
-
-    num_samples = int(ys.shape[0])
-    for i in range(num_samples):
-        if float(ys[i].item()) <= 0.5:
-            continue
-
-        start = int(offsets[i].item())
-        end = int(offsets[i + 1].item())
-        if end <= start:
-            continue
-
-        active_rules = set(int(x) for x in rules_flat[start:end].tolist())
-
-        for rid in active_rules:
-            if rid in rule_set:
-                rule_hit_counts[rid] += 1
-
-        if len(synergy_adj) > 0:
-            for a in active_rules:
-                if a not in synergy_adj:
-                    continue
-                for b, _idx in synergy_adj[a]:
-                    if b in active_rules:
-                        synergy_hit_counts[(a, b)] += 1
-
-    return rule_hit_counts, synergy_hit_counts
-
-
 def get_relation_rule_count(relation):
     return int(len(rule_map.get(int(relation), [])))
 
@@ -1657,7 +1615,6 @@ def build_dependency_blocks(model, train_split, dependency_chunk_size):
         return []
 
     relation_rule_ids = [int(rid) for rid in model.relation_rule_ids.tolist()]
-    rule_hit_counts, _ = compute_train_hit_counts(train_split, relation_rule_ids, [])
     effective_rule_weights = get_effective_rule_weights(model)
     rule_rank = {
         int(rid): idx
@@ -1666,7 +1623,6 @@ def build_dependency_blocks(model, train_split, dependency_chunk_size):
                 relation_rule_ids,
                 key=lambda rid: (
                     -float(effective_rule_weights[int(model.global_to_local[int(rid)].item())].item()),
-                    -int(rule_hit_counts.get(int(rid), 0)),
                     int(rid),
                 ),
             )
@@ -1781,8 +1737,6 @@ def get_parser():
         choices=["none", "d3", "d6"],
         help="Dependency shared-parameter grouping: none | d3(BB/BU/UU) | d6(BB/BUc/BUd/UcUc/UcUd/UdUd).",
     )
-    parser.add_argument("--collect_train_hit_counts", action="store_true", default=True, help="Collect per-rule/per-dependency train hit counts for analysis CSVs (can be slow).")
-    parser.add_argument("--no_collect_train_hit_counts", dest="collect_train_hit_counts", action="store_false", help="Disable per-rule/per-dependency train hit count collection.")
     return parser
 
 
@@ -1977,7 +1931,7 @@ def build_rule_type_weight_rows(model, initial_rule_type_weights):
     ]
 
 
-def build_dependency_weight_rows(model, dependency_pairs, initial_dependency_weights, dependency_hit_counts):
+def build_dependency_weight_rows(model, dependency_pairs, initial_dependency_weights):
     if (
         model is None
         or len(dependency_pairs) == 0
@@ -2003,7 +1957,6 @@ def build_dependency_weight_rows(model, dependency_pairs, initial_dependency_wei
             round(float(t), 7),
             round(float(((o**2) * (1.0 if kind == "synergy" else -1.0)) if args.sign_constraint_dependency else o), 7),
             round(float(((t**2) * (1.0 if kind == "synergy" else -1.0)) if args.sign_constraint_dependency else t), 7),
-            int(dependency_hit_counts.get((int(a), int(b)), 0)),
         )
         for (a, b, kind), o, t in zip(dependency_pairs, initial_dependency_weights.tolist(), trained_dependency_weights.tolist())
     ]
@@ -2150,6 +2103,7 @@ def evaluate_current_stage_result(relation, model, model_builder, evaluate_every
         "optimizer": None,
         "tail_mrr": tail_mrr,
         "head_mrr": head_mrr,
+        "valid": build_test_metrics_from_raw(head_valid, tail_valid),
         "test_initial": build_test_metrics_from_raw(head_test, tail_test),
         "test": build_test_metrics_from_raw(head_test, tail_test),
         "epochs_trained": 0,
@@ -2157,6 +2111,7 @@ def evaluate_current_stage_result(relation, model, model_builder, evaluate_every
         "eval_seconds": float(eval_seconds),
         "evaluate_every": int(evaluate_every),
         "best_valid_epoch": 0,
+        "best_valid_combined": float((head_valid[0] + tail_valid[0]) / 2.0),
         "best_valid_combined_raw": float((head_valid[3] + tail_valid[3]) / 2.0),
     }
 
@@ -2203,6 +2158,7 @@ def run_training_stage(
     else:
         early_stopping_patience = int(early_stopping_patience)
     min_epochs_before_stop = int(min_epochs_before_stop)
+    best_valid_combined = -1.0
     best_valid_combined_raw = -1.0
     no_improve_eval_rounds = 0
     epochs_trained = 0
@@ -2211,7 +2167,9 @@ def run_training_stage(
     final_loss = None
     evaluate_every = eval_every_values[0]
     best_state = None
+    best_state_raw = None
     best_valid_epoch = None
+    best_valid_epoch_raw = None
 
     # Evaluate the untrained starting point as a valid checkpoint candidate.
     has_non_finite = False
@@ -2233,9 +2191,12 @@ def run_training_stage(
             )
         eval_seconds += perf_counter() - eval_start
 
+        best_valid_combined = (init_head_valid[0] + init_tail_valid[0]) / 2.0
         best_valid_combined_raw = (init_head_valid[3] + init_tail_valid[3]) / 2.0
         best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        best_state_raw = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
         best_valid_epoch = 0
+        best_valid_epoch_raw = 0
         head_mrr.update_from_metrics(init_head_valid, model, (pos, float(lr_values[0]), -1))
         tail_mrr.update_from_metrics(init_tail_valid, model, (pos, float(lr_values[0]), -1))
 
@@ -2283,14 +2244,19 @@ def run_training_stage(
             if not has_non_finite:
                 head_mrr.update_from_metrics(current_head_valid, model, (pos, float(current_lr), t))
                 tail_mrr.update_from_metrics(current_tail_valid, model, (pos, float(current_lr), t))
+                valid_combined = (current_head_valid[0] + current_tail_valid[0]) / 2.0
                 valid_combined_raw = (current_head_valid[3] + current_tail_valid[3]) / 2.0
-                if valid_combined_raw > best_valid_combined_raw:
-                    best_valid_combined_raw = valid_combined_raw
+                if valid_combined > best_valid_combined:
+                    best_valid_combined = valid_combined
                     best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
                     best_valid_epoch = int(t + 1)
                     no_improve_eval_rounds = 0
                 else:
                     no_improve_eval_rounds += 1
+                if valid_combined_raw > best_valid_combined_raw:
+                    best_valid_combined_raw = valid_combined_raw
+                    best_state_raw = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+                    best_valid_epoch_raw = int(t + 1)
 
             if (
                 (not has_non_finite)
@@ -2300,16 +2266,19 @@ def run_training_stage(
             ):
                 pbar.set_postfix(
                     loss=f"{final_loss:.5f}",
-                    max_mrr=f"{valid_combined_raw:.5f}",
+                    max_mrr=f"{valid_combined:.5f}",
                     lr=f"{current_lr:.6g}",
                 )
                 break
 
-        max_mrr = max(best_valid_combined_raw, 0.0)
+        max_mrr = max(best_valid_combined, 0.0)
         pbar.set_postfix(loss=f"{final_loss:.5f}", max_mrr=f"{max_mrr:.5f}")
 
     if best_state is None:
         raise RuntimeError(f"No valid checkpoint selected for relation {relation} at stage {stage_name}")
+    if best_state_raw is None:
+        best_state_raw = {k: v.detach().cpu().clone() for k, v in best_state.items()}
+        best_valid_epoch_raw = best_valid_epoch
 
     with step_timer("epoch_eval_head"):
         head_mrr.finalize_test()
@@ -2335,6 +2304,21 @@ def run_training_stage(
     )
     selected_test = selected_stage_result["test"]
 
+    selected_state_dict_raw = {k: v.detach().cpu().clone() for k, v in best_state_raw.items()}
+    if selected_state_dict_raw.keys() == selected_state_dict.keys() and all(
+        torch.equal(selected_state_dict_raw[k], selected_state_dict[k]) for k in selected_state_dict.keys()
+    ):
+        selected_stage_result_raw = selected_stage_result
+    else:
+        selected_model_raw = build_model_from_state_dict(relation, model_builder, selected_state_dict_raw)
+        selected_stage_result_raw = evaluate_current_stage_result(
+            relation,
+            selected_model_raw,
+            model_builder,
+            evaluate_every=evaluate_every,
+        )
+    selected_test_raw = selected_stage_result_raw["test"]
+
     if checkpoint_selection == "combined":
         result_model = selected_stage_result["model"]
         result_head_mrr = selected_stage_result["head_mrr"]
@@ -2353,15 +2337,21 @@ def run_training_stage(
         "optimizer": optimizer,
         "tail_mrr": result_tail_mrr,
         "head_mrr": result_head_mrr,
+        "selected_valid": selected_stage_result.get("valid"),
+        "selected_valid_raw": selected_stage_result_raw.get("valid"),
         "test_initial": test_initial,
         "test": result_test,
         "selected_state_dict": selected_state_dict,
         "selected_test": selected_test,
+        "selected_state_dict_raw": selected_state_dict_raw,
+        "selected_test_raw": selected_test_raw,
         "epochs_trained": int(epochs_trained),
         "train_seconds": float(train_seconds),
         "eval_seconds": float(eval_seconds),
         "evaluate_every": int(evaluate_every),
         "best_valid_epoch": None if best_valid_epoch is None else int(best_valid_epoch),
+        "best_valid_epoch_raw": None if best_valid_epoch_raw is None else int(best_valid_epoch_raw),
+        "best_valid_combined": float(best_valid_combined),
         "best_valid_combined_raw": float(best_valid_combined_raw),
     }
 
@@ -2403,9 +2393,22 @@ def run_dependency_stage(
 
 
 def aggregate_single(relation):
-    def build_best_valid_metrics(stage_result):
+    def build_best_valid_metrics(stage_result, valid_key="selected_valid", combined_key="best_valid_combined", epoch_key="best_valid_epoch"):
         if stage_result is None:
             return None
+        selected_valid = stage_result.get(valid_key)
+        if selected_valid is not None:
+            return {
+                "mrr": float(selected_valid["mrr"]),
+                "h1": float(selected_valid["h1"]),
+                "h10": float(selected_valid["h10"]),
+                "mrr_raw": float(selected_valid["mrr_raw"]),
+                "h1_raw": float(selected_valid["h1_raw"]),
+                "h10_raw": float(selected_valid["h10_raw"]),
+                "combined": float(stage_result.get(combined_key, selected_valid["mrr"])),
+                "combined_raw": float(stage_result.get("best_valid_combined_raw", selected_valid["mrr_raw"])),
+                "epoch": None if stage_result.get(epoch_key) is None else int(stage_result[epoch_key]),
+            }
 
         stage_head_mrr = stage_result["head_mrr"]
         stage_tail_mrr = stage_result["tail_mrr"]
@@ -2423,8 +2426,9 @@ def aggregate_single(relation):
             "tail_mrr": float(stage_tail_mrr.maximums_v),
             "head_mrr_raw": float(stage_head_mrr.maximums_v_raw),
             "tail_mrr_raw": float(stage_tail_mrr.maximums_v_raw),
+            "combined": float(stage_result.get(combined_key, stage_result["best_valid_combined_raw"])),
             "combined_raw": float(stage_result["best_valid_combined_raw"]),
-            "epoch": None if stage_result["best_valid_epoch"] is None else int(stage_result["best_valid_epoch"]),
+            "epoch": None if stage_result.get(epoch_key) is None else int(stage_result[epoch_key]),
         }
 
     relation_start_time = perf_counter()
@@ -2483,6 +2487,12 @@ def aggregate_single(relation):
         checkpoint_selection="combined",
     )
     best_valid_stage1 = build_best_valid_metrics(stage1_result)
+    best_valid_stage1_raw = build_best_valid_metrics(
+        stage1_result,
+        valid_key="selected_valid_raw",
+        combined_key="best_valid_combined_raw",
+        epoch_key="best_valid_epoch_raw",
+    )
 
     final_result = stage1_result
     dependency_stage_result = None
@@ -2494,8 +2504,10 @@ def aggregate_single(relation):
         "pos_weight_source": pos_source,
         "epochs_trained": int(stage1_result["epochs_trained"]),
         "evaluate_every": int(stage1_result["evaluate_every"]),
-        "checkpoint_selection": "combined_best_valid",
+        "checkpoint_selection": "filtered_best_valid",
         "best_valid_epoch": int(stage1_result["best_valid_epoch"]),
+        "best_valid_epoch_raw": int(stage1_result["best_valid_epoch_raw"]),
+        "best_valid_combined": float(stage1_result["best_valid_combined"]),
         "best_valid_combined_raw": float(stage1_result["best_valid_combined_raw"]),
     }
     best_valid_stage2 = None
@@ -2602,12 +2614,6 @@ def aggregate_single(relation):
         else stage1_result.get("selected_test", stage1_result["test"])
     )
 
-    rule_hit_counts = {}
-    dependency_hit_counts = {}
-    if args.collect_train_hit_counts:
-        relation_synergy_pairs = [(int(a), int(b)) for (a, b, _kind) in dependency_pairs]
-        rule_hit_counts, dependency_hit_counts = compute_train_hit_counts(train_split, relation_rule_ids, relation_synergy_pairs)
-
     learned_weights = []
     if len(relation_rule_ids) > 0:
         with torch.no_grad():
@@ -2617,7 +2623,6 @@ def aggregate_single(relation):
                     relation_rule_ids,
                     [round(float(v), 7) for v in initial_rule_weights.tolist()],
                     [round(float(v), 7) for v in trained_rule_weights.tolist()],
-                    [int(rule_hit_counts.get(int(rid), 0)) for rid in relation_rule_ids],
                 )
             )
 
@@ -2630,7 +2635,6 @@ def aggregate_single(relation):
             dependency_weights_trial_model,
             dependency_pairs,
             initial_dependency_weights,
-            dependency_hit_counts,
         )
 
     learned_dependency_type_weights_trial = []
@@ -2646,7 +2650,6 @@ def aggregate_single(relation):
             final_result["model"],
             dependency_pairs,
             initial_dependency_weights,
-            dependency_hit_counts,
         )
 
     learned_dependency_type_weights_final = []
@@ -2703,6 +2706,7 @@ def aggregate_single(relation):
             "other": float(other_seconds),
         },
         "best_valid_stage1": best_valid_stage1,
+        "best_valid_stage1_raw": best_valid_stage1_raw,
         "best_valid_stage2": best_valid_stage2,
         "model_selection": {
             "selected_stage": (
@@ -2714,9 +2718,11 @@ def aggregate_single(relation):
                 None if dependency_stage_result is None else bool(dependency_stage_accepted)
             ),
             "rule_best_valid_mrr": float(best_valid_stage1["mrr"]),
+            "rule_best_valid_mrr_raw_selected": float(best_valid_stage1_raw["mrr"]),
             "dependency_best_valid_mrr": (
                 None if best_valid_stage2 is None else float(best_valid_stage2["mrr"])
             ),
+            "rule_best_valid_combined": float(stage1_result["best_valid_combined"]),
             "rule_best_valid_combined_raw": float(stage1_result["best_valid_combined_raw"]),
             "dependency_best_valid_combined_raw": (
                 None if dependency_stage_result is None else float(dependency_stage_result["best_valid_combined_raw"])
@@ -2734,6 +2740,7 @@ def aggregate_single(relation):
         },
         "test_before_stage1": test_stage_1,
         "test_after_stage1": test_stage_2,
+        "test_after_stage1_raw_selected": stage1_result.get("selected_test_raw"),
         "test_before_stage2": test_stage_3,
         "test_after_stage2": None if dependency_stage_result is None else test_stage_4,
         "test": final_test_metrics,
@@ -2746,7 +2753,7 @@ def aggregate_single(relation):
 
         with open(f"{args.experiment}/weight-{relation}.csv", "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["ruleID", "original", "trained", "train_hit_count"])
+            writer.writerow(["ruleID", "original", "trained"])
             writer.writerows(learned_weights)
 
         if len(learned_dependency_weights_trial) > 0:
@@ -2761,7 +2768,6 @@ def aggregate_single(relation):
                         "raw_trained",
                         "effective_original",
                         "effective_trained",
-                        "train_hit_count",
                     ]
                 )
                 writer.writerows(learned_dependency_weights_trial)
@@ -2778,7 +2784,6 @@ def aggregate_single(relation):
                         "raw_trained",
                         "effective_original",
                         "effective_trained",
-                        "train_hit_count",
                     ]
                 )
                 writer.writerows(learned_dependency_weights_final)
@@ -2826,6 +2831,7 @@ def _merge_metric_files(metric_files, relation_test_counts):
     rows_by_stage = {
         "test_before_stage1": [],
         "test_after_stage1": [],
+        "test_after_stage1_raw_selected": [],
         "test_before_stage2": [],
         "test_after_stage2": [],
     }
@@ -2853,12 +2859,14 @@ def _merge_metric_files(metric_files, relation_test_counts):
         count = relation_test_counts.get(relation, 0)
         test_before_stage1 = m.get("test_before_stage1", m.get("test_stage_1_rule_init", m.get("test_initial")))
         test_after_stage1 = m.get("test_after_stage1", m.get("test_stage_2_rule_trained"))
+        test_after_stage1_raw_selected = m.get("test_after_stage1_raw_selected")
         # Keep summary denominators comparable across stages by carrying forward the
         # stage-1 result for relations that never entered stage 2.
         test_before_stage2 = m.get("test_before_stage2", m.get("test_stage_3_synergy_init")) or test_after_stage1
         test_after_stage2 = m.get("test_after_stage2", m.get("test_stage_4_synergy_trained")) or test_before_stage2
         append_stage_row("test_before_stage1", test_before_stage1, relation, count)
         append_stage_row("test_after_stage1", test_after_stage1, relation, count)
+        append_stage_row("test_after_stage1_raw_selected", test_after_stage1_raw_selected, relation, count)
         append_stage_row("test_before_stage2", test_before_stage2, relation, count)
         append_stage_row("test_after_stage2", test_after_stage2, relation, count)
 
@@ -2890,6 +2898,7 @@ def _merge_metric_files(metric_files, relation_test_counts):
         "num_relations": int(num_relations),
         "test_before_stage1": weighted_by_stage["test_before_stage1"],
         "test_after_stage1": weighted_by_stage["test_after_stage1"],
+        "test_after_stage1_raw_selected": weighted_by_stage["test_after_stage1_raw_selected"],
         "test_before_stage2": weighted_by_stage["test_before_stage2"],
         "test_after_stage2": weighted_by_stage["test_after_stage2"],
         "test": weighted_by_stage["test_after_stage2"] or weighted_by_stage["test_after_stage1"],

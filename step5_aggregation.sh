@@ -6,10 +6,17 @@ set -euo pipefail
 dataset="$1"
 multiprocess="${2:-2}"
 max_parallel_configs="${MAX_PARALLEL_CONFIGS:-4}"
+run_tag="${RUN_TAG:-}"
+run_batch1_only="${RUN_BATCH1_ONLY:-0}"
+
+if [ -n "${run_tag}" ] && [ "${run_tag#_}" = "${run_tag}" ]; then
+    run_tag="_${run_tag}"
+fi
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="${ROOT_DIR}/logs/aggregation_structural/${dataset}"
 EXP_ROOT="${ROOT_DIR}/data/${dataset}/aggregation"
-MASTER_LOG="${LOG_DIR}/master.log"
+MASTER_LOG="${LOG_DIR}/master${run_tag}.log"
 
 mkdir -p "${LOG_DIR}" "${EXP_ROOT}"
 
@@ -29,7 +36,11 @@ run_config() {
     local name="$2"
     shift 2
     local log_path="${LOG_DIR}/${dataset}_${name}.log"
-    local exp_dir="${EXP_ROOT}/${name}"
+    local exp_dir="${EXP_ROOT}/${name}${run_tag}"
+
+    if [ -n "${run_tag}" ]; then
+        log_path="${LOG_DIR}/${dataset}_${name}${run_tag}.log"
+    fi
 
     mkdir -p "${exp_dir}"
     echo "[$(date '+%F %T')] START ${name} gpu=${gpu} args=$*" | tee -a "${MASTER_LOG}"
@@ -119,6 +130,9 @@ batch2=(
 )
 
 run_batched_configs "${max_parallel_configs}" "${batch1[@]}"
-run_batched_configs "${max_parallel_configs}" "${batch2[@]}"
+
+if [ "${run_batch1_only}" != "1" ]; then
+    run_batched_configs "${max_parallel_configs}" "${batch2[@]}"
+fi
 
 echo "Step 5 finished for ${dataset}"
