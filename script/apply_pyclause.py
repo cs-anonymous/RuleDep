@@ -134,6 +134,7 @@ def main():
     parser.add_argument("--read-zero-rules", type=int, default=0)
     parser.add_argument("--read-uxxc-rules", type=int, default=1)
     parser.add_argument("--read-uxxd-rules", type=int, default=1)
+    parser.add_argument("--b-max-length", type=int, default=-1)
     parser.add_argument("--num_top_rules", type=int, default=200)
 
     args = parser.parse_args()
@@ -148,6 +149,7 @@ def main():
     opts.set("loader.load_zero_rules", bool(args.read_zero_rules))
     opts.set("loader.load_u_xxc_rules", bool(args.read_uxxc_rules))
     opts.set("loader.load_u_xxd_rules", bool(args.read_uxxd_rules))
+    opts.set("loader.b_max_length", int(args.b_max_length))
     opts.set("loader.b_min_support", int(args.min_correct_predictions))
     opts.set("loader.c_min_support", int(args.min_correct_predictions))
     # IMPORTANT: default is 1000, which prunes B-rule DFS branches for efficiency.

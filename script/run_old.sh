@@ -17,6 +17,8 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 dataset="$1"
 relation="${2:--1}"
 if [ "$#" -ge 2 ]; then
@@ -37,12 +39,12 @@ pos_hpo="${POS_HPO:-5}"
 num_unseen="${NUM_UNSEEN:-0}"
 sign_constraint="${SIGN_CONSTRAINT:-1}"
 cmd=(
-    "${python_bin}" aggregation_old.py
+    "${python_bin}" "${ROOT_DIR}/script/aggregation_old.py"
     -d "${dataset}"
-    --data_root data
-    --rule_file "data/${dataset}/rules/rule.txt"
-    --directory_explanations "data/${dataset}/application/"
-    --directory_preprocessed_datasets "data/${dataset}/datasets/"
+    --data_root "${ROOT_DIR}/data"
+    --rule_file "${ROOT_DIR}/data/${dataset}/rules/rule.txt"
+    --directory_explanations "${ROOT_DIR}/data/${dataset}/application/"
+    --directory_preprocessed_datasets "${ROOT_DIR}/data/${dataset}/datasets/"
     --relation "${relation}"
     --device "${device}"
     --model "${model}"

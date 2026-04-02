@@ -11,3 +11,4 @@ baseline
 /out*
 kge
 __pycache__
+logs

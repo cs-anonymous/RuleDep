@@ -16,6 +16,7 @@ snapshots="${3:-10,100,400,1000}"
 default_worker_threads="$(nproc)"
 worker_threads="${4:-${default_worker_threads}}"
 final_snapshot="${snapshots##*,}"
+max_length_cyclic="${MAX_LENGTH_CYCLIC:-}"
 
 echo "======================================"
 echo "Step 1: Rule learning for ${dataset}"
@@ -34,6 +35,7 @@ PATH_OUTPUT   = data/${dataset}/rules/rules
 SNAPSHOTS_AT = ${snapshots}
 
 WORKER_THREADS = ${worker_threads}
+${max_length_cyclic:+MAX_LENGTH_CYCLIC = ${max_length_cyclic}}
 EOF
 ) 2>&1 | tee "${java_log}"
 java_status="${PIPESTATUS[0]}"

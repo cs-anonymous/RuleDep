@@ -33,6 +33,7 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 
 STEP_TIMINGS = defaultdict(float)
 STEP_COUNTS = defaultdict(int)
+RELATION_PROCESSED_CACHE = {}
 STEP_GPU_REQUIRED = {
     "load_dataloaders": False,
     "epoch_train.iter_create": False,
@@ -312,6 +313,68 @@ def build_relation_key_index(index_dict, direction="o"):
         for key in index_dict.keys():
             relation_to_keys[key[0]].append(key)
     return relation_to_keys
+
+
+def get_relation_processed_root():
+    explicit_dir = str(getattr(args, "relation_processed_dir", "") or "").strip()
+    if explicit_dir != "":
+        return explicit_dir
+    return os.path.join(args.directory_explanations, "relation")
+
+
+def _processed_file_name(split_name, direction):
+    prefix = "processed_sp" if direction == "o" else "processed_po"
+    return f"{prefix}_{split_name}.pkl"
+
+
+def _relation_processed_file_path(relation, split_name, direction):
+    return os.path.join(get_relation_processed_root(), str(int(relation)), _processed_file_name(split_name, direction))
+
+
+def _load_relation_processed_from_global(relation, split_name, direction):
+    direction_name = "o" if direction == "o" else "s"
+    global_path = os.path.join(args.directory_explanations, _processed_file_name(split_name, direction))
+    if not exists(global_path):
+        return {}
+
+    print(
+        f"[processed] relation-local file missing; fallback to global subset "
+        f"relation={relation} split={split_name} direction={direction_name} path={global_path}"
+    )
+    processed_global = pickle.load(open(global_path, "rb"))
+    relation_subset = {
+        key: processed_global[key]
+        for key in relation_keys[f"{split_name}_{direction_name}"].get(int(relation), [])
+        if key in processed_global
+    }
+    del processed_global
+    gc.collect()
+    return relation_subset
+
+
+def load_relation_processed(relation, split_name, direction):
+    cache_key = (int(relation), str(split_name), str(direction))
+    if cache_key in RELATION_PROCESSED_CACHE:
+        return RELATION_PROCESSED_CACHE[cache_key]
+
+    relation_path = _relation_processed_file_path(relation, split_name, direction)
+    if exists(relation_path):
+        processed = pickle.load(open(relation_path, "rb"))
+    else:
+        processed = _load_relation_processed_from_global(relation, split_name, direction)
+
+    RELATION_PROCESSED_CACHE[cache_key] = processed
+    return processed
+
+
+def clear_relation_processed_cache(relation=None):
+    if relation is None:
+        RELATION_PROCESSED_CACHE.clear()
+        return
+
+    relation = int(relation)
+    for cache_key in [k for k in RELATION_PROCESSED_CACHE.keys() if int(k[0]) == relation]:
+        del RELATION_PROCESSED_CACHE[cache_key]
 
 
 def read_ids(file_path):
@@ -778,6 +841,56 @@ def build_relation_dependency_type_metadata(relation_rule_ids, global_to_local, 
 
 
 class LinearAggregator(nn.Module):
+    def _get_active_dependency_base_weights(self, active_pair_idx, target_dtype, target_device):
+        if active_pair_idx.numel() == 0:
+            return torch.empty((0,), dtype=target_dtype, device=target_device)
+
+        dependency_w_active = self.dependencies.weight[active_pair_idx, 0]
+        if self.dependency_sign_constraint:
+            dependency_w_active = (dependency_w_active**2) * self.dependency_pair_sign[active_pair_idx]
+        return dependency_w_active.to(device=target_device, dtype=target_dtype)
+
+    def _aggregate_rule_contribution(self, local_rule_values, local_rule_ids):
+        if self.num_relation_rule_types <= 0:
+            return local_rule_values.sum(dim=1, keepdim=True)
+
+        active_rule_type_local = self.rule_local_to_type_local[local_rule_ids]
+        valid_local = active_rule_type_local != self.pad_rule_type_tok
+        if not bool(valid_local.any().item()):
+            return local_rule_values.sum(dim=1, keepdim=True)
+
+        safe_rule_type_local = active_rule_type_local.masked_fill(~valid_local, 0)
+        weighted_rules = local_rule_values * valid_local.to(local_rule_values.dtype)
+        bucket_sum = torch.zeros(
+            (int(local_rule_values.shape[0]), self.num_relation_rule_types),
+            dtype=local_rule_values.dtype,
+            device=local_rule_values.device,
+        )
+        bucket_sum.scatter_add_(1, safe_rule_type_local, weighted_rules)
+        rule_type_w = self.rule_types.weight[: self.num_relation_rule_types, 0].to(local_rule_values.dtype)
+        return bucket_sum @ rule_type_w.reshape(-1, 1)
+
+    def _aggregate_dependency_contribution(self, pair_active_chunk, dependency_w_active, active_pair_idx_chunk, target_dtype):
+        pair_scores = pair_active_chunk.to(target_dtype) * dependency_w_active.reshape(1, -1)
+        if self.num_relation_dependency_types <= 0:
+            return pair_scores.sum(dim=1, keepdim=True)
+
+        active_dep_type_local = self.dependency_local_to_type_local[active_pair_idx_chunk]
+        valid_dep_local = active_dep_type_local != self.pad_dependency_type_tok
+        if not bool(valid_dep_local.any().item()):
+            return pair_scores.sum(dim=1, keepdim=True)
+
+        safe_dep_type_local = active_dep_type_local.masked_fill(~valid_dep_local, 0)
+        weighted_pairs = pair_scores * valid_dep_local.to(pair_scores.dtype).reshape(1, -1)
+        bucket_sum = torch.zeros(
+            (int(pair_scores.shape[0]), self.num_relation_dependency_types),
+            dtype=pair_scores.dtype,
+            device=pair_scores.device,
+        )
+        bucket_sum.scatter_add_(1, safe_dep_type_local.reshape(1, -1).expand(int(pair_scores.shape[0]), -1), weighted_pairs)
+        dependency_type_w = self.dependency_types.weight[: self.num_relation_dependency_types, 0].to(pair_scores.dtype)
+        return bucket_sum @ dependency_type_w.reshape(-1, 1)
+
     def init_weights(self):
         with torch.no_grad():
             torch.manual_seed(0)
@@ -900,6 +1013,13 @@ class LinearAggregator(nn.Module):
         else:
             dep_type_local = torch.empty((0,), dtype=torch.long)
         self.register_buffer("dependency_local_to_type_local", dep_type_local)
+        if self.num_relation_dependency_types > 0 and int(dep_type_local.numel()) != int(self.num_relation_dependencies):
+            raise RuntimeError(
+                f"dependency type local-id count mismatch for relation={relation}: "
+                f"num_relation_dependencies={self.num_relation_dependencies}, "
+                f"num_dependency_type_local_ids={int(dep_type_local.numel())}, "
+                f"source_pair_count={int(dependency_type_meta['source_pair_count'])}"
+            )
 
         self.init_weights()
 
@@ -913,18 +1033,7 @@ class LinearAggregator(nn.Module):
             local_rules = local_rules**2
         local_rule_values = local_rules.squeeze(dim=2)
 
-        if self.num_relation_rule_types > 0:
-            rule_type_scale_by_local = torch.ones(
-                (self.num_relation_rules + 1,), dtype=local_rule_values.dtype, device=local_rule_values.device
-            )
-            valid_local = self.rule_local_to_type_local != self.pad_rule_type_tok
-            if bool(valid_local.any().item()):
-                rule_type_w = self.rule_types.weight[: self.num_relation_rule_types, 0].to(local_rule_values.dtype)
-                rule_type_scale_by_local[: self.num_relation_rules][valid_local] = rule_type_w[
-                    self.rule_local_to_type_local[valid_local]
-                ]
-            local_rule_values = local_rule_values * rule_type_scale_by_local[local_rule_ids]
-        logits = local_rule_values.sum(dim=1, keepdim=True)
+        logits = self._aggregate_rule_contribution(local_rule_values, local_rule_ids)
 
         if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
             batch_size = int(local_rules.shape[0])
@@ -938,23 +1047,6 @@ class LinearAggregator(nn.Module):
             pair_chunk = max(int(getattr(args, "dependency_chunk_size", 0)), 1)
 
             if self.num_relation_dependencies > 0:
-                dependency_w_all = self.dependencies.weight[: self.num_relation_dependencies, 0]
-                if self.dependency_sign_constraint:
-                    dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
-                if self.num_relation_dependency_types > 0:
-                    dep_type_scale_by_local = torch.ones(
-                        (self.num_relation_dependencies,), dtype=dependency_w_all.dtype, device=dependency_w_all.device
-                    )
-                    valid_dep_local = self.dependency_local_to_type_local != self.pad_dependency_type_tok
-                    if bool(valid_dep_local.any().item()):
-                        dependency_type_w = self.dependency_types.weight[: self.num_relation_dependency_types, 0].to(
-                            dependency_w_all.dtype
-                        )
-                        dep_type_scale_by_local[valid_dep_local] = dependency_type_w[
-                            self.dependency_local_to_type_local[valid_dep_local]
-                        ]
-                    dependency_w_all = dependency_w_all * dep_type_scale_by_local
-
                 dependency_score = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
                 active_rules_in_batch = active_matrix.any(dim=0)
                 active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
@@ -965,16 +1057,23 @@ class LinearAggregator(nn.Module):
                 if active_pair_idx.numel() > 0:
                     pair_a_active = self.synergy_pair_a_local[active_pair_idx]
                     pair_b_active = self.synergy_pair_b_local[active_pair_idx]
-                    dependency_w_active = dependency_w_all[active_pair_idx]
+                    dependency_w_active = self._get_active_dependency_base_weights(
+                        active_pair_idx, local_rule_values.dtype, local_rules.device
+                    )
 
                     active_pair_count = int(active_pair_idx.numel())
                     for start in range(0, active_pair_count, pair_chunk):
                         end = min(start + pair_chunk, active_pair_count)
                         a_local = pair_a_active[start:end]
                         b_local = pair_b_active[start:end]
+                        chunk_pair_idx = active_pair_idx[start:end]
                         pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
-                        w_chunk = dependency_w_active[start:end].reshape(1, -1)
-                        dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
+                        dependency_score = dependency_score + self._aggregate_dependency_contribution(
+                            pair_active_chunk,
+                            dependency_w_active[start:end],
+                            chunk_pair_idx,
+                            local_rule_values.dtype,
+                        )
                 logits = logits + dependency_score
 
         logits = logits + self.bias
@@ -1109,8 +1208,72 @@ class SurprisalAggregator(nn.Module):
         else:
             dep_type_local = torch.empty((0,), dtype=torch.long)
         self.register_buffer("dependency_local_to_type_local", dep_type_local)
+        if self.num_relation_dependency_types > 0 and int(dep_type_local.numel()) != int(self.num_relation_dependencies):
+            raise RuntimeError(
+                f"dependency type local-id count mismatch for relation={relation}: "
+                f"num_relation_dependencies={self.num_relation_dependencies}, "
+                f"num_dependency_type_local_ids={int(dep_type_local.numel())}, "
+                f"source_pair_count={int(dependency_type_meta['source_pair_count'])}"
+            )
 
         self.init_weights()
+
+    def _get_active_dependency_base_weights(self, active_pair_idx, target_dtype, target_device):
+        if active_pair_idx.numel() == 0:
+            return torch.empty((0,), dtype=target_dtype, device=target_device)
+
+        dependency_w_active = self.dependencies.weight[active_pair_idx, 0]
+        dependency_w_active = torch.clamp(dependency_w_active, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
+        if self.dependency_sign_constraint:
+            dependency_w_active = (dependency_w_active**2) * self.dependency_pair_sign[active_pair_idx]
+        return dependency_w_active.to(device=target_device, dtype=target_dtype)
+
+    def _aggregate_rule_contribution(self, rule_w, local_rule_ids):
+        if self.num_relation_rule_types <= 0:
+            return rule_w.sum(dim=1, keepdim=True)
+
+        active_rule_type_local = self.rule_local_to_type_local[local_rule_ids]
+        valid_local = active_rule_type_local != self.pad_rule_type_tok
+        if not bool(valid_local.any().item()):
+            return rule_w.sum(dim=1, keepdim=True)
+
+        safe_rule_type_local = active_rule_type_local.masked_fill(~valid_local, 0)
+        weighted_rules = rule_w * valid_local.to(rule_w.dtype)
+        bucket_sum = torch.zeros(
+            (int(rule_w.shape[0]), self.num_relation_rule_types),
+            dtype=rule_w.dtype,
+            device=rule_w.device,
+        )
+        bucket_sum.scatter_add_(1, safe_rule_type_local, weighted_rules)
+        rule_type_w = torch.clamp(
+            self.rule_types.weight[: self.num_relation_rule_types, 0], min=self.WEIGHT_MIN, max=self.WEIGHT_MAX
+        ).to(rule_w.dtype)
+        return bucket_sum @ rule_type_w.reshape(-1, 1)
+
+    def _aggregate_dependency_contribution(self, pair_active_chunk, dependency_w_active, active_pair_idx_chunk, target_dtype):
+        pair_scores = pair_active_chunk.to(target_dtype) * dependency_w_active.reshape(1, -1)
+        if self.num_relation_dependency_types <= 0:
+            return pair_scores.sum(dim=1, keepdim=True)
+
+        active_dep_type_local = self.dependency_local_to_type_local[active_pair_idx_chunk]
+        valid_dep_local = active_dep_type_local != self.pad_dependency_type_tok
+        if not bool(valid_dep_local.any().item()):
+            return pair_scores.sum(dim=1, keepdim=True)
+
+        safe_dep_type_local = active_dep_type_local.masked_fill(~valid_dep_local, 0)
+        weighted_pairs = pair_scores * valid_dep_local.to(pair_scores.dtype).reshape(1, -1)
+        bucket_sum = torch.zeros(
+            (int(pair_scores.shape[0]), self.num_relation_dependency_types),
+            dtype=pair_scores.dtype,
+            device=pair_scores.device,
+        )
+        bucket_sum.scatter_add_(1, safe_dep_type_local.reshape(1, -1).expand(int(pair_scores.shape[0]), -1), weighted_pairs)
+        dependency_type_w = torch.clamp(
+            self.dependency_types.weight[: self.num_relation_dependency_types, 0],
+            min=self.WEIGHT_MIN,
+            max=self.WEIGHT_MAX,
+        ).to(pair_scores.dtype)
+        return bucket_sum @ dependency_type_w.reshape(-1, 1)
 
     def forward(self, rules):
         local_rule_ids = self.global_to_local[rules.long()]
@@ -1118,20 +1281,7 @@ class SurprisalAggregator(nn.Module):
         rule_w = self.rules(local_rule_ids).squeeze(dim=2)
         rule_w = torch.clamp(rule_w, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
         rule_w.masked_fill_(mask, 0.0)
-        if self.num_relation_rule_types > 0:
-            rule_type_scale_by_local = torch.ones(
-                (self.num_relation_rules + 1,), dtype=rule_w.dtype, device=rule_w.device
-            )
-            valid_local = self.rule_local_to_type_local != self.pad_rule_type_tok
-            if bool(valid_local.any().item()):
-                rule_type_w = torch.clamp(
-                    self.rule_types.weight[: self.num_relation_rule_types, 0], min=self.WEIGHT_MIN, max=self.WEIGHT_MAX
-                ).to(rule_w.dtype)
-                rule_type_scale_by_local[: self.num_relation_rules][valid_local] = rule_type_w[
-                    self.rule_local_to_type_local[valid_local]
-                ]
-            rule_w = rule_w * rule_type_scale_by_local[local_rule_ids]
-        score = rule_w.sum(dim=1, keepdim=True)
+        score = self._aggregate_rule_contribution(rule_w, local_rule_ids)
 
         if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
             batch_size = int(local_rule_ids.shape[0])
@@ -1145,26 +1295,6 @@ class SurprisalAggregator(nn.Module):
             pair_chunk = max(int(getattr(args, "dependency_chunk_size", 0)), 1)
 
             if self.num_relation_dependencies > 0:
-                dependency_w_all = self.dependencies.weight[: self.num_relation_dependencies, 0]
-                dependency_w_all = torch.clamp(dependency_w_all, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
-                if self.dependency_sign_constraint:
-                    dependency_w_all = (dependency_w_all**2) * self.dependency_pair_sign
-                if self.num_relation_dependency_types > 0:
-                    dep_type_scale_by_local = torch.ones(
-                        (self.num_relation_dependencies,), dtype=dependency_w_all.dtype, device=dependency_w_all.device
-                    )
-                    valid_dep_local = self.dependency_local_to_type_local != self.pad_dependency_type_tok
-                    if bool(valid_dep_local.any().item()):
-                        dependency_type_w = torch.clamp(
-                            self.dependency_types.weight[: self.num_relation_dependency_types, 0],
-                            min=self.WEIGHT_MIN,
-                            max=self.WEIGHT_MAX,
-                        ).to(dependency_w_all.dtype)
-                        dep_type_scale_by_local[valid_dep_local] = dependency_type_w[
-                            self.dependency_local_to_type_local[valid_dep_local]
-                        ]
-                    dependency_w_all = dependency_w_all * dep_type_scale_by_local
-
                 dependency_score = torch.zeros((batch_size, 1), dtype=rule_w.dtype, device=local_rule_ids.device)
                 active_rules_in_batch = active_matrix.any(dim=0)
                 active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
@@ -1175,16 +1305,23 @@ class SurprisalAggregator(nn.Module):
                 if active_pair_idx.numel() > 0:
                     pair_a_active = self.synergy_pair_a_local[active_pair_idx]
                     pair_b_active = self.synergy_pair_b_local[active_pair_idx]
-                    dependency_w_active = dependency_w_all[active_pair_idx]
+                    dependency_w_active = self._get_active_dependency_base_weights(
+                        active_pair_idx, rule_w.dtype, local_rule_ids.device
+                    )
 
                     active_pair_count = int(active_pair_idx.numel())
                     for start in range(0, active_pair_count, pair_chunk):
                         end = min(start + pair_chunk, active_pair_count)
                         a_local = pair_a_active[start:end]
                         b_local = pair_b_active[start:end]
+                        chunk_pair_idx = active_pair_idx[start:end]
                         pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
-                        w_chunk = dependency_w_active[start:end].reshape(1, -1)
-                        dependency_score = dependency_score + (pair_active_chunk.float() * w_chunk).sum(dim=1, keepdim=True)
+                        dependency_score = dependency_score + self._aggregate_dependency_contribution(
+                            pair_active_chunk,
+                            dependency_w_active[start:end],
+                            chunk_pair_idx,
+                            rule_w.dtype,
+                        )
                 score = score + dependency_score
 
         if self.sign_constraint:
@@ -1279,9 +1416,9 @@ class MRR:
         self.maximums_t_10_raw = 0.0
 
         self.valid_sp_to_o = valid_sp_to_o if direction == "o" else valid_po_to_s
-        self.valid_processed = processed_sp_valid if direction == "o" else processed_po_valid
+        self.valid_processed = load_relation_processed(relation, "valid", direction)
         self.test_sp_to_o = test_sp_to_o if direction == "o" else test_po_to_s
-        self.test_processed = processed_sp_test if direction == "o" else processed_po_test
+        self.test_processed = load_relation_processed(relation, "test", direction)
         self.nnm = None
 
     def calc_metrics_(self, ranks, n):
@@ -1499,7 +1636,7 @@ def load_dataloaders(dataset_directory, relation):
             batch_size=effective_batch_size,
             shuffle=args.shuffle_train,
             device=args.device,
-            preload_to_device=args.device != "cpu",
+            preload_to_device=False,
         )
 
         if len(train_loader) == 0:
@@ -1592,7 +1729,7 @@ def build_block_dataloader(base_dataloader, owner_rule_ids):
         batch_size=base_dataloader.batch_size,
         shuffle=base_dataloader.shuffle,
         device=args.device,
-        preload_to_device=args.device != "cpu",
+        preload_to_device=False,
     )
 
 
@@ -1622,6 +1759,12 @@ def get_parser():
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
     parser.add_argument("--synergy_pair_chunk_size", dest="dependency_chunk_size", action="store", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--rule_file", action="store", default="", help="Path to rules file. Default: <data_root>/<dataset>/rules/rules-1000-5")
+    parser.add_argument(
+        "--relation_processed_dir",
+        action="store",
+        default="",
+        help="Directory containing relation-local processed_sp_*.pkl and processed_po_*.pkl. Default: <data_root>/<dataset>/application/relation",
+    )
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
     parser.add_argument(
@@ -2663,6 +2806,16 @@ def _get_all_relations():
     return list(range(dataset.num_relations()))
 
 
+def _aggregate_single_and_cleanup(relation):
+    try:
+        return aggregate_single(relation)
+    finally:
+        clear_relation_processed_cache(relation)
+        gc.collect()
+        if torch.cuda.is_available() and str(args.device).startswith("cuda"):
+            torch.cuda.empty_cache()
+
+
 def _get_relation_test_counts():
     relation_ids = test_torch[:, 1].long().cpu()
     counts = torch.bincount(relation_ids, minlength=dataset.num_relations())
@@ -2788,7 +2941,7 @@ def aggregate_all_relations_sequential():
 
     for relation in relations:
         try:
-            aggregate_single(relation)
+            _aggregate_single_and_cleanup(relation)
         except Exception as e:
             failed_relations[int(relation)] = str(e)
 
@@ -2800,7 +2953,7 @@ def _run_one_relation(relation):
     # Pool workers are daemonic; they cannot spawn children.
     # So DataLoader must run in-process in each worker.
     args.max_worker_dataloader = 0
-    aggregate_single(relation)
+    _aggregate_single_and_cleanup(relation)
     return int(relation)
 
 
@@ -2842,7 +2995,7 @@ def aggregate_multiple():
 
     for relation in deferred_large_relations:
         try:
-            aggregate_single(relation)
+            _aggregate_single_and_cleanup(relation)
         except Exception as e:
             failed_relations[int(relation)] = str(e)
 
@@ -2884,11 +3037,7 @@ valid_sp_to_o = dataset.index("valid_sp_to_o")
 valid_po_to_s = dataset.index("valid_po_to_s")
 
 print("Loading processed explanations...")
-processed_sp_test = pickle.load(open(args.directory_explanations + "processed_sp_test.pkl", "rb"))
-processed_po_test = pickle.load(open(args.directory_explanations + "processed_po_test.pkl", "rb"))
-
-processed_sp_valid = pickle.load(open(args.directory_explanations + "processed_sp_valid.pkl", "rb"))
-processed_po_valid = pickle.load(open(args.directory_explanations + "processed_po_valid.pkl", "rb"))
+print(f"Using relation-local processed explanations root: {get_relation_processed_root()}")
 
 rule_file = args.rule_file if args.rule_file else f"./{dataset_dir}/rules/rules-1000-5"
 dependency_dir = os.path.dirname(rule_file)

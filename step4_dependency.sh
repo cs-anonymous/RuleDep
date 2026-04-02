@@ -10,8 +10,17 @@ default_dep_min_supp() {
     esac
 }
 
+default_filter_target_split() {
+    case "$1" in
+        hetionet|wikidata5m) echo valid ;;
+        *) echo train ;;
+    esac
+}
+
 dataset="$1"
 worker_threads="${2:-$(nproc)}"
+filter_target_split="${TARGET_SPLIT:-$(default_filter_target_split "${dataset}")}"
+filter_min_supp="${FILTER_MIN_SUPP:-$(default_dep_min_supp "${dataset}")}"
 
 export DATASET="${dataset}"
 export MIN_SUPP="${MIN_SUPP:-$(default_dep_min_supp "${dataset}")}"
@@ -33,6 +42,10 @@ mvn -DskipTests compile exec:java > "data/${dataset}/rules/run_deplearn.log" 2>&
     tail -n 120 "data/${dataset}/rules/run_deplearn.log" >&2
     exit 1
 }
-python filter_dependency.py -d "${dataset}" --jobs "${worker_threads}"
+python filter_dependency.py \
+    -d "${dataset}" \
+    --jobs "${worker_threads}" \
+    --target_split "${filter_target_split}" \
+    --min_supp "${filter_min_supp}"
 
 echo "Step 4 finished for ${dataset}"

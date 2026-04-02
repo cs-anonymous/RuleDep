@@ -3,7 +3,8 @@ set -euo pipefail
 
 default_support_threshold_for_dataset() {
     case "$1" in
-        KG20C|WN18RR) echo 3 ;;
+        KG20C) echo 2 ;;
+        WN18RR) echo 2 ;;
         *) echo 5 ;;
     esac
 }
@@ -28,7 +29,7 @@ for dataset in "${datasets[@]}"; do
     echo "Running steps 0-5 for ${dataset}"
     echo "=================================================="
 
-    python "${PREPROCESS_SCRIPT:-preprocess.py}" "data/${dataset}"
+    # python "${PREPROCESS_SCRIPT:-preprocess.py}" "data/${dataset}"
     # ./step1_learning.sh "${dataset}" "${support_threshold}" "${SNAPSHOTS:-10,100,400,1000}" "${LEARNING_WORKER_THREADS:-20}"
     ./step2_application.sh "${dataset}" "${TOPK:-100}" "${APPLICATION_WORKER_THREADS:-20}"
     ./step3_dataset.sh "${dataset}"

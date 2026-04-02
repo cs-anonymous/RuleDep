@@ -8,15 +8,15 @@ import re
 from collections import defaultdict
 
 
-WORKER_TRAIN_ACTIVE_RULE_SETS_BY_RELATION = None
-WORKER_MIN_TRAIN = 0
+WORKER_ACTIVE_RULE_SETS_BY_RELATION = None
+WORKER_MIN_SUPP = 0
 
 
-def _init_filter_worker(train_active_rule_sets_by_relation, min_train):
-    global WORKER_TRAIN_ACTIVE_RULE_SETS_BY_RELATION
-    global WORKER_MIN_TRAIN
-    WORKER_TRAIN_ACTIVE_RULE_SETS_BY_RELATION = train_active_rule_sets_by_relation
-    WORKER_MIN_TRAIN = int(min_train)
+def _init_filter_worker(active_rule_sets_by_relation, min_supp):
+    global WORKER_ACTIVE_RULE_SETS_BY_RELATION
+    global WORKER_MIN_SUPP
+    WORKER_ACTIVE_RULE_SETS_BY_RELATION = active_rule_sets_by_relation
+    WORKER_MIN_SUPP = int(min_supp)
 
 def read_ids(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -191,22 +191,22 @@ def build_processed_from_applied(applied_rules, entity_id_to_idx, relation_id_to
     return processed_sp, processed_po
 
 
-def load_processed_train(application_dir, entity_ids, relation_ids):
-    sp_path = os.path.join(application_dir, "processed_sp_train.pkl")
-    po_path = os.path.join(application_dir, "processed_po_train.pkl")
+def load_processed_split(application_dir, entity_ids, relation_ids, split_name):
+    sp_path = os.path.join(application_dir, f"processed_sp_{split_name}.pkl")
+    po_path = os.path.join(application_dir, f"processed_po_{split_name}.pkl")
     if os.path.exists(sp_path) and os.path.exists(po_path):
         return pickle.load(open(sp_path, "rb")), pickle.load(open(po_path, "rb"))
 
-    applied_path = os.path.join(application_dir, "applied_rules_train.json")
+    applied_path = os.path.join(application_dir, f"applied_rules_{split_name}.json")
     if not os.path.exists(applied_path):
         raise FileNotFoundError(
-            f"Missing processed train explanations ({sp_path}, {po_path}) and fallback source {applied_path}"
+            f"Missing processed {split_name} explanations ({sp_path}, {po_path}) and fallback source {applied_path}"
         )
 
     entity_id_to_idx = {ent: idx for idx, ent in enumerate(entity_ids)}
     relation_id_to_idx = {rel: idx for idx, rel in enumerate(relation_ids)}
-    applied_rules_train = load_applied_rules(applied_path)
-    return build_processed_from_applied(applied_rules_train, entity_id_to_idx, relation_id_to_idx)
+    applied_rules = load_applied_rules(applied_path)
+    return build_processed_from_applied(applied_rules, entity_id_to_idx, relation_id_to_idx)
 
 
 def build_active_rule_sets_by_relation(split_to_targets, processed_sp, processed_po):
@@ -276,9 +276,9 @@ def filter_relation_candidates(task):
     relation, chunk_id, candidates = task
     keep_idx = set(range(len(candidates)))
 
-    if WORKER_MIN_TRAIN > 0:
-        active_train = WORKER_TRAIN_ACTIVE_RULE_SETS_BY_RELATION.get(int(relation), [])
-        keep_idx &= set(prefilter_candidates_by_support(active_train, candidates, WORKER_MIN_TRAIN))
+    if WORKER_MIN_SUPP > 0:
+        active_sets = WORKER_ACTIVE_RULE_SETS_BY_RELATION.get(int(relation), [])
+        keep_idx &= set(prefilter_candidates_by_support(active_sets, candidates, WORKER_MIN_SUPP))
 
     keep_idx = sorted(keep_idx)
     kept_pairs = [candidates[i] for i in keep_idx]
@@ -386,13 +386,15 @@ def filter_dependency_file(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Filter dependency files by train support.")
+    parser = argparse.ArgumentParser(description="Filter dependency files by split support.")
     parser.add_argument("-d", "--dataset", default="codex-m")
     parser.add_argument("--data_root", default="data")
     parser.add_argument("--rule_file", default="")
     parser.add_argument("--synergy_file", default="")
     parser.add_argument("--redundancy_file", default="")
-    parser.add_argument("--min_train", type=int, default=5)
+    parser.add_argument("--target_split", choices=["train", "valid", "test"], default="train")
+    parser.add_argument("--min_supp", type=int, default=5)
+    parser.add_argument("--min_train", dest="min_supp", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--dep_per_rule_multiplier", type=int, default=2, help="Keep at most this many dependencies per rule for each relation after ranking by |lift|.")
     parser.add_argument("--jobs", type=int, default=os.cpu_count(), help="Number of worker processes for relation-level filtering.")
     parser.add_argument(
@@ -420,25 +422,25 @@ def main():
     relation_ids = read_ids(os.path.join(dataset_dir, "relation_ids.del"))
     rule_relation_by_id, relation_rule_count_by_id = parse_rule_file_metadata(rule_file, relation_ids)
 
-    train_active_rule_sets_by_relation = defaultdict(list)
-    if int(args.min_train) > 0:
+    active_rule_sets_by_relation = defaultdict(list)
+    if int(args.min_supp) > 0:
         entity_ids = read_ids(os.path.join(dataset_dir, "entity_ids.del"))
-        train_sp_to_o, train_po_to_s = load_split_targets(os.path.join(dataset_dir, "train.del"))
-        processed_sp_train, processed_po_train = load_processed_train(application_dir, entity_ids, relation_ids)
-        train_active_rule_sets_by_relation = build_active_rule_sets_by_relation(
-            (train_sp_to_o, train_po_to_s),
-            processed_sp_train,
-            processed_po_train,
+        split_sp_to_o, split_po_to_s = load_split_targets(os.path.join(dataset_dir, f"{args.target_split}.del"))
+        processed_sp_split, processed_po_split = load_processed_split(application_dir, entity_ids, relation_ids, args.target_split)
+        active_rule_sets_by_relation = build_active_rule_sets_by_relation(
+            (split_sp_to_o, split_po_to_s),
+            processed_sp_split,
+            processed_po_split,
         )
 
     if os.path.exists(synergy_file):
         filter_dependency_file(
             synergy_file,
             os.path.splitext(synergy_file)[0] + "_filtered.txt",
-            train_active_rule_sets_by_relation,
+            active_rule_sets_by_relation,
             rule_relation_by_id,
             relation_rule_count_by_id,
-            min_train=args.min_train,
+            min_train=args.min_supp,
             dep_per_rule_multiplier=args.dep_per_rule_multiplier,
             jobs=args.jobs,
             progress_every=args.progress_every,
@@ -449,10 +451,10 @@ def main():
         filter_dependency_file(
             redundancy_file,
             os.path.splitext(redundancy_file)[0] + "_filtered.txt",
-            train_active_rule_sets_by_relation,
+            active_rule_sets_by_relation,
             rule_relation_by_id,
             relation_rule_count_by_id,
-            min_train=args.min_train,
+            min_train=args.min_supp,
             dep_per_rule_multiplier=args.dep_per_rule_multiplier,
             jobs=args.jobs,
             progress_every=args.progress_every,

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 datasets=("$@")
 if [ "${#datasets[@]}" -eq 0 ]; then
     datasets=(
@@ -17,5 +19,5 @@ for dataset in "${datasets[@]}"; do
     echo "=================================================="
     echo "Running old aggregation for ${dataset}"
     echo "=================================================="
-    PYTHON_BIN="${PYTHON_BIN:-/home/sy/anaconda3/bin/python}" ./run_old.sh "${dataset}"
+    PYTHON_BIN="${PYTHON_BIN:-/home/sy/anaconda3/bin/python}" "${ROOT_DIR}/script/run_old.sh" "${dataset}"
 done

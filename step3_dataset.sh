@@ -5,6 +5,7 @@ set -euo pipefail
 
 dataset="$1"
 worker_threads="${2:-$(nproc)}"
+generate_relation_processed="${GENERATE_RELATION_PROCESSED:-1}"
 
 echo "======================================"
 echo "Step 3: Dataset generation for ${dataset}"
@@ -21,6 +22,13 @@ for split in train valid test; do
         --save_dir "data/${dataset}/application" \
         --num_workers "${worker_threads}"
 done
+
+if [ "${generate_relation_processed}" = "1" ]; then
+    echo "Generating relation-local processed explanation files..."
+    python script/split_processed_by_relation.py \
+        -d "${dataset}" \
+        --application_dir "data/${dataset}/application"
+fi
 
 python create_datasets.py -d "${dataset}" \
     --applied_rules "data/${dataset}/application/applied_rules_train.json" \
