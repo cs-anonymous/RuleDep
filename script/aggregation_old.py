@@ -522,22 +522,14 @@ class MRR:
                 self.maximums_t_10_raw[relation] = t_h10_raw
 
 
-class SharedDataset(Dataset):
-    def get_empty_shared_array(self, shape, type_):
-        shared_array_base = torch.multiprocessing.Array(type_, torch.tensor(shape).prod().item())
-        shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
-        shared_array = shared_array.reshape(*shape)
-        return torch.from_numpy(shared_array)
-
+class InMemoryDataset(Dataset):
     def __init__(self, xs, ys):
-        self.shared_x = self.get_empty_shared_array(xs.shape, ctypes.c_int)
-        self.shared_x[:] = xs
-        self.shared_y = self.get_empty_shared_array(ys.shape, ctypes.c_float)
-        self.shared_y[:] = ys
+        self.xs = xs.contiguous()
+        self.ys = ys.contiguous()
         self.len = xs.shape[0]
 
     def __getitem__(self, index):
-        return self.shared_x[index], self.shared_y[index]
+        return self.xs[index], self.ys[index]
 
     def __len__(self):
         return self.len
@@ -558,7 +550,7 @@ def load_dataloader(dataset_directory, relation):
     if xs.shape[0] == 0:
         return None
 
-    train_set = SharedDataset(xs, ys)
+    train_set = InMemoryDataset(xs, ys)
     return DataLoader(
         train_set,
         batch_size=int(args.batch_size),
@@ -774,6 +766,8 @@ if __name__ == "__main__":
             for lr, max_epoch in zip(args.lr_hpo, args.max_epoch_hpo):
                 tail_mrr = MRR(direction="o")
                 head_mrr = MRR(direction="s")
+                best_valid_combined = {}
+                best_valid_combined_raw = {}
                 logging.info(f"Pos weight: {pos}, Lr: {lr}, Max epoch: {max_epoch}, Unseen: {unseen}")
 
                 if args.model == "LinearAggregator":
@@ -805,15 +799,48 @@ if __name__ == "__main__":
                             int(unseen),
                         )
                         nnm.cpu()
-                        head_valid_metrics = head_mrr.update(nnm, relation, (float(pos), float(lr), int(t)))
-                        tail_valid_metrics = tail_mrr.update(nnm, relation, (float(pos), float(lr), int(t)))
+                        head_valid_metrics = head_mrr.calc_metrics(
+                            nnm,
+                            head_mrr.valid_sp_to_o,
+                            head_mrr.valid_processed,
+                            relation,
+                            direction=head_mrr.direction,
+                            filter_test=True,
+                        )
+                        tail_valid_metrics = tail_mrr.calc_metrics(
+                            nnm,
+                            tail_mrr.valid_sp_to_o,
+                            tail_mrr.valid_processed,
+                            relation,
+                            direction=tail_mrr.direction,
+                            filter_test=True,
+                        )
+                        head_valid_mrr, _head_h1, _head_h10, head_valid_mrr_raw, _head_h1_raw, _head_h10_raw = head_valid_metrics
+                        tail_valid_mrr, _tail_h1, _tail_h10, tail_valid_mrr_raw, _tail_h1_raw, _tail_h10_raw = tail_valid_metrics
+                        valid_combined = float((head_valid_mrr + tail_valid_mrr) / 2.0)
+                        valid_combined_raw = float((head_valid_mrr_raw + tail_valid_mrr_raw) / 2.0)
+                        if (relation not in best_valid_combined) or (valid_combined > best_valid_combined[relation]):
+                            best_valid_combined[relation] = valid_combined
+                            best_valid_combined_raw[relation] = valid_combined_raw
+                            head_mrr.maximums_v[relation] = float(head_valid_mrr)
+                            tail_mrr.maximums_v[relation] = float(tail_valid_mrr)
+                            head_mrr.maximums_v_raw[relation] = float(head_valid_mrr_raw)
+                            tail_mrr.maximums_v_raw[relation] = float(tail_valid_mrr_raw)
+                            head_mrr.nnm[relation] = copy.deepcopy(nnm)
+                            tail_mrr.nnm[relation] = copy.deepcopy(nnm)
+                            head_mrr.nnm_raw[relation] = copy.deepcopy(nnm)
+                            tail_mrr.nnm_raw[relation] = copy.deepcopy(nnm)
+                            head_mrr.best_hps[relation] = (float(pos), float(lr), int(t))
+                            tail_mrr.best_hps[relation] = (float(pos), float(lr), int(t))
+                            head_mrr.best_hps_raw[relation] = (float(pos), float(lr), int(t))
+                            tail_mrr.best_hps_raw[relation] = (float(pos), float(lr), int(t))
                         nnm.to(args.device)
-                        max_tail_valid_mrr = tail_valid_metrics["best_valid_mrr_raw"]
-                        max_head_valid_mrr = head_valid_metrics["best_valid_mrr_raw"]
+                        max_valid_combined = best_valid_combined.get(relation, valid_combined)
+                        max_valid_combined_raw = best_valid_combined_raw.get(relation, valid_combined_raw)
                         logging.info(
                             f"{relation} tail loss: {loss:>7f} "
-                            f"best_valid_tail_raw={max_tail_valid_mrr} "
-                            f"best_valid_head_raw={max_head_valid_mrr} "
+                            f"best_valid_combined={max_valid_combined} "
+                            f"best_valid_combined_raw={max_valid_combined_raw} "
                             f"[{t:>5d}/{int(max_epoch):>5d}]"
                         )
 

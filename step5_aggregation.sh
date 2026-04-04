@@ -54,7 +54,6 @@ run_config() {
             --rule_file "data/${dataset}/rules/rule.txt" \
             --relation -1 \
             --multiprocess "${multiprocess}" \
-            --model LinearAggregator \
             --train_rule_in_dependency_stage \
             "$@"
     ) 2>&1 | tee "${log_path}"
@@ -116,9 +115,9 @@ run_batched_configs() {
 }
 
 batch1=(
-    "structural_rd::--synergy --redundancy --rule_grouping none --dependency_grouping none"
-    "structural_r2d3::--synergy --redundancy --rule_grouping r2 --dependency_grouping d3"
-    "structural_r3d6::--synergy --redundancy --rule_grouping r3 --dependency_grouping d6"
+    "structural_rd::--synergy --redundancy --type_grouping none"
+    "structural_r2d3::--synergy --redundancy --type_grouping r2d3"
+    "structural_r3d6::--synergy --redundancy --type_grouping r3d6"
     "synergy::--synergy"
 )
 

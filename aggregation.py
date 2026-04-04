@@ -17,6 +17,7 @@ import shutil
 import uuid
 import warnings
 from datetime import datetime
+from functools import partial
 from os.path import exists
 from pprint import pformat
 from time import perf_counter
@@ -34,6 +35,7 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 STEP_TIMINGS = defaultdict(float)
 STEP_COUNTS = defaultdict(int)
 RELATION_PROCESSED_CACHE = {}
+DEPENDENCY_MASK_RULE_WEIGHT_THRESHOLD_RATIO = 0.01
 STEP_GPU_REQUIRED = {
     "load_dataloaders": False,
     "epoch_train.iter_create": False,
@@ -195,10 +197,7 @@ def test(dataloader, model, loss_fn):
             loss = loss_fn(pred, y)
             test_loss += loss.item()
 
-            if args.model in ["SurprisalAggregator"]:
-                pred_prob = pred
-            else:
-                pred_prob = torch.sigmoid(pred)
+            pred_prob = torch.sigmoid(pred)
             correct += ((pred_prob > 0.5) == y.to(args.device)).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
@@ -279,8 +278,7 @@ def rank_batch_group(nnm, batch_items):
     with step_timer("epoch_eval.rank_model_infer"):
         with torch.no_grad():
             pred_all = nnm(rules_all).detach()
-            if args.model not in ["SurprisalAggregator"]:
-                pred_all = torch.sigmoid(pred_all).detach()
+            pred_all = torch.sigmoid(pred_all).detach()
     max_conf_all = RULE_CONF_TABLE[rules_all].max(dim=1, keepdim=True).values
     score_all = (pred_all * max_conf_all).squeeze(dim=1)
     score_raw_all = pred_all.squeeze(dim=1)
@@ -557,6 +555,54 @@ def classify_dependency_type_group(rule_type_a_r3: str, rule_type_b_r3: str, gro
     if grouping == "d6":
         return tuple(sorted((str(rule_type_a_r3), str(rule_type_b_r3))))
     raise ValueError(f"Unknown dependency grouping: {grouping}")
+
+
+def resolve_type_grouping(type_grouping: str):
+    type_grouping = str(type_grouping).lower()
+    if type_grouping == "none":
+        return {
+            "type_grouping": "none",
+            "rule_grouping": "none",
+            "dependency_grouping": "none",
+            "use_global_score_scales": False,
+        }
+    if type_grouping == "rd":
+        return {
+            "type_grouping": "rd",
+            "rule_grouping": "none",
+            "dependency_grouping": "none",
+            "use_global_score_scales": True,
+        }
+    if type_grouping == "r2d3":
+        return {
+            "type_grouping": "r2d3",
+            "rule_grouping": "r2",
+            "dependency_grouping": "d3",
+            "use_global_score_scales": False,
+        }
+    if type_grouping == "r3d6":
+        return {
+            "type_grouping": "r3d6",
+            "rule_grouping": "r3",
+            "dependency_grouping": "d6",
+            "use_global_score_scales": False,
+        }
+    raise ValueError(f"Unknown type_grouping: {type_grouping}")
+
+
+def compute_rule_init_values_from_conf(confs: torch.Tensor, sign_constraint: bool, init_mode: str) -> torch.Tensor:
+    init_mode = str(init_mode).lower()
+    if init_mode == "surprisal":
+        confs = confs.clamp(min=0.0, max=1 - 1e-7)
+        base = -torch.log(1 - confs)
+    elif init_mode == "conf":
+        base = confs
+    else:
+        raise ValueError(f"Unknown rule_init_mode: {init_mode}")
+
+    if sign_constraint:
+        return torch.sqrt(torch.clamp(base, min=0.0))
+    return base
 
 
 def extract_head_relation(rule_str: str):
@@ -841,6 +887,13 @@ def build_relation_dependency_type_metadata(relation_rule_ids, global_to_local, 
 
 
 class LinearAggregator(nn.Module):
+    SCALE_MIN = -7.0
+    SCALE_MAX = 7.0
+
+    def _effective_positive_scale(self, raw_param, target_dtype, target_device):
+        raw = torch.clamp(raw_param, min=self.SCALE_MIN, max=self.SCALE_MAX)
+        return (raw**2).to(device=target_device, dtype=target_dtype)
+
     def _get_active_dependency_base_weights(self, active_pair_idx, target_dtype, target_device):
         if active_pair_idx.numel() == 0:
             return torch.empty((0,), dtype=target_dtype, device=target_device)
@@ -848,6 +901,11 @@ class LinearAggregator(nn.Module):
         dependency_w_active = self.dependencies.weight[active_pair_idx, 0]
         if self.dependency_sign_constraint:
             dependency_w_active = (dependency_w_active**2) * self.dependency_pair_sign[active_pair_idx]
+        dependency_mask = getattr(self, "trainable_dependency_grad_mask", None)
+        if dependency_mask is not None:
+            dependency_mask_active = dependency_mask[active_pair_idx].to(device=target_device, dtype=target_dtype)
+            dependency_w_active = dependency_w_active.to(device=target_device, dtype=target_dtype) * dependency_mask_active
+            return dependency_w_active
         return dependency_w_active.to(device=target_device, dtype=target_dtype)
 
     def _aggregate_rule_contribution(self, local_rule_values, local_rule_ids):
@@ -895,9 +953,12 @@ class LinearAggregator(nn.Module):
         with torch.no_grad():
             torch.manual_seed(0)
             confs = RULE_CONF_TABLE_CPU[torch.tensor(self.relation_rule_ids, dtype=torch.long)].reshape(-1, 1)
-            if self.sign_constraint:
-                confs = torch.sqrt(torch.clamp(confs, min=0.0))
-            self.rules.weight[: self.num_relation_rules] = confs
+            rule_init_values = compute_rule_init_values_from_conf(
+                confs,
+                sign_constraint=self.sign_constraint,
+                init_mode=getattr(args, "rule_init_mode", "conf"),
+            )
+            self.rules.weight[: self.num_relation_rules] = rule_init_values
             if self.num_relation_rule_types > 0:
                 self.rule_types.weight[: self.num_relation_rule_types].fill_(1.0)
             if self.num_relation_dependencies > 0:
@@ -908,11 +969,14 @@ class LinearAggregator(nn.Module):
                     else:
                         self.dependencies.weight[: self.num_relation_dependencies] = init_values
                 elif self.dependency_sign_constraint:
-                    self.dependencies.weight[: self.num_relation_dependencies].fill_(0.1)
+                        self.dependencies.weight[: self.num_relation_dependencies].fill_(0.1)
                 else:
                     self.dependencies.weight[: self.num_relation_dependencies].zero_()
             if self.num_relation_dependency_types > 0:
                 self.dependency_types.weight[: self.num_relation_dependency_types].fill_(1.0)
+            if getattr(self, "use_global_score_scales", False):
+                self.rule_component_scale_raw.fill_(1.0)
+                self.dependency_component_scale_raw.fill_(1.0)
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.rules.weight[: self.num_relation_rules].reshape(1, -1))
             bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
             self.bias.uniform_(-bound, bound)
@@ -928,6 +992,8 @@ class LinearAggregator(nn.Module):
         super().__init__()
         self.sign_constraint = sign_constraint
         self.dependency_sign_constraint = dependency_sign_constraint
+        self.dependency_scale_mode = str(getattr(args, "dependency_scale_mode", "none")).lower()
+        self.use_global_score_scales = bool(getattr(args, "use_global_score_scales", False))
 
         relation_rule_ids = sorted(rule_map.get(relation, []))
         self.relation_rule_ids = np.array(relation_rule_ids, dtype=np.int64)
@@ -944,6 +1010,9 @@ class LinearAggregator(nn.Module):
 
         self.rules = nn.Embedding(self.num_relation_rules + 1, 1, padding_idx=self.pad_local_tok)
         self.bias = nn.Parameter(torch.zeros(1, 1))
+        if self.use_global_score_scales:
+            self.rule_component_scale_raw = nn.Parameter(torch.ones(1, 1))
+            self.dependency_component_scale_raw = nn.Parameter(torch.ones(1, 1))
 
         global_to_local = torch.full((PAD_TOK + 1,), self.pad_local_tok, dtype=torch.long)
         if self.num_relation_rules > 0:
@@ -1022,6 +1091,7 @@ class LinearAggregator(nn.Module):
             )
 
         self.init_weights()
+        self.trainable_dependency_grad_mask = None
 
     def forward(self, rules):
         local_rule_ids = self.global_to_local[rules.long()]
@@ -1034,6 +1104,12 @@ class LinearAggregator(nn.Module):
         local_rule_values = local_rules.squeeze(dim=2)
 
         logits = self._aggregate_rule_contribution(local_rule_values, local_rule_ids)
+        if self.use_global_score_scales:
+            logits = logits * self._effective_positive_scale(
+                self.rule_component_scale_raw,
+                logits.dtype,
+                logits.device,
+            )
 
         if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
             batch_size = int(local_rules.shape[0])
@@ -1048,6 +1124,9 @@ class LinearAggregator(nn.Module):
 
             if self.num_relation_dependencies > 0:
                 dependency_score = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
+                dependency_active_count = None
+                if self.dependency_scale_mode != "none":
+                    dependency_active_count = torch.zeros((batch_size, 1), dtype=logits.dtype, device=local_rules.device)
                 active_rules_in_batch = active_matrix.any(dim=0)
                 active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
                     self.synergy_pair_b_local
@@ -1068,270 +1147,35 @@ class LinearAggregator(nn.Module):
                         b_local = pair_b_active[start:end]
                         chunk_pair_idx = active_pair_idx[start:end]
                         pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
+                        if dependency_active_count is not None:
+                            dependency_active_count = dependency_active_count + pair_active_chunk.sum(
+                                dim=1, keepdim=True
+                            ).to(logits.dtype)
                         dependency_score = dependency_score + self._aggregate_dependency_contribution(
                             pair_active_chunk,
                             dependency_w_active[start:end],
                             chunk_pair_idx,
                             local_rule_values.dtype,
                         )
+                if dependency_active_count is not None:
+                    if self.dependency_scale_mode == "sqrt_active":
+                        dependency_den = torch.sqrt(torch.clamp(dependency_active_count, min=1.0))
+                    elif self.dependency_scale_mode == "log1p_active":
+                        dependency_den = torch.log1p(dependency_active_count)
+                        dependency_den = torch.clamp(dependency_den, min=1.0)
+                    else:
+                        raise ValueError(f"Unknown dependency_scale_mode: {self.dependency_scale_mode}")
+                    dependency_score = dependency_score / dependency_den
+                if self.use_global_score_scales:
+                    dependency_score = dependency_score * self._effective_positive_scale(
+                        self.dependency_component_scale_raw,
+                        dependency_score.dtype,
+                        dependency_score.device,
+                    )
                 logits = logits + dependency_score
 
         logits = logits + self.bias
         return logits
-
-
-class SurprisalAggregator(nn.Module):
-    WEIGHT_MIN = -7.0
-    WEIGHT_MAX = 7.0
-
-    def init_weights(self):
-        with torch.no_grad():
-            torch.manual_seed(0)
-            confs = RULE_CONF_TABLE_CPU[torch.tensor(self.relation_rule_ids, dtype=torch.long)].reshape(-1, 1)
-            confs = confs.clamp(min=0.0, max=1 - 1e-7)
-            surprisal = -torch.log(1 - confs)
-            self.rules.weight[: self.num_relation_rules] = surprisal
-            if self.num_relation_rule_types > 0:
-                self.rule_types.weight[: self.num_relation_rule_types].fill_(1.0)
-            if self.num_relation_dependencies > 0:
-                if getattr(args, "init_dep_with_lift", False) and hasattr(self, "dependency_init_values"):
-                    init_values = self.dependency_init_values[: self.num_relation_dependencies].reshape(-1, 1)
-                    if self.dependency_sign_constraint:
-                        self.dependencies.weight[: self.num_relation_dependencies] = torch.sqrt(torch.clamp(init_values.abs(), min=0.0))
-                    else:
-                        self.dependencies.weight[: self.num_relation_dependencies] = init_values
-                # With sign constraints we square the raw parameter in forward().
-                # Initializing at exactly 0 would make the dependency gradient stay at 0 forever.
-                elif self.dependency_sign_constraint:
-                    self.dependencies.weight[: self.num_relation_dependencies].fill_(0.1)
-                else:
-                    self.dependencies.weight[: self.num_relation_dependencies].zero_()
-            if self.num_relation_dependency_types > 0:
-                self.dependency_types.weight[: self.num_relation_dependency_types].fill_(1.0)
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.rules.weight[: self.num_relation_rules].reshape(1, -1))
-            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-            self.bias.uniform_(-bound, bound)
-
-    def __init__(
-        self,
-        relation,
-        sign_constraint=False,
-        relation_dependencies=None,
-        dependency_type_candidates=None,
-        dependency_sign_constraint=False,
-    ):
-        super().__init__()
-        self.sign_constraint = sign_constraint
-        self.dependency_sign_constraint = dependency_sign_constraint
-
-        relation_rule_ids = sorted(rule_map.get(relation, []))
-        self.relation_rule_ids = np.array(relation_rule_ids, dtype=np.int64)
-        self.num_relation_rules = len(relation_rule_ids)
-        self.pad_local_tok = self.num_relation_rules
-
-        if relation_dependencies is None:
-            relation_dependencies = []
-        relation_dependencies = sorted(relation_dependencies, key=lambda x: (x[0], x[1], x[2]))
-        local_pairs = []
-        global_pairs_filtered = []
-        dependency_signs = []
-        dependency_init_values = []
-
-        self.rules = nn.Embedding(self.num_relation_rules + 1, 1, padding_idx=self.pad_local_tok)
-        self.bias = nn.Parameter(torch.zeros(1, 1))
-
-        global_to_local = torch.full((PAD_TOK + 1,), self.pad_local_tok, dtype=torch.long)
-        if self.num_relation_rules > 0:
-            global_to_local[torch.tensor(relation_rule_ids, dtype=torch.long)] = torch.arange(self.num_relation_rules, dtype=torch.long)
-        self.register_buffer("global_to_local", global_to_local)
-
-        rule_type_meta = build_relation_rule_type_metadata(relation_rule_ids, relation)
-        self.num_relation_rule_types = len(rule_type_meta["keys"])
-        self.rule_type_keys = list(rule_type_meta["keys"])
-        self.rule_type_supports = list(rule_type_meta["supports"])
-        self.pad_rule_type_tok = int(rule_type_meta["pad"])
-        if self.num_relation_rule_types > 0:
-            self.rule_types = nn.Embedding(self.num_relation_rule_types + 1, 1, padding_idx=self.pad_rule_type_tok)
-            rule_type_local = torch.tensor(rule_type_meta["local_ids"], dtype=torch.long)
-        else:
-            rule_type_local = torch.empty((self.num_relation_rules,), dtype=torch.long)
-        self.register_buffer("rule_local_to_type_local", rule_type_local)
-
-        for dep in relation_dependencies:
-            if len(dep) >= 4:
-                a, b, dependency_type, dependency_lift = dep[0], dep[1], dep[2], dep[3]
-            else:
-                a, b, dependency_type = dep[0], dep[1], dep[2]
-                dependency_lift = 0.0
-            local_a = int(global_to_local[a].item())
-            local_b = int(global_to_local[b].item())
-            if local_a == self.pad_local_tok or local_b == self.pad_local_tok:
-                continue
-            local_pairs.append((local_a, local_b))
-            global_pairs_filtered.append((int(a), int(b), str(dependency_type)))
-            dependency_signs.append(1.0 if dependency_type == "synergy" else -1.0)
-            dependency_init_values.append(float(dependency_lift) * 0.1)
-
-        self.num_relation_dependencies = len(local_pairs)
-        self.num_relation_synergy = self.num_relation_dependencies
-        self.relation_dependency_pairs_global = global_pairs_filtered
-        self.relation_synergy_pairs_global = [(int(a), int(b)) for a, b, _kind in global_pairs_filtered]
-        self.pad_dependency_tok = self.num_relation_dependencies
-        self.pad_synergy_tok = self.pad_dependency_tok
-        if self.num_relation_dependencies > 0:
-            self.dependencies = nn.Embedding(self.num_relation_dependencies + 1, 1, padding_idx=self.pad_dependency_tok)
-            pair_a = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
-            pair_b = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
-            dependency_sign_t = torch.tensor(dependency_signs, dtype=torch.float32)
-            dependency_init_t = torch.tensor(dependency_init_values, dtype=torch.float32)
-        else:
-            pair_a = torch.empty((0,), dtype=torch.long)
-            pair_b = torch.empty((0,), dtype=torch.long)
-            dependency_sign_t = torch.empty((0,), dtype=torch.float32)
-            dependency_init_t = torch.empty((0,), dtype=torch.float32)
-        self.register_buffer("synergy_pair_a_local", pair_a)
-        self.register_buffer("synergy_pair_b_local", pair_b)
-        self.register_buffer("dependency_pair_sign", dependency_sign_t)
-        self.register_buffer("dependency_init_values", dependency_init_t)
-
-        if dependency_type_candidates is None:
-            dependency_type_candidates = []
-        dependency_type_meta = build_relation_dependency_type_metadata(relation_rule_ids, global_to_local, dependency_type_candidates)
-        self.num_relation_dependency_types = len(dependency_type_meta["keys"])
-        self.dependency_type_keys = list(dependency_type_meta["keys"])
-        self.dependency_type_supports = list(dependency_type_meta["supports"])
-        self.num_relation_dependency_type_source_pairs = int(dependency_type_meta["source_pair_count"])
-        self.pad_dependency_type_tok = int(dependency_type_meta["pad"])
-        if self.num_relation_dependency_types > 0:
-            self.dependency_types = nn.Embedding(self.num_relation_dependency_types + 1, 1, padding_idx=self.pad_dependency_type_tok)
-            dep_type_local = torch.tensor(dependency_type_meta["local_ids"], dtype=torch.long)
-        else:
-            dep_type_local = torch.empty((0,), dtype=torch.long)
-        self.register_buffer("dependency_local_to_type_local", dep_type_local)
-        if self.num_relation_dependency_types > 0 and int(dep_type_local.numel()) != int(self.num_relation_dependencies):
-            raise RuntimeError(
-                f"dependency type local-id count mismatch for relation={relation}: "
-                f"num_relation_dependencies={self.num_relation_dependencies}, "
-                f"num_dependency_type_local_ids={int(dep_type_local.numel())}, "
-                f"source_pair_count={int(dependency_type_meta['source_pair_count'])}"
-            )
-
-        self.init_weights()
-
-    def _get_active_dependency_base_weights(self, active_pair_idx, target_dtype, target_device):
-        if active_pair_idx.numel() == 0:
-            return torch.empty((0,), dtype=target_dtype, device=target_device)
-
-        dependency_w_active = self.dependencies.weight[active_pair_idx, 0]
-        dependency_w_active = torch.clamp(dependency_w_active, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
-        if self.dependency_sign_constraint:
-            dependency_w_active = (dependency_w_active**2) * self.dependency_pair_sign[active_pair_idx]
-        return dependency_w_active.to(device=target_device, dtype=target_dtype)
-
-    def _aggregate_rule_contribution(self, rule_w, local_rule_ids):
-        if self.num_relation_rule_types <= 0:
-            return rule_w.sum(dim=1, keepdim=True)
-
-        active_rule_type_local = self.rule_local_to_type_local[local_rule_ids]
-        valid_local = active_rule_type_local != self.pad_rule_type_tok
-        if not bool(valid_local.any().item()):
-            return rule_w.sum(dim=1, keepdim=True)
-
-        safe_rule_type_local = active_rule_type_local.masked_fill(~valid_local, 0)
-        weighted_rules = rule_w * valid_local.to(rule_w.dtype)
-        bucket_sum = torch.zeros(
-            (int(rule_w.shape[0]), self.num_relation_rule_types),
-            dtype=rule_w.dtype,
-            device=rule_w.device,
-        )
-        bucket_sum.scatter_add_(1, safe_rule_type_local, weighted_rules)
-        rule_type_w = torch.clamp(
-            self.rule_types.weight[: self.num_relation_rule_types, 0], min=self.WEIGHT_MIN, max=self.WEIGHT_MAX
-        ).to(rule_w.dtype)
-        return bucket_sum @ rule_type_w.reshape(-1, 1)
-
-    def _aggregate_dependency_contribution(self, pair_active_chunk, dependency_w_active, active_pair_idx_chunk, target_dtype):
-        pair_scores = pair_active_chunk.to(target_dtype) * dependency_w_active.reshape(1, -1)
-        if self.num_relation_dependency_types <= 0:
-            return pair_scores.sum(dim=1, keepdim=True)
-
-        active_dep_type_local = self.dependency_local_to_type_local[active_pair_idx_chunk]
-        valid_dep_local = active_dep_type_local != self.pad_dependency_type_tok
-        if not bool(valid_dep_local.any().item()):
-            return pair_scores.sum(dim=1, keepdim=True)
-
-        safe_dep_type_local = active_dep_type_local.masked_fill(~valid_dep_local, 0)
-        weighted_pairs = pair_scores * valid_dep_local.to(pair_scores.dtype).reshape(1, -1)
-        bucket_sum = torch.zeros(
-            (int(pair_scores.shape[0]), self.num_relation_dependency_types),
-            dtype=pair_scores.dtype,
-            device=pair_scores.device,
-        )
-        bucket_sum.scatter_add_(1, safe_dep_type_local.reshape(1, -1).expand(int(pair_scores.shape[0]), -1), weighted_pairs)
-        dependency_type_w = torch.clamp(
-            self.dependency_types.weight[: self.num_relation_dependency_types, 0],
-            min=self.WEIGHT_MIN,
-            max=self.WEIGHT_MAX,
-        ).to(pair_scores.dtype)
-        return bucket_sum @ dependency_type_w.reshape(-1, 1)
-
-    def forward(self, rules):
-        local_rule_ids = self.global_to_local[rules.long()]
-        mask = local_rule_ids == self.pad_local_tok
-        rule_w = self.rules(local_rule_ids).squeeze(dim=2)
-        rule_w = torch.clamp(rule_w, min=self.WEIGHT_MIN, max=self.WEIGHT_MAX)
-        rule_w.masked_fill_(mask, 0.0)
-        score = self._aggregate_rule_contribution(rule_w, local_rule_ids)
-
-        if self.num_relation_dependencies > 0 or self.num_relation_dependency_types > 0:
-            batch_size = int(local_rule_ids.shape[0])
-            active = ~mask
-            active_matrix = torch.zeros(
-                (batch_size, self.num_relation_rules), dtype=torch.bool, device=local_rule_ids.device
-            )
-            row_idx = torch.arange(batch_size, device=local_rule_ids.device).unsqueeze(1).expand_as(local_rule_ids)
-            active_matrix[row_idx[active], local_rule_ids[active]] = True
-
-            pair_chunk = max(int(getattr(args, "dependency_chunk_size", 0)), 1)
-
-            if self.num_relation_dependencies > 0:
-                dependency_score = torch.zeros((batch_size, 1), dtype=rule_w.dtype, device=local_rule_ids.device)
-                active_rules_in_batch = active_matrix.any(dim=0)
-                active_pair_mask = active_rules_in_batch[self.synergy_pair_a_local] & active_rules_in_batch[
-                    self.synergy_pair_b_local
-                ]
-                active_pair_idx = torch.nonzero(active_pair_mask, as_tuple=False).reshape(-1)
-
-                if active_pair_idx.numel() > 0:
-                    pair_a_active = self.synergy_pair_a_local[active_pair_idx]
-                    pair_b_active = self.synergy_pair_b_local[active_pair_idx]
-                    dependency_w_active = self._get_active_dependency_base_weights(
-                        active_pair_idx, rule_w.dtype, local_rule_ids.device
-                    )
-
-                    active_pair_count = int(active_pair_idx.numel())
-                    for start in range(0, active_pair_count, pair_chunk):
-                        end = min(start + pair_chunk, active_pair_count)
-                        a_local = pair_a_active[start:end]
-                        b_local = pair_b_active[start:end]
-                        chunk_pair_idx = active_pair_idx[start:end]
-                        pair_active_chunk = active_matrix[:, a_local] & active_matrix[:, b_local]
-                        dependency_score = dependency_score + self._aggregate_dependency_contribution(
-                            pair_active_chunk,
-                            dependency_w_active[start:end],
-                            chunk_pair_idx,
-                            rule_w.dtype,
-                        )
-                score = score + dependency_score
-
-        if self.sign_constraint:
-            score = torch.clamp(score + self.bias, min=0.0)
-        else:
-            score = torch.nn.functional.softplus(score + self.bias)
-            # score = torch.clamp(score + self.bias, min=0.0)
-        score = 1 - torch.exp(-score)
-        score = torch.clamp(score, min=1e-7, max=1 - 1e-7)
-        return score
 
 
 def calc_mrr(tail_mrr, head_mrr, attr="maximums_t"):
@@ -1351,44 +1195,19 @@ def calc_mrr(tail_mrr, head_mrr, attr="maximums_t"):
     return (head_rank + tail_rank) / (2 * rn), (head_rank_raw + tail_rank_raw) / (2 * rn)
 
 
+def build_model_for_relation(relation, relation_dependencies=None):
+    relation_dependencies = [] if relation_dependencies is None else relation_dependencies
+    return LinearAggregator(
+        relation=relation,
+        sign_constraint=args.sign_constraint,
+        relation_dependencies=relation_dependencies,
+        dependency_type_candidates=relation_dependencies,
+        dependency_sign_constraint=args.sign_constraint_dependency,
+    )
+
+
 def build_rule_only_model_for_relation(relation):
-    if args.model == "LinearAggregator":
-        return LinearAggregator(
-            relation=relation,
-            sign_constraint=args.sign_constraint,
-            relation_dependencies=[],
-            dependency_type_candidates=[],
-            dependency_sign_constraint=args.sign_constraint_dependency,
-        )
-    if args.model == "SurprisalAggregator":
-        return SurprisalAggregator(
-            relation=relation,
-            sign_constraint=args.sign_constraint,
-            relation_dependencies=[],
-            dependency_type_candidates=[],
-            dependency_sign_constraint=args.sign_constraint_dependency,
-        )
-    raise ValueError(f"Unknown model: {args.model}")
-
-
-def build_dependency_model_for_relation(relation):
-    if args.model == "LinearAggregator":
-        return LinearAggregator(
-            relation=relation,
-            sign_constraint=args.sign_constraint,
-            relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_map.get(relation, []),
-            dependency_sign_constraint=args.sign_constraint_dependency,
-        )
-    if args.model == "SurprisalAggregator":
-        return SurprisalAggregator(
-            relation=relation,
-            sign_constraint=args.sign_constraint,
-            relation_dependencies=dependency_map.get(relation, []),
-            dependency_type_candidates=dependency_map.get(relation, []),
-            dependency_sign_constraint=args.sign_constraint_dependency,
-        )
-    raise ValueError(f"Unknown model: {args.model}")
+    return build_model_for_relation(relation, relation_dependencies=None)
 
 
 class MRR:
@@ -1481,6 +1300,7 @@ def compact_mrr_for_save(mrr_obj):
     mrr_light.valid_processed = None
     mrr_light.test_sp_to_o = None
     mrr_light.test_processed = None
+    mrr_light.model_builder = None
 
     # Keep only model parameters instead of full model objects
     if mrr_light.nnm is not None:
@@ -1605,7 +1425,7 @@ def load_dataloaders(dataset_directory, relation):
 def get_effective_rule_weights(model):
     with torch.no_grad():
         raw = model.rules.weight[: model.num_relation_rules, 0].detach().cpu()
-        if args.model == "LinearAggregator" and getattr(model, "sign_constraint", False):
+        if getattr(model, "sign_constraint", False):
             return raw**2
         return raw
 
@@ -1695,7 +1515,6 @@ def get_parser():
     parser.add_argument("--data_root", action="store", help="Dataset root directory", default="data")
     parser.add_argument("-dev", "--device", action="store", help="Device cpu/cuda", default="cuda")
     parser.add_argument("--max_worker_dataloader", action="store", help="Number of processes for dataloader", default=len(os.sched_getaffinity(0)) - 1, type=int)
-    parser.add_argument("--model", action="store", help="Aggregator to use; one of ['LinearAggregator', 'SurprisalAggregator']", default="LinearAggregator")
     parser.add_argument("--shuffle_train", action="store_true", help="Shuffles the examples before creating batches")
     parser.add_argument("--batch_size", action="store", help="Size of batch", default=4096, type=int)
     parser.add_argument("--lr", action="store", default="0.01,0.005,0.001", help="Learning rate or comma-separated phase learning rates, e.g. 0.01,0.005,0.001")
@@ -1703,11 +1522,31 @@ def get_parser():
     parser.add_argument("--evaluate_every", action="store", default="4,2,1", help="Evaluation interval or comma-separated phase intervals, e.g. 4,2,1. Use 0 for no eval in a phase.")
     parser.add_argument("--early_stopping", action="store", default=3, type=int, help="Stop if valid metric does not improve for X consecutive evaluations. -1 disables.")
     parser.add_argument("--pos", action="store", default="auto_sqrt", help="Scaling of the loss for positive examples. Use 'auto_sqrt' (default) for sqrt(neg/pos), 'auto_ratio' for neg/pos, or provide a positive number.",)
+    parser.add_argument(
+        "--rule_init_mode",
+        action="store",
+        default="conf",
+        choices=["conf", "surprisal"],
+        help="Initialization for LinearAggregator rule weights: confidence or surprisal transformed from confidence.",
+    )
     parser.add_argument("--no_sign_constraint", dest="sign_constraint", action="store_false", help="Disable sign constraint for rule weights.")
     parser.add_argument("--sign_constraint_dependency", dest="sign_constraint_dependency", action="store_true", help="Enable sign constraint for dependency weights.")
     parser.add_argument("--no_sign_constraint_dependency", dest="sign_constraint_dependency", action="store_false", help="Disable sign constraint for dependency weights.")
     parser.add_argument("--init_dep_with_lift", action="store_true", default=False, help="Initialize dependency weights with 0.1 * lift from filtered dependency files.")
     parser.add_argument("--train_rule_in_dependency_stage", action="store_true", default=False, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--dependency_scale_mode",
+        action="store",
+        default="none",
+        choices=["none", "sqrt_active", "log1p_active"],
+        help="Normalize dependency score by the number of active dependencies per query.",
+    )
+    parser.add_argument(
+        "--dependency_mask_low_rule_weight",
+        action="store_true",
+        default=False,
+        help="In stage2, mask dependency pairs whose endpoint rules have low stage1 rule weights.",
+    )
     parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
@@ -1724,18 +1563,11 @@ def get_parser():
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
     parser.add_argument(
-        "--rule_grouping",
+        "--type_grouping",
         action="store",
         default="none",
-        choices=["none", "r2", "r3"],
-        help="Rule shared-parameter grouping: none | r2(B/U) | r3(B/Uc/Ud).",
-    )
-    parser.add_argument(
-        "--dependency_grouping",
-        action="store",
-        default="none",
-        choices=["none", "d3", "d6"],
-        help="Dependency shared-parameter grouping: none | d3(BB/BU/UU) | d6(BB/BUc/BUd/UcUc/UcUd/UdUd).",
+        choices=["none", "rd", "r2d3", "r3d6"],
+        help="Aggregation type grouping: none (direct sum), rd (global rule/dep ratios), r2d3, or r3d6.",
     )
     return parser
 
@@ -1890,6 +1722,72 @@ def copy_rule_state_from_state_dict(src_state_dict, dst_model):
             dst_model.bias.copy_(src_state_dict["bias"])
 
 
+def get_effective_rule_weights_from_state_dict(relation, state_dict):
+    relation_rule_ids = sorted(rule_map.get(relation, []))
+    num_relation_rules = len(relation_rule_ids)
+    if num_relation_rules == 0 or state_dict is None or "rules.weight" not in state_dict:
+        return torch.empty((0,), dtype=torch.float32)
+
+    raw = state_dict["rules.weight"][:num_relation_rules, 0].detach().cpu().float()
+    if args.sign_constraint:
+        return raw**2
+    return raw
+
+
+def filter_relation_dependencies_by_rule_strength(relation, relation_dependencies, stage1_state_dict):
+    original_dependencies = list(relation_dependencies or [])
+    if not getattr(args, "dependency_mask_low_rule_weight", False):
+        return original_dependencies, {
+            "enabled": False,
+            "threshold_ratio": None,
+            "threshold_value": None,
+            "before": int(len(original_dependencies)),
+            "after": int(len(original_dependencies)),
+            "removed": 0,
+        }
+
+    ratio = float(DEPENDENCY_MASK_RULE_WEIGHT_THRESHOLD_RATIO)
+    if ratio < 0:
+        raise ValueError(f"dependency_mask_rule_weight_threshold_ratio must be >= 0, got {ratio}")
+
+    effective_rule_weights = get_effective_rule_weights_from_state_dict(relation, stage1_state_dict)
+    relation_rule_ids = sorted(rule_map.get(relation, []))
+    if effective_rule_weights.numel() == 0 or len(original_dependencies) == 0 or len(relation_rule_ids) == 0:
+        return original_dependencies, {
+            "enabled": True,
+            "threshold_ratio": float(ratio),
+            "threshold_value": 0.0,
+            "before": int(len(original_dependencies)),
+            "after": int(len(original_dependencies)),
+            "removed": 0,
+        }
+
+    max_weight = float(effective_rule_weights.max().item()) if effective_rule_weights.numel() > 0 else 0.0
+    threshold_value = float(max_weight * ratio)
+    local_weight_by_rule_id = {
+        int(rule_id): float(effective_rule_weights[idx].item())
+        for idx, rule_id in enumerate(relation_rule_ids)
+    }
+
+    filtered_dependencies = []
+    for dep in original_dependencies:
+        a, b = int(dep[0]), int(dep[1])
+        weight_a = local_weight_by_rule_id.get(a, 0.0)
+        weight_b = local_weight_by_rule_id.get(b, 0.0)
+        if weight_a < threshold_value or weight_b < threshold_value:
+            continue
+        filtered_dependencies.append(dep)
+
+    return filtered_dependencies, {
+        "enabled": True,
+        "threshold_ratio": float(ratio),
+        "threshold_value": float(threshold_value),
+        "before": int(len(original_dependencies)),
+        "after": int(len(filtered_dependencies)),
+        "removed": int(len(original_dependencies) - len(filtered_dependencies)),
+    }
+
+
 def freeze_rule_parameters_for_synergy_stage(model):
     if hasattr(model, "rules"):
         model.rules.weight.requires_grad_(False)
@@ -1992,6 +1890,29 @@ def build_dependency_type_weight_rows(model, initial_dependency_type_weights):
             trained_dependency_type_weights.tolist(),
         )
     ]
+
+
+def build_global_scale_metrics(model, initial_rule_scale, initial_dependency_scale):
+    if model is None or not getattr(model, "use_global_score_scales", False):
+        return {
+            "enabled": False,
+            "rule_original": None,
+            "rule_trained": None,
+            "dependency_original": None,
+            "dependency_trained": None,
+        }
+
+    with torch.no_grad():
+        rule_scale_trained = float((model.rule_component_scale_raw.detach().reshape(-1)[0].cpu().item()) ** 2)
+        dependency_scale_trained = float((model.dependency_component_scale_raw.detach().reshape(-1)[0].cpu().item()) ** 2)
+
+    return {
+        "enabled": True,
+        "rule_original": None if initial_rule_scale is None else float(initial_rule_scale),
+        "rule_trained": float(rule_scale_trained),
+        "dependency_original": None if initial_dependency_scale is None else float(initial_dependency_scale),
+        "dependency_trained": float(dependency_scale_trained),
+    }
 
 
 def build_optimizer_for_model(model, lr, stage_name="rule"):
@@ -2446,10 +2367,7 @@ def aggregate_single(relation):
     if train_dataloader is None:
         raise ValueError(f"No training data for relation {relation}")
 
-    if args.model == "LinearAggregator":
-        loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(pos).float())
-    elif args.model == "SurprisalAggregator":
-        loss_fn = BCELossR([1, pos])
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(pos).float())
 
     eval_every_values = parse_csv_schedule(args.evaluate_every, int, "evaluate_every")
     if any(v < 0 for v in eval_every_values):
@@ -2462,7 +2380,8 @@ def aggregate_single(relation):
         early_stopping_patience
     )
 
-    rule_model = build_rule_only_model_for_relation(relation)
+    rule_model_builder = build_rule_only_model_for_relation
+    rule_model = rule_model_builder(relation)
     with torch.no_grad():
         initial_rule_weights = rule_model.rules.weight[: rule_model.num_relation_rules, 0].detach().cpu().numpy().copy()
         initial_rule_type_weights = (
@@ -2470,13 +2389,23 @@ def aggregate_single(relation):
             if hasattr(rule_model, "rule_types") and rule_model.num_relation_rule_types > 0
             else np.array([], dtype=np.float32)
         )
+        initial_rule_global_scale = (
+            float((rule_model.rule_component_scale_raw.detach().reshape(-1)[0].cpu().item()) ** 2)
+            if getattr(rule_model, "use_global_score_scales", False)
+            else None
+        )
+        initial_dependency_global_scale = (
+            float((rule_model.dependency_component_scale_raw.detach().reshape(-1)[0].cpu().item()) ** 2)
+            if getattr(rule_model, "use_global_score_scales", False)
+            else None
+        )
         initial_bias_value = float(rule_model.bias.detach().reshape(-1)[0].cpu().item()) if hasattr(rule_model, "bias") else None
-    test_stage_1 = evaluate_model_on_test(relation, rule_model.to(args.device), build_rule_only_model_for_relation)
+    test_stage_1 = evaluate_model_on_test(relation, rule_model.to(args.device), rule_model_builder)
 
     stage1_result = run_training_stage(
         relation=relation,
         model=rule_model,
-        model_builder=build_rule_only_model_for_relation,
+        model_builder=rule_model_builder,
         dataloader=train_dataloader,
         loss_fn=loss_fn,
         pos=pos,
@@ -2515,12 +2444,26 @@ def aggregate_single(relation):
     initial_dependency_weights = np.array([], dtype=np.float32)
     initial_dependency_type_weights = np.array([], dtype=np.float32)
     dependency_pairs = []
+    dependency_mask_info = {
+        "enabled": False,
+        "threshold_ratio": None,
+        "threshold_value": None,
+        "before": int(len(dependency_map.get(relation, []))),
+        "after": int(len(dependency_map.get(relation, []))),
+        "removed": 0,
+    }
     test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
 
     if (args.synergy or args.redundancy):
-        dependency_model = build_dependency_model_for_relation(relation)
         selected_stage1_state_dict = stage1_result.get("selected_state_dict")
+        relation_dependencies_for_stage2, dependency_mask_info = filter_relation_dependencies_by_rule_strength(
+            relation,
+            dependency_map.get(relation, []),
+            selected_stage1_state_dict,
+        )
+        dependency_model_builder = partial(build_model_for_relation, relation_dependencies=relation_dependencies_for_stage2)
+        dependency_model = dependency_model_builder(relation)
         if selected_stage1_state_dict is not None:
             copy_rule_state_from_state_dict(selected_stage1_state_dict, dependency_model)
         else:
@@ -2552,12 +2495,12 @@ def aggregate_single(relation):
                         .numpy()
                         .copy()
                     )
-            test_stage_3 = evaluate_model_on_test(relation, dependency_model, build_dependency_model_for_relation)
+            test_stage_3 = evaluate_model_on_test(relation, dependency_model, dependency_model_builder)
 
             dependency_stage_result = run_dependency_stage(
                 relation=relation,
                 model=dependency_model,
-                model_builder=build_dependency_model_for_relation,
+                model_builder=dependency_model_builder,
                 dataloader=train_dataloader,
                 loss_fn=loss_fn,
                 pos=pos,
@@ -2664,7 +2607,7 @@ def aggregate_single(relation):
 
     num_test_samples = int(test_torch[test_torch[:, 1] == relation].shape[0])
     num_relation_rules = int(len(relation_rule_ids))
-    num_relation_dependencies = int(len(dependency_map.get(relation, [])))
+    num_relation_dependencies = int(len(dependency_pairs))
     num_relation_rule_types = int(getattr(nnm, "num_relation_rule_types", 0))
     num_relation_dependency_types = int(getattr(nnm, "num_relation_dependency_types", 0))
     num_relation_dependency_type_source_pairs = int(getattr(nnm, "num_relation_dependency_type_source_pairs", 0))
@@ -2681,6 +2624,7 @@ def aggregate_single(relation):
         "num_relation_rule_types": num_relation_rule_types,
         "num_relation_synergy": num_relation_dependencies,
         "num_relation_dependencies": num_relation_dependencies,
+        "num_relation_dependencies_before_rule_mask": int(dependency_mask_info["before"]),
         "num_relation_dependency_types": num_relation_dependency_types,
         "num_relation_dependency_type_source_pairs": num_relation_dependency_type_source_pairs,
         "num_relation_features": int(
@@ -2734,6 +2678,12 @@ def aggregate_single(relation):
                 "original": initial_bias_value,
                 "trained": trained_bias_value,
             },
+            "global_scales": build_global_scale_metrics(
+                nnm,
+                initial_rule_global_scale,
+                initial_dependency_global_scale,
+            ),
+            "dependency_rule_mask": dependency_mask_info,
             "rule_type_weights": learned_rule_type_weights,
             "dependency_type_weights_trial": learned_dependency_type_weights_trial,
             "dependency_type_weights_final": learned_dependency_type_weights_final,
@@ -2923,7 +2873,7 @@ def _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_secon
 
     final_result = {
         "experiment": args.experiment,
-        "model": args.model,
+        "model": MODEL_NAME,
         "dataset": args.dataset,
         "failed_relations": failed_relations,
         "summary": merged,
@@ -3011,7 +2961,15 @@ def aggregate_multiple():
     sweep_seconds = perf_counter() - sweep_start_time
     return _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_seconds)
 
+MODEL_NAME = "LinearAggregator"
+
 args = get_parser().parse_args()
+type_grouping_config = resolve_type_grouping(getattr(args, "type_grouping", "none"))
+args.type_grouping = type_grouping_config["type_grouping"]
+args.rule_grouping = type_grouping_config["rule_grouping"]
+args.dependency_grouping = type_grouping_config["dependency_grouping"]
+args.use_global_score_scales = bool(type_grouping_config["use_global_score_scales"])
+args.dependency_mask_rule_weight_threshold_ratio = float(DEPENDENCY_MASK_RULE_WEIGHT_THRESHOLD_RATIO)
 EVAL_DEVICE = torch.device(args.device)
 dataset_dir = os.path.join(args.data_root, args.dataset)
 args.directory_explanations = f"./{dataset_dir}/application/"
@@ -3021,9 +2979,11 @@ if "EXPERIMENT_DIR" not in os.environ:
     sign_dependency_bit = 1 if args.sign_constraint_dependency else 0
     dependency_bit = 1 if (args.synergy or args.redundancy) else 0
     exp_name = (
-        f"exp{args.relation}_{args.model}_{sign_bit}_{sign_dependency_bit}_{dependency_bit}_{args.pos}_"
+        f"exp{args.relation}_{MODEL_NAME}_{sign_bit}_{sign_dependency_bit}_{dependency_bit}_{args.pos}_"
         f"{int(args.synergy)}_{int(args.redundancy)}_{int(args.init_dep_with_lift)}_"
-        f"{args.rule_grouping}_{args.dependency_grouping}"
+        f"tg_{args.type_grouping}_"
+        f"ri_{args.rule_init_mode}_ds_{args.dependency_scale_mode}_"
+        f"dm_{int(args.dependency_mask_low_rule_weight)}_{args.dependency_mask_rule_weight_threshold_ratio}"
     )
     os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/aggregation/{exp_name}"
 args.experiment = os.environ["EXPERIMENT_DIR"]
