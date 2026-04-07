@@ -69,7 +69,6 @@ object DepLearn {
     
     // Constants from TLearn
     const val MIN_SURPRISAL_LIFT = 0.05
-    const val TOP_K_RULE_COMBO = 300
 
     private fun format5(value: Double): String {
         val formatted = String.format(java.util.Locale.US, "%.5f", value)
@@ -110,11 +109,19 @@ object DepLearn {
         val positiveLift = metric.smoothSurprisal - m1.smoothSurprisal - m2.smoothSurprisal
         // val negativeLift = metric.rawSurprisal - maxOf(m1.rawSurprisal, m2.rawSurprisal)
         val negativeLift = metric.rawSurprisal - (m1.rawSurprisal + m2.rawSurprisal) / 2
+        val formulaMode = Settings.DEPENDENCY_FORMULA_MODE.lowercase()
 
-        metric.lift = when {
-            positiveLift > 0 -> positiveLift
-            negativeLift < 0 -> negativeLift
-            else -> return
+        metric.lift = when (formulaMode) {
+            "legacy" -> when {
+                positiveLift > 0 -> positiveLift
+                negativeLift < 0 -> negativeLift
+                else -> return
+            }
+            "unified" -> when {
+                positiveLift != 0.0 -> positiveLift
+                else -> return
+            }
+            else -> throw IllegalArgumentException("Unknown DEPENDENCY_FORMULA_MODE: ${Settings.DEPENDENCY_FORMULA_MODE}")
         }
 
         if (abs(metric.lift) < Settings.MIN_ABS_LIFT_DEPENDENCY) {
@@ -140,7 +147,7 @@ object DepLearn {
                 } else null
             }
             .sortedByDescending { it.third.confidence }
-            .take(TOP_K_RULE_COMBO)
+            .take(Settings.TOP_K_RULE_COMBO)
     }
 
     private fun precomputeBodyLists(

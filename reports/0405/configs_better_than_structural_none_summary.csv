@@ -1,0 +1,8 @@
+dataset,structural_none_MRR,num_better_configs,better_configs,best_config,best_MRR,best_delta_vs_structural_none
+FB15k-237,0.348228,5,structural_r2d3; structural_r3d6; pos_auto_ratio; structural_dep_scale; structural_surprisal_init,structural_r2d3,0.351555,0.003327
+KG20C,0.232779,5,init_dep_with_lift; sign_constraint_dependency; pos_auto_ratio; synergy; structural_rule_mask,init_dep_with_lift,0.233655,0.000876
+WN18RR,0.500535,3,structural_rd; init_dep_with_lift; structural_rule_mask,structural_rd,0.502189,0.001654
+YAGO3-10,0.575377,4,structural_dep_scale; structural_r2d3; synergy; structural_surprisal_init,structural_dep_scale,0.577961,0.002584
+codex-l,0.333535,1,structural_dep_scale,structural_dep_scale,0.333772,0.000237
+codex-m,0.342474,4,structural_r3d6; structural_dep_scale; structural_r2d3; structural_rd,structural_r3d6,0.343299,0.000825
+hetionet,0.362111,7,structural_r2d3; structural_r3d6; pos_auto_ratio; structural_surprisal_init; structural_rd; synergy; redundancy,structural_r2d3,0.369847,0.007736

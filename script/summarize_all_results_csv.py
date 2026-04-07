@@ -22,12 +22,10 @@ EVAL_LOGS = [
 ]
 
 STRUCTURAL_STAGE1_PREFIXES = {
+    "structural_none",
     "structural_rd",
-    "structural_rd_filtered",
     "structural_r2d3",
-    "structural_r2d3_filtered",
     "structural_r3d6",
-    "structural_r3d6_filtered",
 }
 
 
@@ -71,6 +69,28 @@ def parse_eval_log(path: Path) -> Dict[str, Optional[float]]:
         "h@1": float(match.group(2)),
         "h@10": float(match.group(3)),
     }
+
+
+def parse_canonical_log(path: Path) -> Dict[str, Optional[float]]:
+    if not path.exists():
+        return {"MRR": None, "h@1": None, "h@10": None}
+    lines = [line.strip() for line in path.read_text(encoding="utf-8", errors="ignore").splitlines() if line.strip()]
+    tuple_lines = [line for line in lines if line.startswith("(") and line.endswith(")")]
+    if len(tuple_lines) < 3:
+        return {"MRR": None, "h@1": None, "h@10": None}
+
+    def first_value(text: str) -> Optional[float]:
+        try:
+            inner = text[1:-1]
+            first = inner.split(",", 1)[0].strip()
+            return float(first)
+        except Exception:
+            return None
+
+    mrr = first_value(tuple_lines[-3])
+    h1 = first_value(tuple_lines[-2])
+    h10 = first_value(tuple_lines[-1])
+    return {"MRR": mrr, "h@1": h1, "h@10": h10}
 
 
 def load_json(path: Path) -> Dict[str, object]:
@@ -242,6 +262,18 @@ def main() -> None:
         if agg_dir.exists():
             for exp_dir in filtered_preferred_experiment_dirs(agg_dir):
                 rows.extend(build_experiment_rows(dataset, exp_dir))
+            canonical_metrics = parse_canonical_log(agg_dir / "canonical" / "canonical.log")
+            if canonical_metrics["MRR"] is not None:
+                rows.append(
+                    {
+                        "dataset": dataset,
+                        "aggregation": "canonical",
+                        "MRR": canonical_metrics["MRR"],
+                        "h@1": canonical_metrics["h@1"],
+                        "h@10": canonical_metrics["h@10"],
+                        "time": None,
+                    }
+                )
             ensemble_row, debug = build_ensemble_row(dataset, agg_dir)
             ensemble_debug[dataset] = debug
             if ensemble_row is not None:

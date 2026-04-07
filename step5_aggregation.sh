@@ -7,7 +7,6 @@ dataset="$1"
 multiprocess="${2:-2}"
 max_parallel_configs="${MAX_PARALLEL_CONFIGS:-4}"
 run_tag="${RUN_TAG:-}"
-run_batch1_only="${RUN_BATCH1_ONLY:-0}"
 
 if [ -n "${run_tag}" ] && [ "${run_tag#_}" = "${run_tag}" ]; then
     run_tag="_${run_tag}"
@@ -115,23 +114,28 @@ run_batched_configs() {
 }
 
 batch1=(
-    "structural_rd::--synergy --redundancy --type_grouping none"
+    "structural_none::--synergy --redundancy --type_grouping none"
+    "structural_rd::--synergy --redundancy --type_grouping rd"
     "structural_r2d3::--synergy --redundancy --type_grouping r2d3"
     "structural_r3d6::--synergy --redundancy --type_grouping r3d6"
-    "synergy::--synergy"
 )
 
 batch2=(
+    "synergy::--synergy"
     "redundancy::--redundancy"
     "sign_constraint_dependency::--synergy --redundancy --sign_constraint_dependency"
     "init_dep_with_lift::--synergy --redundancy --init_dep_with_lift"
+)
+
+batch3=(
     "pos_auto_ratio::--synergy --redundancy --pos auto_ratio"
+    "structural_surprisal_init::--synergy --redundancy --rule_init_mode surprisal"
+    "structural_dep_scale::--synergy --redundancy --dependency_scale_mode sqrt_active"
+    "structural_rule_mask::--synergy --redundancy --dependency_mask_low_rule_weight"
 )
 
 run_batched_configs "${max_parallel_configs}" "${batch1[@]}"
-
-if [ "${run_batch1_only}" != "1" ]; then
-    run_batched_configs "${max_parallel_configs}" "${batch2[@]}"
-fi
+run_batched_configs "${max_parallel_configs}" "${batch2[@]}"
+run_batched_configs "${max_parallel_configs}" "${batch3[@]}"
 
 echo "Step 5 finished for ${dataset}"

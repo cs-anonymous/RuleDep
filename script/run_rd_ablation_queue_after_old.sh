@@ -18,10 +18,10 @@ DATASETS=(
 )
 
 EXPERIMENTS=(
-    "structural_rd_surprisal_filtered"
-    "structural_rd_dep_scale_filtered"
-    "structural_rd_global_ratio_filtered"
-    "structural_rd_rule_mask_filtered"
+    "structural_surprisal_init"
+    "structural_dep_scale"
+    "structural_rd"
+    "structural_rule_mask"
 )
 
 GPUS=(0 1 2 3)
@@ -43,16 +43,16 @@ is_old_running() {
 variant_extra_args() {
     local experiment="$1"
     case "${experiment}" in
-        structural_rd_surprisal_filtered)
+        structural_surprisal_init)
             echo "--rule_init_mode surprisal"
             ;;
-        structural_rd_dep_scale_filtered)
+        structural_dep_scale)
             echo "--dependency_scale_mode sqrt_active"
             ;;
-        structural_rd_global_ratio_filtered)
+        structural_rd)
             echo "--type_grouping rd"
             ;;
-        structural_rd_rule_mask_filtered)
+        structural_rule_mask)
             echo "--dependency_mask_low_rule_weight"
             ;;
         *)

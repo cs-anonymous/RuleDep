@@ -1,8 +1,8 @@
 dataset,aggregation,rule_weight_B,rule_weight_U,rule_weight_Uc,rule_weight_Ud,dep_weight_BB,dep_weight_BU,dep_weight_UU,dep_weight_B_Uc,dep_weight_B_Ud,dep_weight_Uc_Uc,dep_weight_Uc_Ud,dep_weight_Ud_Ud
-FB15k-237,structural_r2d3_filtered,0.79286,0.93864,,,1.06104,1.06570,1.06930,,,,,
-KG20C,structural_rd_filtered,,,,,,,,,,,,
-WN18RR,structural_rd_filtered,,,,,,,,,,,,
-YAGO3-10,structural_r2d3_filtered,1.04441,1.19994,,,1.27414,1.33274,1.30529,,,,,
-codex-l,structural_rd_filtered,,,,,,,,,,,,
-codex-m,structural_r3d6_filtered,0.83903,,1.51961,1.09631,1.12895,,,1.08676,,1.11937,1.10711,1.05039
-hetionet,structural_r2d3_filtered,0.74138,0.78570,,,0.99292,0.99337,0.99551,,,,,
+FB15k-237,structural_r2d3,0.79286,0.93864,,,1.06104,1.06570,1.06930,,,,,
+KG20C,structural_none,,,,,,,,,,,,
+WN18RR,structural_none,,,,,,,,,,,,
+YAGO3-10,structural_r2d3,1.04441,1.19994,,,1.27414,1.33274,1.30529,,,,,
+codex-l,structural_none,,,,,,,,,,,,
+codex-m,structural_r3d6,0.83903,,1.51961,1.09631,1.12895,,,1.08676,,1.11937,1.10711,1.05039
+hetionet,structural_r2d3,0.74138,0.78570,,,0.99292,0.99337,0.99551,,,,,

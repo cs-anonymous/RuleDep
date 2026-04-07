@@ -13,7 +13,7 @@ DATASETS = [
 ]
 
 EXPERIMENTS = [
-    ("R", "baseline", "structural_rd", "test_after_stage1"),
+    ("R", "baseline", "structural_none", "test_after_stage1"),
     ("R2", "baseline", "structural_r2d3", "test_after_stage1"),
     ("R3", "baseline", "structural_r3d6", "test_after_stage1"),
     ("rd", "stage2", "structural_rd", "test_after_stage2"),
@@ -32,6 +32,8 @@ OUT_PATH = ROOT / "reports" / "experiment_summary" / "six_dataset_stage2_baselin
 
 def load_metrics(dataset: str, config_dir: str):
     path = ROOT / "data" / dataset / "aggregation" / config_dir / "metrics-final.json"
+    if not path.exists():
+        return None
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -71,6 +73,8 @@ def main():
     for dataset in DATASETS:
         for exp_name, exp_group, config_dir, metric_key in EXPERIMENTS:
             metrics = load_metrics(dataset, config_dir)
+            if metrics is None:
+                continue
             summary = metrics["summary"]
             metric_obj = summary[metric_key]
             time_obj = metrics.get("time_seconds", {})

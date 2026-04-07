@@ -29,8 +29,8 @@
 
 中等偏小，但真实存在。
 
-- `FB15k-237`：最佳 structural 配置为 `structural_r2d3_filtered = 0.351555`，明显高于 `eval-noisyor = 0.337685`。
-- `codex-m`：最佳 structural 配置为 `structural_r3d6_filtered = 0.343299`，高于 `eval-noisyor = 0.341133` 量级附近的 baseline 线。
+- `FB15k-237`：最佳 structural 配置为 `structural_r2d3 = 0.351555`，明显高于 `eval-noisyor = 0.337685`。
+- `codex-m`：最佳 structural 配置为 `structural_r3d6 = 0.343299`，高于 `eval-noisyor = 0.341133` 量级附近的 baseline 线。
 - `YAGO3-10`：最佳 structural 配置 `0.576659`，也高于纯 rule 型配置。
 - `WN18RR`：dependency 有用，但收益更小，很多配置都非常接近。
 
@@ -94,20 +94,20 @@
 从总表看：
 
 - `FB15k-237`
-  - `synergy_filtered = 0.348182`
-  - `redundancy_filtered = 0.347210`
+  - `synergy = 0.348182`
+  - `redundancy = 0.347210`
   - 两者都有用，synergy 略强
 - `KG20C`
-  - `synergy_filtered = 0.232885`
-  - `redundancy_filtered = 0.229664`
+  - `synergy = 0.232885`
+  - `redundancy = 0.229664`
   - synergy 明显更强
 - `WN18RR`
-  - `synergy_filtered = 0.499568`
-  - `redundancy_filtered = 0.499462`
+  - `synergy = 0.499568`
+  - `redundancy = 0.499462`
   - 二者都很弱，且非常接近
 - `codex-m`
-  - `redundancy_filtered = 0.342124`
-  - `synergy_filtered` 不在最佳前列
+  - `redundancy = 0.342124`
+  - `synergy` 不在最佳前列
   - redundancy 在该数据集上更有竞争力
 - `codex-l`
   - synergy 和 redundancy 都接近，但 synergy 略强
@@ -151,7 +151,7 @@
 
 1. 很多 relation 上，`Uc` 或 `U` 类型会被放大得更多
 
-例如 `codex-m / structural_r3d6_filtered`：
+例如 `codex-m / structural_r3d6`：
 
 - relation `16`
   - `B: 1.0 -> 0.946452`
@@ -170,7 +170,7 @@
 
 2. dependency type 权重通常只做温和缩放，而不是剧烈翻转
 
-例如 `FB15k-237 / structural_r2d3_filtered`：
+例如 `FB15k-237 / structural_r2d3`：
 
 - relation `147`
   - `["B","B"]`: `1.0 -> 1.033335`

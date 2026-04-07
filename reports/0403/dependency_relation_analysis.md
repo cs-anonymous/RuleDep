@@ -12,13 +12,13 @@
 
 本次分析使用每个数据集全局最优的 structural 配置：
 
-- `FB15k-237` -> `structural_r2d3_filtered`
-- `KG20C` -> `structural_rd_filtered`
-- `WN18RR` -> `structural_rd_filtered`
-- `YAGO3-10` -> `structural_r2d3_filtered`
-- `codex-l` -> `structural_rd_filtered`
-- `codex-m` -> `structural_r3d6_filtered`
-- `hetionet` -> `structural_r2d3_filtered`
+- `FB15k-237` -> `structural_r2d3`
+- `KG20C` -> `structural_none`
+- `WN18RR` -> `structural_none`
+- `YAGO3-10` -> `structural_r2d3`
+- `codex-l` -> `structural_none`
+- `codex-m` -> `structural_r3d6`
+- `hetionet` -> `structural_r2d3`
 
 对每个 `dataset, relation`，定义：
 

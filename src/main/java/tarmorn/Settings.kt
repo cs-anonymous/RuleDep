@@ -222,6 +222,12 @@ object Settings {
     @JvmField
     var MIN_ABS_LIFT_DEPENDENCY: Double = 0.01
 
+    @JvmField
+    var TOP_K_RULE_COMBO: Int = 300
+
+    @JvmField
+    var DEPENDENCY_FORMULA_MODE: String = "legacy"
+
     // The maximal size of the rules that are stored when reading them from a file.
     // Determines which rules are read from a file by the rule reader.
     // All rules with a body length > then this number are ignored.

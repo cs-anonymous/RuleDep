@@ -9,8 +9,11 @@ from pathlib import Path
 from statistics import median
 from typing import Dict, List, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    plt = None
 
 
 ROOT = Path("/home/sy/RuleDep")
@@ -516,6 +519,8 @@ def build_type_weight_summary(rows: List[Dict[str, object]]) -> List[Dict[str, o
 
 
 def plot_gain_vs_stage1(rows: List[Dict[str, object]], out_path: Path) -> None:
+    if plt is None:
+        return
     plt.figure(figsize=(8, 5))
     datasets = sorted({r["dataset"] for r in rows})
     cmap = plt.get_cmap("tab10")
@@ -542,6 +547,8 @@ def plot_gain_vs_stage1(rows: List[Dict[str, object]], out_path: Path) -> None:
 
 
 def plot_gain_vs_dep_density(rows: List[Dict[str, object]], out_path: Path) -> None:
+    if plt is None:
+        return
     plt.figure(figsize=(8, 5))
     datasets = sorted({r["dataset"] for r in rows})
     cmap = plt.get_cmap("tab10")
@@ -563,6 +570,8 @@ def plot_gain_vs_dep_density(rows: List[Dict[str, object]], out_path: Path) -> N
 
 
 def plot_bucket_summary(summary_rows: List[Dict[str, object]], title: str, out_path: Path) -> None:
+    if plt is None:
+        return
     labels = [row["bucket"] for row in summary_rows]
     positive = [float(row["positive_ratio"]) * 100 if row["positive_ratio"] is not None else 0.0 for row in summary_rows]
     negative = [float(row["negative_ratio"]) * 100 if row["negative_ratio"] is not None else 0.0 for row in summary_rows]
@@ -591,6 +600,8 @@ def plot_bucket_summary(summary_rows: List[Dict[str, object]], title: str, out_p
 
 
 def plot_dataset_gain_mix(dataset_summary: List[Dict[str, object]], out_path: Path) -> None:
+    if plt is None:
+        return
     labels = [row["dataset"] for row in dataset_summary]
     pos = [int(row["positive_relations"]) for row in dataset_summary]
     neu = [int(row["neutral_relations"]) for row in dataset_summary]
@@ -610,9 +621,11 @@ def plot_dataset_gain_mix(dataset_summary: List[Dict[str, object]], out_path: Pa
 
 
 def plot_type_weight_summary(type_rows: List[Dict[str, object]], out_path: Path) -> None:
-    datasets = [row["dataset"] for row in type_rows if row["aggregation"] != "structural_rd_filtered"]
+    if plt is None:
+        return
+    datasets = [row["dataset"] for row in type_rows if row["aggregation"] != "structural_none"]
     rule_keys = ["rule_weight_B", "rule_weight_U", "rule_weight_Uc", "rule_weight_Ud"]
-    filtered_rows = [row for row in type_rows if row["aggregation"] != "structural_rd_filtered"]
+    filtered_rows = [row for row in type_rows if row["aggregation"] != "structural_none"]
     if not filtered_rows:
         return
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
@@ -674,6 +687,8 @@ def main() -> None:
 
     print(f"Wrote relation analysis table to {relation_csv}")
     print(f"Rows: {len(rows)}")
+    if plt is None:
+        print("matplotlib not available; skipped plot generation")
 
 
 if __name__ == "__main__":

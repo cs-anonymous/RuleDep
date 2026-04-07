@@ -1550,6 +1550,12 @@ def get_parser():
     parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
+    parser.add_argument(
+        "--resume_relation_sweep",
+        action="store_true",
+        default=False,
+        help="Resume an all-relation run by skipping relations that already have valid metric-<rel>.json files in EXPERIMENT_DIR, then re-write metrics-final.json.",
+    )
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
     parser.add_argument("--synergy_pair_chunk_size", dest="dependency_chunk_size", action="store", type=int, help=argparse.SUPPRESS)
@@ -1562,6 +1568,8 @@ def get_parser():
     )
     parser.add_argument("--synergy", action="store_true", default=False, help="Load dependencies from synergy_filtered.txt.")
     parser.add_argument("--redundancy", action="store_true", default=False, help="Load dependencies from redundancy_filtered.txt.")
+    parser.add_argument("--synergy_file", default="", help="Override synergy dependency file path.")
+    parser.add_argument("--redundancy_file", default="", help="Override redundancy dependency file path.")
     parser.add_argument(
         "--type_grouping",
         action="store",
@@ -2777,6 +2785,34 @@ def _get_relation_test_counts():
     return {int(i): int(c) for i, c in enumerate(counts.tolist())}
 
 
+def _discover_completed_relations():
+    completed = set()
+    metric_files = sorted(glob.glob(os.path.join(args.experiment, "metric-*.json")))
+    for path in metric_files:
+        try:
+            with open(path, "r") as f:
+                payload = json.load(f)
+            relation = int(payload["relation"])
+        except Exception:
+            # Corrupt / partial metric files should be recomputed.
+            continue
+        completed.add(relation)
+    return completed
+
+
+def _relations_remaining_for_sweep(relations):
+    if not getattr(args, "resume_relation_sweep", False):
+        return list(relations), set()
+    completed_relations = _discover_completed_relations()
+    remaining_relations = [relation for relation in relations if relation not in completed_relations]
+    skipped = len(relations) - len(remaining_relations)
+    print(
+        f"Resume mode enabled: completed_relations={len(completed_relations)}, "
+        f"remaining_relations={len(remaining_relations)}, skipped={skipped}"
+    )
+    return remaining_relations, completed_relations
+
+
 def _merge_metric_files(metric_files, relation_test_counts):
     rows_by_stage = {
         "test_before_stage1": [],
@@ -2892,9 +2928,13 @@ def _finalize_relation_sweep(failed_relations, relation_test_counts, sweep_secon
 def aggregate_all_relations_sequential():
     sweep_start_time = perf_counter()
     relations = _get_all_relations()
+    relations, completed_relations = _relations_remaining_for_sweep(relations)
     relation_test_counts = _get_relation_test_counts()
 
-    print(f"Start relation sweep (sequential), total relations: {len(relations)}")
+    print(
+        f"Start relation sweep (sequential), remaining relations: {len(relations)}, "
+        f"completed relations reused: {len(completed_relations)}"
+    )
 
     failed_relations = {}
 
@@ -2922,13 +2962,14 @@ def aggregate_multiple():
     args.max_worker_dataloader = 0
 
     relations = _get_all_relations()
+    relations, completed_relations = _relations_remaining_for_sweep(relations)
     deferred_large_relations = [relation for relation in relations if is_large_relation(relation)]
     pooled_relations = [relation for relation in relations if not is_large_relation(relation)]
     relation_test_counts = _get_relation_test_counts()
     num_processes = min(max(int(args.multiprocess), 2), len(pooled_relations)) if pooled_relations else 0
 
     print(
-        f"Start relation sweep, total relations: {len(relations)}, "
+        f"Start relation sweep, remaining relations: {len(relations)}, reused completed relations: {len(completed_relations)}, "
         f"pooled relations: {len(pooled_relations)}, deferred large relations: {len(deferred_large_relations)}, "
         f"processes: {num_processes}"
     )
@@ -3010,8 +3051,8 @@ print(f"Using relation-local processed explanations root: {get_relation_processe
 
 rule_file = args.rule_file if args.rule_file else f"./{dataset_dir}/rules/rules-1000-5"
 dependency_dir = os.path.dirname(rule_file)
-synergy_filtered_file = os.path.join(dependency_dir, "synergy_filtered.txt")
-redundancy_filtered_file = os.path.join(dependency_dir, "redundancy_filtered.txt")
+synergy_filtered_file = args.synergy_file if getattr(args, "synergy_file", "") else os.path.join(dependency_dir, "synergy_filtered.txt")
+redundancy_filtered_file = args.redundancy_file if getattr(args, "redundancy_file", "") else os.path.join(dependency_dir, "redundancy_filtered.txt")
 relation_ids = read_ids(f"./{dataset_dir}/relation_ids.del")
 rule_meta = parse_rule_file_metadata(rule_file, relation_ids)
 rule_type_r3_by_id = rule_meta["rule_type_r3_by_id"]

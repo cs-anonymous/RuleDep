@@ -14,7 +14,7 @@ DATASETS = [
 ]
 
 EXPERIMENTS = [
-    ("R", "baseline", "structural_rd", "best_valid_stage1", "test_after_stage1"),
+    ("R", "baseline", "structural_none", "best_valid_stage1", "test_after_stage1"),
     ("R2", "baseline", "structural_r2d3", "best_valid_stage1", "test_after_stage1"),
     ("R3", "baseline", "structural_r3d6", "best_valid_stage1", "test_after_stage1"),
     ("rd", "stage2", "structural_rd", "best_valid_stage2", "test_after_stage2"),
@@ -40,6 +40,8 @@ def r5(value):
 
 def load_relation_metric(dataset: str, exp_dir: str, relation: int):
     path = ROOT / "data" / dataset / "aggregation" / exp_dir / f"metric-{relation}.json"
+    if not path.exists():
+        return None
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -79,6 +81,8 @@ def main():
             candidates = []
             for exp_name, exp_group, exp_dir, valid_key, test_key in EXPERIMENTS:
                 metric_obj = load_relation_metric(dataset, exp_dir, relation)
+                if metric_obj is None:
+                    continue
                 valid_obj = metric_obj.get(valid_key) or {}
                 test_obj = metric_obj.get(test_key) or {}
                 if not valid_obj or not test_obj:
@@ -109,6 +113,8 @@ def main():
                 )
 
             exp_order = {item[0]: idx for idx, item in enumerate(EXPERIMENTS)}
+            if not candidates:
+                continue
             best = max(
                 candidates,
                 key=lambda x: (x["valid_mrr"], -exp_order[x["experiment"]]),
@@ -134,6 +140,8 @@ def main():
                 }
             )
 
+        if not selected_rows:
+            continue
         agg = aggregate_selected(selected_rows)
         summary_row = {
             "dataset": dataset,

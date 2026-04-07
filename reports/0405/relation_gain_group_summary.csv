@@ -1,0 +1,4 @@
+group,num_relations,selected_dependency_ratio,avg_stage1_mrr,median_stage1_mrr,avg_rel_gain_pct,median_rel_gain_pct,avg_dep_per_rule,median_dep_per_rule,avg_filtered_dep_per_rule,avg_B_ratio,avg_Uc_ratio,avg_Ud_ratio,avg_test_triple_count
+positive,36.00000,1.00000,0.32935,0.28742,11.29295,7.02994,1.56103,1.38731,1.56103,0.20979,0.51922,0.27046,143.05556
+neutral,378.00000,0.39947,0.36342,0.34339,0.14957,0.00000,1.24354,0.73705,1.24354,0.19428,0.55191,0.25291,774.54497
+negative,11.00000,1.00000,0.39544,0.32818,-10.55671,-6.87713,2.12907,2.01817,2.12907,0.16507,0.54270,0.29157,31.54545
