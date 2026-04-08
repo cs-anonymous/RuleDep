@@ -20,11 +20,11 @@
 | Dataset | Best config | Best MRR | Ensemble | Canonical | Best app |
 | --- | --- | ---: | ---: | ---: | ---: |
 | KG20C | init_dep_with_lift | 0.233655 | 0.235229 | 0.239401 | 0.229772 |
-| codex-m | structural_r3d6 | 0.343299 | 0.346220 | 0.345537 | 0.319487 |
-| WN18RR | structural_rd | 0.502189 | 0.499851 | 0.499500 | 0.496968 |
-| FB15k-237 | structural_r2d3 | 0.351555 | 0.356535 | 0.353919 | 0.337685 |
-| codex-l | structural_dep_scale | 0.333772 | 0.335050 | - | 0.311458 |
-| YAGO3-10 | structural_dep_scale | 0.577961 | 0.576309 | 0.573990 | 0.554384 |
+| codex-m | structural_r3d6 | 0.343299 | 0.346357 | 0.345537 | 0.319487 |
+| WN18RR | structural_rd | 0.502189 | 0.500230 | 0.499500 | 0.496968 |
+| FB15k-237 | best_combination | 0.353336 | 0.356980 | 0.353919 | 0.337685 |
+| codex-l | structural_dep_scale | 0.333772 | 0.334876 | - | 0.311458 |
+| YAGO3-10 | structural_dep_scale | 0.577961 | 0.576375 | 0.573990 | 0.554384 |
 | hetionet | structural_r2d3 | 0.369847 | 0.371678 | - | 0.230313 |
 
 ## Notes

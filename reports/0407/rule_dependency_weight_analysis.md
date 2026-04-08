@@ -1,5 +1,10 @@
 # 0407 Rule / Dependency Weight Analysis
 
+注：
+
+- 本页已按当前最新已完成实验重生成。
+- `hetionet` 的 2026-04-08 targeted follow-up 尚未完成，因此这里的跨数据集比较不把该批 `hetionet` 新实验纳入最终判断。
+
 本节沿用第 2 部分的 best config，考察 rule 与 dependency 的参数在训练前后如何变化，以及模型最终是否会把大量 dependency 权重压回到接近零的区域。
 
 相关表格：
@@ -32,23 +37,23 @@
 
 | Dataset | Config | Rule near-zero | Dep trial near-zero | Dep final near-zero | Rule max abs | Dep trial max abs | Dep final max abs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| KG20C | init_dep_with_lift | 12.48470 | 68.11450 | 68.11450 | 1.90228 | 1.15098 | 1.15098 |
-| codex-m | structural_r3d6 | 11.38830 | 97.62060 | 46.79880 | 2.99124 | 0.58873 | 0.58873 |
-| WN18RR | structural_rd | 10.75430 | 89.07810 | 57.69790 | 4.24963 | 0.30246 | 0.30246 |
-| FB15k-237 | structural_r2d3 | 16.69570 | 80.56860 | 54.67160 | 4.02744 | 0.80798 | 0.80798 |
-| codex-l | structural_dep_scale | 30.90220 | 54.59180 | 12.21260 | 4.29032 | 6.76793 | 6.76793 |
-| YAGO3-10 | structural_dep_scale | 44.85790 | 68.05020 | 14.59040 | 4.20227 | 3.25249 | 3.25249 |
-| hetionet | structural_r2d3 | 20.78810 | 98.94870 | 88.67860 | 4.99785 | 0.18869 | 0.18869 |
+| KG20C | init_dep_with_lift | 12.48466 | 68.11455 | 68.11455 | 1.90228 | 1.15098 | 1.15098 |
+| codex-m | structural_r3d6 | 11.38827 | 97.62060 | 46.79882 | 2.99124 | 0.58873 | 0.58873 |
+| WN18RR | structural_rd | 10.75427 | 89.07812 | 57.69792 | 4.24963 | 0.30246 | 0.30246 |
+| FB15k-237 | structural_r2d3 | 16.69568 | 80.56864 | 54.67156 | 4.02744 | 0.80798 | 0.80798 |
+| codex-l | structural_dep_scale | 30.90225 | 54.59183 | 12.21255 | 4.29032 | 6.76793 | 6.76793 |
+| YAGO3-10 | structural_dep_scale | 44.85790 | 68.05019 | 14.59044 | 4.20227 | 3.25249 | 3.25249 |
+| hetionet | structural_r2d3 | 20.78810 | 98.94872 | 88.67859 | 4.99785 | 0.18869 | 0.18869 |
 
 ## Dependency Sign vs Type
 
-在 trial 阶段，`synergy` 的平均正权重比例为 `27.18034%`，`redundancy` 为 `8.75647%`。
-经过最终选择后，`synergy` 的平均正权重比例上升到 `54.19174%`，`redundancy` 也上升到 `35.56521%`。
+在 trial 阶段，`synergy` 的平均正权重比例为 `27.18033%`，`redundancy` 为 `8.75649%`。
+经过最终选择后，`synergy` 的平均正权重比例上升到 `54.19173%`，`redundancy` 也上升到 `35.56521%`。
 
 ## Global View
 
 rule 权重的平均绝对变化为 `0.26399`，dependency 在 trial 与 final 阶段分别为 `0.02309` 和 `0.05651`。
-近零比例方面，rule 权重均值为 `21.12446%`，dependency 在 trial 阶段为 `79.56750%`，final 阶段为 `48.96634%`。
+近零比例方面，rule 权重均值为 `21.12445%`，dependency 在 trial 阶段为 `79.56752%`，final 阶段为 `48.96635%`。
 
 ## Interpretation
 

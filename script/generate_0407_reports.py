@@ -37,6 +37,7 @@ EVAL_SOURCES = [
 ]
 
 STAGE1_DUPLICATE_EXPERIMENTS = {
+    "structural_none",
     "structural_rd",
     "structural_r2d3",
     "structural_r3d6",

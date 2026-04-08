@@ -4,7 +4,7 @@
 
 相关表格：
 
-- [dataset_size_rule_dependency_stats.csv](/home/sy/RuleDep/reports/0407/dataset_size_rule_dependency_stats.csv)
+- `dataset_size_rule_dependency_stats.csv`
 
 ## Headline Table
 

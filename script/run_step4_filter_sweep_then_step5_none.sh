@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${ROOT_DIR}/logs/step4_filter_sweep_then_step5_none"
 PYTHON_BIN="${PYTHON_BIN:-/home/sy/anaconda3/envs/ruledep/bin/python}"
 FILTER_JOBS="${FILTER_JOBS:-24}"
+HETIONET_FILTER_JOBS="${HETIONET_FILTER_JOBS:-4}"
 START_DATASET="${START_DATASET:-}"
 DATASETS_OVERRIDE="${DATASETS_OVERRIDE:-}"
 DATASETS=("FB15k-237" "KG20C" "WN18RR" "YAGO3-10" "codex-l" "codex-m" "hetionet")
@@ -49,7 +50,7 @@ filter_min_supp() {
 
 filter_jobs_for_dataset() {
     case "$1" in
-        hetionet) echo "8" ;;
+        hetionet) echo "${HETIONET_FILTER_JOBS}" ;;
         *) echo "${FILTER_JOBS}" ;;
     esac
 }

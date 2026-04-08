@@ -23,14 +23,14 @@
 - `KG20C` -> `init_dep_with_lift`
 - `codex-m` -> `structural_r3d6`
 - `WN18RR` -> `structural_rd`
-- `FB15k-237` -> `structural_r2d3`
+- `FB15k-237` -> `best_combination`
 - `codex-l` -> `structural_dep_scale`
 - `YAGO3-10` -> `structural_dep_scale`
 - `hetionet` -> `structural_r2d3`
 
 ## Main Findings
 
-在全部 `425` 个 relation 中，`56` 个 relation 的相对增益超过 `3%`，`275` 个 relation 落在 `0%-3%` 的稳定提升区间，另有 `94` 个 relation 出现负迁移。整体上，dependency 的收益并不是均匀分布的，而更像是集中出现在一批“baseline 尚未饱和但结构信号较强”的 relation 上。
+在全部 `425` 个 relation 中，`81` 个 relation 的相对增益超过 `3%`，`219` 个 relation 落在 `0%-3%` 的稳定提升区间，另有 `125` 个 relation 出现负迁移。整体上，dependency 的收益并不是均匀分布的，而更像是集中出现在一批“baseline 尚未饱和但结构信号较强”的 relation 上。
 
 <p align="center"><img src="plot_gain_vs_stage1.png" alt="Gain vs Stage1" width="60%"></p>
 
@@ -42,20 +42,20 @@
 
 ## Positive vs Negative Relations
 
-正增益 relation 的平均 stage1 MRR 为 `0.31160`，低于负增益 relation 的 `0.36900`；而其平均 dependency density 为 `1.53750`，高于负增益 relation 的 `1.27038`。 这说明 dependency 更容易帮助那些仍有提升空间、且规则交互相对更密的 relation。
+正增益 relation 的平均 stage1 MRR 为 `0.28131`，低于负增益 relation 的 `0.42703`；而其平均 dependency density 为 `1.27644`，高于负增益 relation 的 `1.59412`。 这说明 dependency 更容易帮助那些仍有提升空间、且规则交互相对更密的 relation。
 
 进一步看中位数统计，正增益 relation 的典型规模特征如下：
 
-- `train triples` 中位数：`842.00000`，负增益为 `814.00000`
-- `test triples` 中位数：`46.00000`，负增益为 `56.00000`
-- `#rules` 中位数：`1998.00000`，负增益为 `1579.00000`
-- `#dependencies` 中位数：`1814.00000`，负增益为 `1763.00000`
-- `dep_per_rule` 中位数：`1.33624`，负增益为 `0.80308`
+- `train triples` 中位数：`797.00000`，负增益为 `599.00000`
+- `test triples` 中位数：`40.00000`，负增益为 `36.00000`
+- `#rules` 中位数：`1492.00000`，负增益为 `1196.00000`
+- `#dependencies` 中位数：`1283.00000`，负增益为 `1961.00000`
+- `dep_per_rule` 中位数：`0.79740`，负增益为 `1.20275`
 
 按最终被选中的 stage 看，正增益 relation 更常落在 dependency stage：
 
-- 正增益 relation：`dependency = 46`，`rule_only = 10`
-- 负增益 relation：`dependency = 62`，`rule_only = 32`
+- 正增益 relation：`dependency = 55`，`rule_only = 26`
+- 负增益 relation：`dependency = 80`，`rule_only = 45`
 
 <p align="center"><img src="plot_stage1_bucket_summary.png" alt="Stage1 Bucket Summary" width="60%"></p>
 
@@ -72,9 +72,9 @@
 | Dataset | Config | Positive | Neutral | Negative | Avg gain pct |
 | --- | --- | ---: | ---: | ---: | ---: |
 | KG20C | init_dep_with_lift | 1 | 3 | 1 | 2.18316 |
-| codex-m | structural_r3d6 | 4 | 30 | 12 | 0.55822 |
+| codex-m | structural_r3d6 | 4 | 30 | 12 | 0.55821 |
 | WN18RR | structural_rd | 1 | 8 | 2 | 0.90663 |
-| FB15k-237 | structural_r2d3 | 37 | 148 | 52 | 1.39861 |
+| FB15k-237 | best_combination | 62 | 92 | 83 | 1.66240 |
 | codex-l | structural_dep_scale | 4 | 48 | 13 | 0.57201 |
 | YAGO3-10 | structural_dep_scale | 4 | 28 | 5 | 1.41338 |
 | hetionet | structural_r2d3 | 5 | 10 | 9 | 2.45482 |
@@ -98,16 +98,16 @@
 
 表格文件 `relation_relative_gain_gt_3pct_best_config.csv` 给出了完整列表，下面列出最有代表性的正例及其规模信息：
 
-- `FB15k-237` / `/olympics/olympic_games/sports`: baseline `0.26323`, final `0.46603`, rel_gain `77.04325%`, `train=664`, `test=13`, `rules=9650`, `deps=21010`, `dep_per_rule=2.17720`, `selected_stage=dependency`
-- `FB15k-237` / `/award/award_winner/awards_won./award/award_honor/award_winner`: baseline `0.26534`, final `0.37228`, rel_gain `40.30138%`, `train=8423`, `test=41`, `rules=79116`, `deps=316464`, `dep_per_rule=4.00000`, `selected_stage=dependency`
 - `hetionet` / `DrD`: baseline `0.22111`, final `0.30250`, rel_gain `36.80881%`, `train=423`, `test=62`, `rules=583`, `deps=182`, `dep_per_rule=0.31218`, `selected_stage=dependency`
+- `FB15k-237` / `/base/popstra/celebrity/friendship./base/popstra/friendship/participant`: baseline `0.05312`, final `0.07153`, rel_gain `34.65679%`, `train=1511`, `test=32`, `rules=2911`, `deps=464`, `dep_per_rule=0.15940`, `selected_stage=rule_only`
+- `FB15k-237` / `/film/film/film_festivals`: baseline `0.19895`, final `0.25978`, rel_gain `30.57209%`, `train=264`, `test=18`, `rules=827`, `deps=157`, `dep_per_rule=0.18984`, `selected_stage=dependency`
+- `FB15k-237` / `/music/genre/parent_genre`: baseline `0.16270`, final `0.20418`, rel_gain `25.49437%`, `train=678`, `test=97`, `rules=454`, `deps=188`, `dep_per_rule=0.41410`, `selected_stage=rule_only`
+- `FB15k-237` / `/military/military_combatant/military_conflicts./military/military_combatant_group/combatants`: baseline `0.26036`, final `0.32488`, rel_gain `24.78345%`, `train=747`, `test=17`, `rules=28658`, `deps=80136`, `dep_per_rule=2.79629`, `selected_stage=dependency`
+- `FB15k-237` / `/location/country/official_language`: baseline `0.27862`, final `0.34660`, rel_gain `24.40022%`, `train=225`, `test=16`, `rules=991`, `deps=3964`, `dep_per_rule=4.00000`, `selected_stage=rule_only`
 - `YAGO3-10` / `dealsWith`: baseline `0.26473`, final `0.32516`, rel_gain `22.82627%`, `train=1302`, `test=7`, `rules=5173`, `deps=15381`, `dep_per_rule=2.97332`, `selected_stage=dependency`
-- `FB15k-237` / `/base/popstra/celebrity/friendship./base/popstra/friendship/participant`: baseline `0.05312`, final `0.06308`, rel_gain `18.74464%`, `train=1511`, `test=32`, `rules=2911`, `deps=464`, `dep_per_rule=0.15940`, `selected_stage=dependency`
-- `FB15k-237` / `/award/award_nominee/award_nominations./award/award_nomination/award_nominee`: baseline `0.27075`, final `0.31912`, rel_gain `17.86426%`, `train=15989`, `test=214`, `rules=126142`, `deps=379530`, `dep_per_rule=3.00875`, `selected_stage=dependency`
-- `FB15k-237` / `/base/culturalevent/event/entity_involved`: baseline `0.10802`, final `0.12611`, rel_gain `16.75249%`, `train=276`, `test=20`, `rules=237`, `deps=234`, `dep_per_rule=0.98734`, `selected_stage=dependency`
-- `FB15k-237` / `/location/location/partially_contains`: baseline `0.32828`, final `0.37945`, rel_gain `15.58600%`, `train=133`, `test=13`, `rules=758`, `deps=1439`, `dep_per_rule=1.89842`, `selected_stage=dependency`
-- `FB15k-237` / `/music/performance_role/regular_performances./music/group_membership/role`: baseline `0.09913`, final `0.11432`, rel_gain `15.32770%`, `train=2655`, `test=40`, `rules=91633`, `deps=194070`, `dep_per_rule=2.11790`, `selected_stage=dependency`
-- `FB15k-237` / `/film/film/distributors./film/film_film_distributor_relationship/region`: baseline `0.56497`, final `0.64524`, rel_gain `14.20726%`, `train=157`, `test=10`, `rules=916`, `deps=1814`, `dep_per_rule=1.98035`, `selected_stage=dependency`
+- `FB15k-237` / `/award/award_nominee/award_nominations./award/award_nomination/award_nominee`: baseline `0.27075`, final `0.32256`, rel_gain `19.13285%`, `train=15989`, `test=214`, `rules=126142`, `deps=379530`, `dep_per_rule=3.00875`, `selected_stage=dependency`
+- `FB15k-237` / `/music/performance_role/regular_performances./music/group_membership/role`: baseline `0.09913`, final `0.11709`, rel_gain `18.12076%`, `train=2655`, `test=40`, `rules=91633`, `deps=194070`, `dep_per_rule=2.11791`, `selected_stage=rule_only`
+- `FB15k-237` / `/award/award_winning_work/awards_won./award/award_honor/award`: baseline `0.17743`, final `0.20912`, rel_gain `17.86588%`, `train=3310`, `test=118`, `rules=19741`, `deps=40669`, `dep_per_rule=2.06013`, `selected_stage=dependency`
 
 从这些代表性正例可以看到两类模式：
 
@@ -118,13 +118,13 @@
 
 负例通常对应两种风险：其一是 baseline 本身已经较强，额外 dependency 容易过修正；其二是 dependency 虽多，但质量不稳定，valid 侧的偏好无法稳定迁移到 test。
 
-- `FB15k-237` / `/base/locations/continents/countries_within`: baseline `0.81961`, final `0.52942`, rel_gain `-35.40603%`, selected_stage `dependency`
-- `FB15k-237` / `/olympics/olympic_games/participating_countries`: baseline `0.45873`, final `0.38930`, rel_gain `-15.13551%`, selected_stage `rule_only`
-- `FB15k-237` / `/film/film_set_designer/film_sets_designed`: baseline `0.23048`, final `0.19728`, rel_gain `-14.40385%`, selected_stage `dependency`
-- `FB15k-237` / `/tv/tv_network/programs./tv/tv_network_duration/program`: baseline `0.19074`, final `0.16421`, rel_gain `-13.91094%`, selected_stage `dependency`
-- `FB15k-237` / `/location/hud_county_place/county`: baseline `0.28156`, final `0.24667`, rel_gain `-12.39087%`, selected_stage `rule_only`
-- `FB15k-237` / `/olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics`: baseline `0.37638`, final `0.34202`, rel_gain `-9.12920%`, selected_stage `rule_only`
-- `FB15k-237` / `/film/film/written_by`: baseline `0.12397`, final `0.11329`, rel_gain `-8.61402%`, selected_stage `dependency`
-- `FB15k-237` / `/media_common/netflix_genre/titles`: baseline `0.36690`, final `0.34753`, rel_gain `-5.28029%`, selected_stage `dependency`
-- `hetionet` / `CpD`: baseline `0.30059`, final `0.28484`, rel_gain `-5.24143%`, selected_stage `dependency`
-- `FB15k-237` / `/organization/non_profit_organization/registered_with./organization/non_profit_registration/registering_agency`: baseline `0.77494`, final `0.73578`, rel_gain `-5.05351%`, selected_stage `dependency`
+- `FB15k-237` / `/base/locations/continents/countries_within`: baseline `0.81961`, final `0.51488`, rel_gain `-37.17981%`, selected_stage `dependency`
+- `FB15k-237` / `/music/artist/origin`: baseline `0.15966`, final `0.11940`, rel_gain `-25.22008%`, selected_stage `rule_only`
+- `FB15k-237` / `/sports/sports_team/roster./baseball/baseball_roster_position/position`: baseline `0.64444`, final `0.55833`, rel_gain `-13.36207%`, selected_stage `dependency`
+- `FB15k-237` / `/film/film/film_art_direction_by`: baseline `0.75000`, final `0.66667`, rel_gain `-11.11111%`, selected_stage `rule_only`
+- `FB15k-237` / `/music/group_member/membership./music/group_membership/role`: baseline `0.25564`, final `0.22805`, rel_gain `-10.78991%`, selected_stage `dependency`
+- `FB15k-237` / `/organization/non_profit_organization/registered_with./organization/non_profit_registration/registering_agency`: baseline `0.77494`, final `0.69759`, rel_gain `-9.98077%`, selected_stage `dependency`
+- `FB15k-237` / `/location/location/partially_contains`: baseline `0.32828`, final `0.29660`, rel_gain `-9.65049%`, selected_stage `rule_only`
+- `FB15k-237` / `/celebrities/celebrity/celebrity_friends./celebrities/friendship/friend`: baseline `0.06144`, final `0.05588`, rel_gain `-9.04255%`, selected_stage `rule_only`
+- `FB15k-237` / `/olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics`: baseline `0.37638`, final `0.34256`, rel_gain `-8.98724%`, selected_stage `rule_only`
+- `FB15k-237` / `/education/educational_institution/students_graduates./education/education/major_field_of_study`: baseline `0.23666`, final `0.21592`, rel_gain `-8.76611%`, selected_stage `rule_only`

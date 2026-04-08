@@ -1,5 +1,10 @@
 # 0407 Type-weight Analysis
 
+注：
+
+- 本页已按当前最新已完成实验重生成。
+- `hetionet` 的 2026-04-08 targeted follow-up 尚未完成，因此这里关于跨数据集的 typed 配置结论不把 `hetionet` 的该批新实验计入。
+
 这一节不再把 type weight 直接做成单个实验级平均值，而是回到 relation 粒度来问：在每个数据集最优的 typed 实验里，究竟是哪一类 rule type 或 dependency interaction 真正在起作用。
 
 这里将某个 type 在一个 relation 上的重要性定义为：`support x trained_weight`。
@@ -47,18 +52,18 @@
 
 按 relation 计数，整体上最常成为主导项的 rule type 是 `U`，最常成为主导项的 dependency interaction 是 `UU`。
 
-如果只在能观测到 `B / Uc / Ud` 三类权重的 relation 上检查，满足 `Ud < B < Uc` 的比例为 `18.51850%`。 这比“直接看全局平均值”更合理，因为它保留了 relation 之间的差异。
+如果只在能观测到 `B / Uc / Ud` 三类权重的 relation 上检查，满足 `Ud < B < Uc` 的比例为 `18.51852%`。 这比“直接看全局平均值”更合理，因为它保留了 relation 之间的差异。
 
 ## Within-dataset Heterogeneity
 
 下面的统计更能说明问题：如果某个数据集所有 relation 都偏好同一种 type，那么它的 dominant-type entropy 会很低；反过来，如果不同 relation 各自依赖不同的 type，entropy 就会更高。
 
 - `KG20C`: dominant rule type 最常见的是 `Uc`，占 `100.00000%`；rule-type entropy 为 `0.00000`，dependency-type entropy 为 `0.72193`。
-- `codex-m`: dominant rule type 最常见的是 `Uc`，占 `73.91300%`；rule-type entropy 为 `0.67359`，dependency-type entropy 为 `0.94598`。
+- `codex-m`: dominant rule type 最常见的是 `Uc`，占 `73.91304%`；rule-type entropy 为 `0.67359`，dependency-type entropy 为 `0.94598`。
 - `WN18RR`: dominant rule type 最常见的是 `U`，占 `100.00000%`；rule-type entropy 为 `0.00000`，dependency-type entropy 为 `0.86497`。
-- `FB15k-237`: dominant rule type 最常见的是 `U`，占 `87.34180%`；rule-type entropy 为 `0.54799`，dependency-type entropy 为 `0.68889`。
-- `codex-l`: dominant rule type 最常见的是 `Uc`，占 `69.23080%`；rule-type entropy 为 `0.75033`，dependency-type entropy 为 `0.91126`。
-- `YAGO3-10`: dominant rule type 最常见的是 `U`，占 `94.59460%`；rule-type entropy 为 `0.30338`，dependency-type entropy 为 `0.97553`。
+- `FB15k-237`: dominant rule type 最常见的是 `U`，占 `87.34177%`；rule-type entropy 为 `0.54799`，dependency-type entropy 为 `0.68889`。
+- `codex-l`: dominant rule type 最常见的是 `Uc`，占 `69.23077%`；rule-type entropy 为 `0.75033`，dependency-type entropy 为 `0.91126`。
+- `YAGO3-10`: dominant rule type 最常见的是 `U`，占 `94.59459%`；rule-type entropy 为 `0.30337`，dependency-type entropy 为 `0.97553`。
 - `hetionet`: dominant rule type 最常见的是 `U`，占 `100.00000%`；rule-type entropy 为 `0.00000`，dependency-type entropy 为 `0.74853`。
 
 ## What Is Important In Each Dataset
