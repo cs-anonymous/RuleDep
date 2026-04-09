@@ -1,10 +1,5 @@
 # 0407 Type-weight Analysis
 
-注：
-
-- 本页已按当前最新已完成实验重生成。
-- `hetionet` 的 2026-04-08 targeted follow-up 尚未完成，因此这里关于跨数据集的 typed 配置结论不把 `hetionet` 的该批新实验计入。
-
 这一节不再把 type weight 直接做成单个实验级平均值，而是回到 relation 粒度来问：在每个数据集最优的 typed 实验里，究竟是哪一类 rule type 或 dependency interaction 真正在起作用。
 
 这里将某个 type 在一个 relation 上的重要性定义为：`support x trained_weight`。

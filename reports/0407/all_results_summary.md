@@ -25,7 +25,7 @@
 | FB15k-237 | best_combination | 0.353336 | 0.356980 | 0.353919 | 0.337685 |
 | codex-l | structural_dep_scale | 0.333772 | 0.334876 | - | 0.311458 |
 | YAGO3-10 | structural_dep_scale | 0.577961 | 0.576375 | 0.573990 | 0.554384 |
-| hetionet | structural_r2d3 | 0.369847 | 0.371678 | - | 0.230313 |
+| hetionet | best_combination | 0.373229 | 0.373465 | - | 0.230313 |
 
 ## Notes
 

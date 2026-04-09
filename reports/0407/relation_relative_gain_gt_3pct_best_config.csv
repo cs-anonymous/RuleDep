@@ -75,8 +75,10 @@ YAGO3-10,structural_dep_scale,0,isLocatedIn,411,0.38799,0.38799,0.40666,0.01868,
 YAGO3-10,structural_dep_scale,3,diedIn,49,0.18000,0.18000,0.20078,0.02078,11.54464,0.02078,dependency
 YAGO3-10,structural_dep_scale,12,participatedIn,19,0.33396,0.33396,0.36673,0.03277,9.81240,0.03277,dependency
 YAGO3-10,structural_dep_scale,28,dealsWith,7,0.26473,0.26473,0.32516,0.06043,22.82627,0.06043,dependency
-hetionet,structural_r2d3,0,AdG,10464,0.23822,0.24211,0.24770,0.00948,3.98117,0.00559,dependency
-hetionet,structural_r2d3,1,AeG,53477,0.32228,0.35235,0.35235,0.03007,9.33203,0.00000,rule_only
-hetionet,structural_r2d3,4,CcSE,13524,0.21476,0.24492,0.24492,0.03016,14.04290,0.00000,rule_only
-hetionet,structural_r2d3,5,CrC,663,0.47474,0.47406,0.49004,0.01529,3.22174,0.01598,dependency
-hetionet,structural_r2d3,14,DrD,62,0.22111,0.22244,0.30250,0.08139,36.80881,0.08005,dependency
+hetionet,best_combination,0,AdG,10464,0.23822,0.24024,0.24678,0.00857,3.59598,0.00654,dependency
+hetionet,best_combination,1,AeG,53477,0.32228,0.35904,0.36298,0.04070,12.62833,0.00393,dependency
+hetionet,best_combination,4,CcSE,13524,0.21476,0.25516,0.25516,0.04040,18.80981,0.00000,rule_only
+hetionet,best_combination,6,CtD,71,0.35196,0.36711,0.36711,0.01515,4.30543,0.00000,rule_only
+hetionet,best_combination,14,DrD,62,0.22111,0.26286,0.30949,0.08838,39.97219,0.04663,dependency
+hetionet,best_combination,22,Gr>G,27325,0.03660,0.03773,0.03773,0.00114,3.10564,0.00000,rule_only
+hetionet,best_combination,23,PCiC,64,0.51121,0.53223,0.53376,0.02255,4.41038,0.00152,dependency

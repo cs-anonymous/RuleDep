@@ -2700,10 +2700,10 @@
         "count": 10464
       },
       "1": {
-        "experiment": "structural_rd",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.349700378254056,
-        "test_mrr": 0.35804507322609425,
+        "experiment": "best_combination",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.3536533797159791,
+        "test_mrr": 0.36297525838017464,
         "count": 53477
       },
       "2": {
@@ -2721,10 +2721,10 @@
         "count": 1068
       },
       "4": {
-        "experiment": "structural_r2d3",
+        "experiment": "best_combination",
         "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.2475106567144394,
-        "test_mrr": 0.2449215203523636,
+        "selected_valid_mrr": 0.2549411654472351,
+        "test_mrr": 0.25515908002853394,
         "count": 13524
       },
       "5": {

@@ -12,3 +12,4 @@ baseline
 kge
 __pycache__
 logs
+tmp_*
