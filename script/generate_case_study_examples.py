@@ -22,6 +22,12 @@ def load_positive_relations():
     return list(csv.DictReader(open(POSITIVE_CASES_CSV, encoding="utf-8")))
 
 
+def load_existing_rows():
+    if not OUT_CSV.exists():
+        return []
+    return list(csv.DictReader(open(OUT_CSV, encoding="utf-8")))
+
+
 def build_argv_from_config(cfg, relation, tmp_exp):
     batch_size = cfg.get("batch_size", 4096)
     lr = cfg.get("lr", 0.01)
@@ -321,8 +327,11 @@ def write_outputs(rows, relation_count):
 
 def main():
     positive_rows = load_positive_relations()
+    only_dataset = os.environ.get("ONLY_DATASET")
+    if only_dataset:
+        positive_rows = [row for row in positive_rows if row["dataset"] == only_dataset]
     start_dataset = os.environ.get("START_DATASET")
-    if start_dataset:
+    if start_dataset and not only_dataset:
         dataset_order = []
         for row in positive_rows:
             if row["dataset"] not in dataset_order:
@@ -332,9 +341,9 @@ def main():
             allowed = set(dataset_order[start_idx:])
             positive_rows = [row for row in positive_rows if row["dataset"] in allowed]
 
-    all_rows = []
+    append_existing = os.environ.get("APPEND_EXISTING", "0") == "1"
+    all_rows = load_existing_rows() if append_existing else []
     group_runtime = {}
-    completed_groups = 0
     for row in positive_rows:
         group_key = (row["dataset"], row["best_config"])
         if group_key not in group_runtime:
@@ -343,7 +352,6 @@ def main():
                 flush=True,
             )
             group_runtime[group_key] = build_group_runtime(row)
-            completed_groups += 1
         print(
             f"[case-study] scanning dataset={row['dataset']} relation={row['relation']} "
             f"name={row['relation_name']}",
@@ -351,6 +359,24 @@ def main():
         )
         _cfg, mod = group_runtime[group_key]
         all_rows.extend(collect_relation_cases(mod, row))
+        deduped_rows = []
+        seen = set()
+        for case_row in all_rows:
+            key = (
+                case_row["dataset"],
+                case_row["best_config"],
+                case_row["relation"],
+                case_row["direction"],
+                case_row["query_text"],
+                case_row["gold_entity"],
+                case_row["stage1_top1"],
+                case_row["final_top1"],
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped_rows.append(case_row)
+        all_rows = deduped_rows
         write_outputs(all_rows, len(positive_rows))
 
     write_outputs(all_rows, len(positive_rows))

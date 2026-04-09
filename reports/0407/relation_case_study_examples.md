@@ -3,7 +3,7 @@
 Examples where the stage-1 model failed (`rank > 1`) but the dependency-augmented final model succeeded (`rank = 1`).
 
 Scanned positive relations: `13`
-Recovered query-level flip cases: `76`
+Recovered query-level flip cases: `107`
 
 | dataset | relation | zh | direction | query | gold | stage1 top1 | final top1 | stage1 rank | final rank | rank gain |
 |---|---|---|---|---|---|---|---:|---:|---:|---:|
@@ -83,3 +83,34 @@ Recovered query-level flip cases: `76`
 | YAGO3-10 | diedIn | 逝世于 | tail | (Alastair_Sim, diedIn, ?) | London | Los_Angeles | London | 2.0 | 1.0 | 1.0 |
 | YAGO3-10 | participatedIn | 参与于 | tail | (Belgium, participatedIn, ?) | Battle_of_France | Operation_Enduring_Freedom | Battle_of_France | 4.0 | 1.0 | 3.0 |
 | YAGO3-10 | participatedIn | 参与于 | tail | (Republic_of_Genoa, participatedIn, ?) | Battle_of_Crécy | Fourth_Crusade | Battle_of_Crécy | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | head | (?, isLocatedIn, Transylvania) | Ținutul_Crișuri | Arad_(Romania) | Ținutul_Crișuri | 13.0 | 1.0 | 12.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Alghero, isLocatedIn, ?) | Sardinia | Emilia-Romagna | Sardinia | 7.0 | 1.0 | 6.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Edmonton_Eskimos, isLocatedIn, ?) | Edmonton | Ontario | Edmonton | 6.0 | 1.0 | 5.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Jasper_County,_Missouri, isLocatedIn, ?) | Missouri | Joplin,_Missouri | Missouri | 4.0 | 1.0 | 3.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Bełchatów_County, isLocatedIn, ?) | Łódź_Voivodeship | Gmina_Bełchatów | Łódź_Voivodeship | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Hørsholm_Municipality, isLocatedIn, ?) | Capital_Region_of_Denmark | Hørsholm | Capital_Region_of_Denmark | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Old_Shatterhand_(film), isLocatedIn, ?) | France | United_Kingdom | France | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Ruston,_Louisiana, isLocatedIn, ?) | Louisiana | Louisiana_Tech_University | Louisiana | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Ținutul_Crișuri, isLocatedIn, ?) | Transylvania | Romania | Transylvania | 3.0 | 1.0 | 2.0 |
+| YAGO3-10 | isLocatedIn | 位于 | head | (?, isLocatedIn, South_Governorate) | Tyre | Lebanon | Tyre | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | head | (?, isLocatedIn, Södermanland) | Strängnäs_Municipality | Närke | Strängnäs_Municipality | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Deep_End_(film), isLocatedIn, ?) | United_Kingdom | United_States | United_Kingdom | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Haveri_district, isLocatedIn, ?) | Karnataka | Haveri | Karnataka | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Morgan_County,_Tennessee, isLocatedIn, ?) | Tennessee | Harriman,_Tennessee | Tennessee | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Plzeň-South_District, isLocatedIn, ?) | Pilsen | Ústí_nad_Labem_Region | Pilsen | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Queenstown-Lakes_District, isLocatedIn, ?) | Otago | Queenstown,_New_Zealand | Otago | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Turbo,_Colombia, isLocatedIn, ?) | Colombia | United_States | Colombia | 2.0 | 1.0 | 1.0 |
+| YAGO3-10 | isLocatedIn | 位于 | tail | (Whitman_College, isLocatedIn, ?) | Washington_(state) | Seattle | Washington_(state) | 2.0 | 1.0 | 1.0 |
+| codex-l | P749 | 上级组织/母组织 | head | (?, P749, Q51747) | Q664721 | Q664721 | Q664721 | 1.5 | 1.0 | 0.5 |
+| codex-l | P749 | 上级组织/母组织 | tail | (Q664721, P749, ?) | Q51747 | Q51747 | Q51747 | 1.5 | 1.0 | 0.5 |
+| codex-l | P161 | 演员/出演成员 | head | (?, P161, Q109232) | Q104123 | Q39970 | Q104123 | 2.5 | 1.0 | 1.5 |
+| codex-l | P161 | 演员/出演成员 | head | (?, P161, Q400825) | Q1988877 | Q244999 | Q1988877 | 2.0 | 1.0 | 1.0 |
+| codex-l | P161 | 演员/出演成员 | head | (?, P161, Q51562) | Q151596 | Q256416 | Q151596 | 2.0 | 1.0 | 1.0 |
+| codex-l | P161 | 演员/出演成员 | head | (?, P161, Q7374) | Q204212 | Q204212 | Q204212 | 2.0 | 1.0 | 1.0 |
+| codex-l | P161 | 演员/出演成员 | tail | (Q189600, P161, ?) | Q574190 | Q704314 | Q574190 | 2.0 | 1.0 | 1.0 |
+| codex-l | P161 | 演员/出演成员 | tail | (Q1352415, P161, ?) | Q237594 | Q237594 | Q237594 | 1.5 | 1.0 | 0.5 |
+| codex-l | P161 | 演员/出演成员 | tail | (Q207536, P161, ?) | Q193048 | Q115932 | Q193048 | 1.5 | 1.0 | 0.5 |
+| hetionet | DrD | 疾病与疾病相似 | tail | (Disease::DOID:11615, DrD, ?) | Disease::DOID:11054 | Disease::DOID:4045 | Disease::DOID:11054 | 5.0 | 1.0 | 4.0 |
+| hetionet | DrD | 疾病与疾病相似 | head | (?, DrD, Disease::DOID:1245) | Disease::DOID:1964 | Disease::DOID:11239 | Disease::DOID:1964 | 3.0 | 1.0 | 2.0 |
+| hetionet | DrD | 疾病与疾病相似 | tail | (Disease::DOID:2174, DrD, ?) | Disease::DOID:4159 | Disease::DOID:119 | Disease::DOID:4159 | 3.0 | 1.0 | 2.0 |
+| hetionet | DpS | 疾病表现出症状 | head | (?, DpS, Symptom::D014550) | Disease::DOID:4362 | Disease::DOID:1993 | Disease::DOID:4362 | 3.0 | 1.0 | 2.0 |
