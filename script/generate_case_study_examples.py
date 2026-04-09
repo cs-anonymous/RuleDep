@@ -23,6 +23,17 @@ def load_positive_relations():
 
 
 def build_argv_from_config(cfg, relation, tmp_exp):
+    batch_size = cfg.get("batch_size", 4096)
+    lr = cfg.get("lr", 0.01)
+    max_epoch = cfg.get("max_epoch", 40)
+    evaluate_every = cfg.get("evaluate_every", 4)
+    early_stopping = cfg.get("early_stopping", 12)
+    pos = cfg.get("pos", "auto_sqrt")
+    rule_init_mode = cfg.get("rule_init_mode", "conf")
+    dependency_scale_mode = cfg.get("dependency_scale_mode", "none")
+    eval_key_batch_size = cfg.get("eval_key_batch_size", 64)
+    dependency_chunk_size = cfg.get("dependency_chunk_size", 4096)
+    type_grouping = cfg.get("type_grouping", "none")
     argv = [
         "aggregation.py",
         "-d",
@@ -30,27 +41,27 @@ def build_argv_from_config(cfg, relation, tmp_exp):
         "--device",
         "cuda",
         "--batch_size",
-        str(cfg["batch_size"]),
+        str(batch_size),
         "--lr",
-        str(cfg["lr"]),
+        str(lr),
         "--max_epoch",
-        str(cfg["max_epoch"]),
+        str(max_epoch),
         "--evaluate_every",
-        str(cfg["evaluate_every"]),
+        str(evaluate_every),
         "--early_stopping",
-        str(cfg["early_stopping"]),
+        str(early_stopping),
         "--pos",
-        str(cfg["pos"]),
+        str(pos),
         "--rule_init_mode",
-        str(cfg["rule_init_mode"]),
+        str(rule_init_mode),
         "--dependency_scale_mode",
-        str(cfg.get("dependency_scale_mode", "none")),
+        str(dependency_scale_mode),
         "--multiprocess",
         "0",
         "--eval_key_batch_size",
-        str(cfg.get("eval_key_batch_size", 64)),
+        str(eval_key_batch_size),
         "--dependency_chunk_size",
-        str(cfg.get("dependency_chunk_size", 4096)),
+        str(dependency_chunk_size),
         "--rule_file",
         str(cfg["rule_file"]),
         "--relation",
@@ -58,7 +69,7 @@ def build_argv_from_config(cfg, relation, tmp_exp):
         "--max_worker_dataloader",
         "0",
         "--type_grouping",
-        str(cfg.get("type_grouping", "none")),
+        str(type_grouping),
     ]
     if not cfg.get("sign_constraint", True):
         argv.append("--no_sign_constraint")
@@ -99,27 +110,33 @@ def import_aggregation_module(module_name, argv):
 
 
 def score_key(mod, model, processed_entry):
-    candidates = torch.as_tensor(processed_entry["candidates"], dtype=torch.long, device=mod.EVAL_DEVICE)
-    rule_lists = processed_entry["rules"]
-    if len(rule_lists) > 0:
-        rules = torch.nested.to_padded_tensor(
-            torch.nested.nested_tensor([torch.tensor(x) for x in rule_lists]),
-            padding=mod.PAD_TOK,
-        ).long().to(mod.EVAL_DEVICE)
-    else:
-        rules = torch.empty((0, 0), dtype=torch.long, device=mod.EVAL_DEVICE)
+    candidates_all = list(processed_entry["candidates"])
+    rule_lists_all = list(processed_entry["rules"])
+    kept_pairs = [(cand, rules) for cand, rules in zip(candidates_all, rule_lists_all) if len(rules) > 0]
+
+    scores = torch.full((mod.dataset.num_entities(),), 0.0, device=mod.EVAL_DEVICE)
+    if not kept_pairs:
+        return scores, len(candidates_all), 0
+
+    kept_candidates = torch.as_tensor([cand for cand, _rules in kept_pairs], dtype=torch.long, device=mod.EVAL_DEVICE)
+    rules = torch.nested.to_padded_tensor(
+        torch.nested.nested_tensor([torch.tensor(rules) for _cand, rules in kept_pairs]),
+        padding=mod.PAD_TOK,
+    ).long().to(mod.EVAL_DEVICE)
     with torch.no_grad():
         pred = torch.sigmoid(model(rules)).detach()
     max_conf = mod.RULE_CONF_TABLE[rules].max(dim=1, keepdim=True).values
     score = (pred * max_conf).squeeze(1)
-    scores = torch.full((mod.dataset.num_entities(),), 0.0, device=mod.EVAL_DEVICE)
-    scores[candidates] = score
-    return scores, len(candidates), len(rule_lists)
+    scores[kept_candidates] = score
+    return scores, len(candidates_all), len(kept_pairs)
 
 
 def load_final_directional_states(mod, relation, experiment_dir):
     sys.modules["aggregation"] = mod
     __main__.MRR = mod.MRR
+    __main__.build_model_for_relation = mod.build_model_for_relation
+    __main__.build_rule_only_model_for_relation = mod.build_rule_only_model_for_relation
+    __main__.build_dependency_model_for_relation = mod.build_model_for_relation
     with open(Path(experiment_dir) / f"mrr-{relation}.pkl", "rb") as f:
         head_mrr, tail_mrr = pickle.load(f)
     relation_dependencies = mod.dependency_map.get(relation, [])
@@ -272,26 +289,7 @@ def write_markdown(rows, relation_count):
     OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main():
-    positive_rows = load_positive_relations()
-    all_rows = []
-    group_runtime = {}
-    for row in positive_rows:
-        group_key = (row["dataset"], row["best_config"])
-        if group_key not in group_runtime:
-            print(
-                f"[case-study] loading group dataset={row['dataset']} best_config={row['best_config']}",
-                flush=True,
-            )
-            group_runtime[group_key] = build_group_runtime(row)
-        print(
-            f"[case-study] scanning dataset={row['dataset']} relation={row['relation']} "
-            f"name={row['relation_name']}",
-            flush=True,
-        )
-        _cfg, mod = group_runtime[group_key]
-        all_rows.extend(collect_relation_cases(mod, row))
-
+def write_outputs(rows, relation_count):
     fieldnames = [
         "dataset",
         "best_config",
@@ -317,8 +315,45 @@ def main():
     with open(OUT_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(all_rows)
-    write_markdown(all_rows, len(positive_rows))
+        writer.writerows(rows)
+    write_markdown(rows, relation_count)
+
+
+def main():
+    positive_rows = load_positive_relations()
+    start_dataset = os.environ.get("START_DATASET")
+    if start_dataset:
+        dataset_order = []
+        for row in positive_rows:
+            if row["dataset"] not in dataset_order:
+                dataset_order.append(row["dataset"])
+        if start_dataset in dataset_order:
+            start_idx = dataset_order.index(start_dataset)
+            allowed = set(dataset_order[start_idx:])
+            positive_rows = [row for row in positive_rows if row["dataset"] in allowed]
+
+    all_rows = []
+    group_runtime = {}
+    completed_groups = 0
+    for row in positive_rows:
+        group_key = (row["dataset"], row["best_config"])
+        if group_key not in group_runtime:
+            print(
+                f"[case-study] loading group dataset={row['dataset']} best_config={row['best_config']}",
+                flush=True,
+            )
+            group_runtime[group_key] = build_group_runtime(row)
+            completed_groups += 1
+        print(
+            f"[case-study] scanning dataset={row['dataset']} relation={row['relation']} "
+            f"name={row['relation_name']}",
+            flush=True,
+        )
+        _cfg, mod = group_runtime[group_key]
+        all_rows.extend(collect_relation_cases(mod, row))
+        write_outputs(all_rows, len(positive_rows))
+
+    write_outputs(all_rows, len(positive_rows))
     print(f"wrote {len(all_rows)} rows to {OUT_CSV}")
 
 
