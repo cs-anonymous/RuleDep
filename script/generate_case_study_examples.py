@@ -173,6 +173,9 @@ def train_stage1_only(mod, relation):
         stage_name="rule",
         checkpoint_selection="combined",
     )
+    selected_state_dict = stage1_result.get("selected_state_dict")
+    if selected_state_dict is not None:
+        return mod.build_model_from_state_dict(relation, rule_model_builder, selected_state_dict)
     return stage1_result["model"]
 
 
@@ -275,6 +278,12 @@ def collect_relation_cases(mod, row):
 
 
 def write_markdown(rows, relation_count):
+    def fmt_float(value):
+        try:
+            return f"{float(value):.1f}"
+        except (TypeError, ValueError):
+            return str(value)
+
     lines = [
         "# Case Study Examples",
         "",
@@ -290,7 +299,7 @@ def write_markdown(rows, relation_count):
         lines.append(
             f"| {row['dataset']} | {row['relation_name']} | {row['relation_gloss_zh']} | {row['direction']} | "
             f"{row['query_text']} | {row['gold_entity']} | {row['stage1_top1']} | {row['final_top1']} | "
-            f"{row['stage1_rank']:.1f} | {row['final_rank']:.1f} | {row['rank_gain']:.1f} |"
+            f"{fmt_float(row['stage1_rank'])} | {fmt_float(row['final_rank'])} | {fmt_float(row['rank_gain'])} |"
         )
     OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -343,6 +352,9 @@ def main():
 
     append_existing = os.environ.get("APPEND_EXISTING", "0") == "1"
     all_rows = load_existing_rows() if append_existing else []
+    replace_existing_dataset = os.environ.get("REPLACE_EXISTING_DATASET", "0") == "1"
+    if append_existing and replace_existing_dataset and only_dataset:
+        all_rows = [row for row in all_rows if row["dataset"] != only_dataset]
     group_runtime = {}
     for row in positive_rows:
         group_key = (row["dataset"], row["best_config"])
