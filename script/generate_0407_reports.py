@@ -50,6 +50,12 @@ MAIN_STRUCTURAL_EXPERIMENTS = [
     "structural_r3d6",
 ]
 
+ESTIMATED_CANONICAL_TIMES = {
+    # Estimated from the interrupted codex-l canonical run:
+    # 2026-04-05 14:33:58 -> 20:25:16 reached epoch 26/40, 2/69 relations.
+    "codex-l": 33685.558747,
+}
+
 METRIC_RE = re.compile(
     r"MRR\s+([0-9]*\.?[0-9]+).*?"
     r"hits@1\s+([0-9]*\.?[0-9]+).*?"
@@ -411,6 +417,73 @@ def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str]) -
             "eval-noisyor": fmt_float((mapping.get("eval-noisyor") or {}).get("MRR")),
         }
         out.append(row)
+    return out
+
+
+def estimate_ruledep_stage_times(data_root: Path, best_config_rows: List[Dict[str, object]], overall_rows: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    """Estimate relation-wise wall-clock time from per-relation epoch counts.
+
+    Existing metrics only persist combined per-relation time.  We split each
+    relation's time by stage1/stage2 epoch ratio, then divide the relation-wise
+    estimate by two because the current main runs use multiprocess=2.  Canonical
+    is an old serial runner, so its parsed wall-clock time is not divided.
+    """
+
+    canonical_time_by_dataset = {
+        str(row["dataset"]): to_float(row.get("time"))
+        for row in overall_rows
+        if row.get("aggregation") == "canonical"
+    }
+
+    out: List[Dict[str, object]] = []
+    for row in best_config_rows:
+        dataset = str(row["dataset"])
+        best_config = str(row.get("best_config") or "")
+        if not best_config:
+            continue
+
+        exp_dir = data_root / dataset / "aggregation" / best_config
+        if not exp_dir.exists():
+            continue
+
+        stage1_time = 0.0
+        stage2_time = 0.0
+        total_time = 0.0
+        relation_count = 0
+        missing_epoch_count = 0
+        for metric_path in sorted(exp_dir.glob("metric-*.json")):
+            metric = read_json(metric_path)
+            relation_total = to_float((metric.get("time_seconds") or {}).get("total")) or 0.0
+            train_info = metric.get("train") or {}
+            stage1_info = train_info.get("stage1_rule_only") or {}
+            stage2_info = train_info.get("stage2_dependency_only") or {}
+            stage1_epochs = to_float(stage1_info.get("epochs_trained")) or 0.0
+            stage2_epochs = to_float(stage2_info.get("epochs_trained")) or 0.0
+            epoch_total = stage1_epochs + stage2_epochs
+            if epoch_total <= 0:
+                missing_epoch_count += 1
+                stage1_epochs = 1.0
+                stage2_epochs = 0.0
+                epoch_total = 1.0
+
+            stage1_time += relation_total * stage1_epochs / epoch_total
+            stage2_time += relation_total * stage2_epochs / epoch_total
+            total_time += relation_total
+            relation_count += 1
+
+        out.append(
+            {
+                "dataset": dataset,
+                "best_config": best_config,
+                "canonical_time_s": canonical_time_by_dataset.get(dataset, ESTIMATED_CANONICAL_TIMES.get(dataset)),
+                "canonical_time_source": "actual" if canonical_time_by_dataset.get(dataset) is not None else ("estimated" if dataset in ESTIMATED_CANONICAL_TIMES else ""),
+                "ruledep_stage1_time_s": stage1_time / 2.0,
+                "ruledep_stage2_time_s": stage2_time / 2.0,
+                "ruledep_total_time_s": total_time / 2.0,
+                "relation_count": relation_count,
+                "missing_epoch_count": missing_epoch_count,
+            }
+        )
     return out
 
 
@@ -1176,6 +1249,7 @@ def build_overall_results_md(
     rows: List[Dict[str, object]],
     best_config_rows: List[Dict[str, object]],
     best_config_map: Dict[str, str],
+    time_comparison_rows: Optional[List[Dict[str, object]]] = None,
 ) -> str:
     by_dataset: Dict[str, Dict[str, Dict[str, object]]] = defaultdict(dict)
     for row in rows:
@@ -1190,6 +1264,7 @@ def build_overall_results_md(
     lines.append("")
     lines.append("- `all_results_summary.csv`")
     lines.append("- `best_config_by_dataset.csv`")
+    lines.append("- `overall_time_comparison.csv`")
     lines.append("- `all_results_ensemble_debug.json`")
     lines.append("")
     lines.append("说明：")
@@ -1198,6 +1273,7 @@ def build_overall_results_md(
     lines.append("- `canonical` 按老格式目录解析：`head_mrr_*.p + tail_mrr_*.p + canonical.log 中的 Done`。")
     lines.append("- `ensemble_best_valid` 是逐 relation 在所有非 canonical aggregation 中按 selected valid MRR 选模后的整体 test 汇总。")
     lines.append("- `structural_rd__stage1 / structural_r2d3__stage1 / structural_r3d6__stage1` 是同一实验里的 stage1 test。")
+    lines.append("- 时间对比表中，RuleDep stage1/stage2 时间用 per-relation `epochs_trained` 比例估算，并按当前 `multiprocess=2` 除以 2；canonical 是串行老流程，不除以 2。")
     lines.append("")
     lines.append("## Best Non-canonical Config Per Dataset")
     lines.append("")
@@ -1218,6 +1294,24 @@ def build_overall_results_md(
             key=lambda value: -1.0 if value is None else float(value),
         )
         lines.append(f"| {dataset} | {best_cfg or '-'} | {best_mrr or '-'} | {ensemble_mrr or '-'} | {canonical_mrr or '-'} | {fmt_float(best_app) or '-'} |")
+
+    lines.append("")
+    lines.append("## Estimated Runtime Breakdown")
+    lines.append("")
+    lines.append("| Dataset | RuleDep config | Canonical time (s) | Canonical source | RuleDep stage1 est. (s) | RuleDep stage2 est. (s) | RuleDep total est. (s) |")
+    lines.append("| --- | --- | ---: | --- | ---: | ---: | ---: |")
+    for row in time_comparison_rows or []:
+        lines.append(
+            "| {dataset} | {config} | {canonical} | {source} | {stage1} | {stage2} | {total} |".format(
+                dataset=row["dataset"],
+                config=row["best_config"],
+                canonical=fmt_float(row.get("canonical_time_s")) or "-",
+                source=row.get("canonical_time_source") or "-",
+                stage1=fmt_float(row.get("ruledep_stage1_time_s")) or "-",
+                stage2=fmt_float(row.get("ruledep_stage2_time_s")) or "-",
+                total=fmt_float(row.get("ruledep_total_time_s")) or "-",
+            )
+        )
 
     lines.append("")
     lines.append("## Notes")
@@ -1491,9 +1585,31 @@ def main() -> None:
         ],
     )
     best_config_map = overall_best_config_map(overall_rows)
+    time_comparison_rows = estimate_ruledep_stage_times(data_root, best_config_rows, overall_rows)
+    write_csv(
+        report_dir / "overall_time_comparison.csv",
+        [
+            {
+                key: fmt_float(value) if isinstance(value, float) else value
+                for key, value in row.items()
+            }
+            for row in time_comparison_rows
+        ],
+        [
+            "dataset",
+            "best_config",
+            "canonical_time_s",
+            "canonical_time_source",
+            "ruledep_stage1_time_s",
+            "ruledep_stage2_time_s",
+            "ruledep_total_time_s",
+            "relation_count",
+            "missing_epoch_count",
+        ],
+    )
 
     (report_dir / "all_results_summary.md").write_text(
-        build_overall_results_md(overall_rows, best_config_rows, best_config_map),
+        build_overall_results_md(overall_rows, best_config_rows, best_config_map, time_comparison_rows),
         encoding="utf-8",
     )
 

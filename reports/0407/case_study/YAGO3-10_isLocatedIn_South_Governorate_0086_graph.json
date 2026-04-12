@@ -1,0 +1,3418 @@
+{
+  "example_id": "YAGO3-10_isLocatedIn_South_Governorate_0086",
+  "case_role": "redundancy: Lebanon is related to South Governorate but has wrong query granularity; dependency pushes it far down",
+  "dataset": "YAGO3-10",
+  "split": "test",
+  "config_id": "structural_dep_scale",
+  "query": {
+    "direction": "head",
+    "head_id": null,
+    "head_label": null,
+    "relation_id": "isLocatedIn",
+    "relation_label": "city isLocatedIn country",
+    "tail_id": "South_Governorate",
+    "tail_label": "South_Governorate"
+  },
+  "gold": {
+    "entity_id": "Tyre",
+    "entity_label": "Tyre"
+  },
+  "relation_context": {
+    "relation_index": 0,
+    "relation_gloss_zh": "位于",
+    "mapping_direction": "many-to-many",
+    "baseline_mrr_relation": 0.38799,
+    "final_mrr_relation": 0.40666
+  },
+  "graph_semantics": {
+    "kg_edges": "Observed triples from train/valid/test around query/candidate seeds; intended for drawing the local KG neighborhood.",
+    "prediction_edges": "Candidate answer edges for the query, annotated with before/after ranks and scores.",
+    "rule_dependency_layer": "Top active rule/dependency identifiers and weights from the aggregation explanation. Full grounding witnesses were not saved by the application files, so this layer annotates candidates rather than claiming each rule edge is an observed KG edge."
+  },
+  "nodes": [
+    {
+      "id": "2006_Lebanon_War",
+      "label": "2006_Lebanon_War",
+      "role": "context"
+    },
+    {
+      "id": "Acre,_Israel",
+      "label": "Acre,_Israel",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      }
+    },
+    {
+      "id": "Akko",
+      "label": "Akko",
+      "role": "context"
+    },
+    {
+      "id": "Al-Mabarrah",
+      "label": "Al-Mabarrah",
+      "role": "context"
+    },
+    {
+      "id": "Aley_District",
+      "label": "Aley_District",
+      "role": "context"
+    },
+    {
+      "id": "Amal_Movement",
+      "label": "Amal_Movement",
+      "role": "context"
+    },
+    {
+      "id": "American_University_of_Beirut",
+      "label": "American_University_of_Beirut",
+      "role": "context"
+    },
+    {
+      "id": "Arab_Open_University",
+      "label": "Arab_Open_University",
+      "role": "context"
+    },
+    {
+      "id": "Asia",
+      "label": "Asia",
+      "role": "context"
+    },
+    {
+      "id": "Ba'ath_Party_(Syrian-dominated_faction)",
+      "label": "Ba'ath_Party_(Syrian-dominated_faction)",
+      "role": "context"
+    },
+    {
+      "id": "Baabda_District",
+      "label": "Baabda_District",
+      "role": "context"
+    },
+    {
+      "id": "Baalbek",
+      "label": "Baalbek",
+      "role": "context"
+    },
+    {
+      "id": "Baalbek_District",
+      "label": "Baalbek_District",
+      "role": "context"
+    },
+    {
+      "id": "Batroun_District",
+      "label": "Batroun_District",
+      "role": "context"
+    },
+    {
+      "id": "Battle_of_Arsuf",
+      "label": "Battle_of_Arsuf",
+      "role": "context"
+    },
+    {
+      "id": "Battle_of_Azaz_(1125)",
+      "label": "Battle_of_Azaz_(1125)",
+      "role": "context"
+    },
+    {
+      "id": "Battle_of_Hattin",
+      "label": "Battle_of_Hattin",
+      "role": "context"
+    },
+    {
+      "id": "Battle_of_La_Forbie",
+      "label": "Battle_of_La_Forbie",
+      "role": "context"
+    },
+    {
+      "id": "Beirut",
+      "label": "Beirut",
+      "role": "context"
+    },
+    {
+      "id": "Beqaa_Governorate",
+      "label": "Beqaa_Governorate",
+      "role": "context"
+    },
+    {
+      "id": "Beqaa_Valley",
+      "label": "Beqaa_Valley",
+      "role": "context"
+    },
+    {
+      "id": "Bint_Jbeil_District",
+      "label": "Bint_Jbeil_District",
+      "role": "context"
+    },
+    {
+      "id": "Bsharri_District",
+      "label": "Bsharri_District",
+      "role": "context"
+    },
+    {
+      "id": "Byblos",
+      "label": "Byblos",
+      "role": "context"
+    },
+    {
+      "id": "Chouf_District",
+      "label": "Chouf_District",
+      "role": "context"
+    },
+    {
+      "id": "Conrad_of_Montferrat",
+      "label": "Conrad_of_Montferrat",
+      "role": "context"
+    },
+    {
+      "id": "East_Jerusalem",
+      "label": "East_Jerusalem",
+      "role": "context"
+    },
+    {
+      "id": "Fifth_Crusade",
+      "label": "Fifth_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "First_Crusade",
+      "label": "First_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "Fulk,_King_of_Jerusalem",
+      "label": "Fulk,_King_of_Jerusalem",
+      "role": "context"
+    },
+    {
+      "id": "Hapoel_Jerusalem_B.C.",
+      "label": "Hapoel_Jerusalem_B.C.",
+      "role": "context"
+    },
+    {
+      "id": "Hapoel_Katamon_Jerusalem_F.C.",
+      "label": "Hapoel_Katamon_Jerusalem_F.C.",
+      "role": "context"
+    },
+    {
+      "id": "Hebrew_University_of_Jerusalem",
+      "label": "Hebrew_University_of_Jerusalem",
+      "role": "context"
+    },
+    {
+      "id": "Isabella_I_of_Jerusalem",
+      "label": "Isabella_I_of_Jerusalem",
+      "role": "context"
+    },
+    {
+      "id": "Israel",
+      "label": "Israel",
+      "role": "context"
+    },
+    {
+      "id": "Jerusalem",
+      "label": "Jerusalem",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      }
+    },
+    {
+      "id": "Jerusalem_District",
+      "label": "Jerusalem_District",
+      "role": "context"
+    },
+    {
+      "id": "Joan_of_Acre",
+      "label": "Joan_of_Acre",
+      "role": "context"
+    },
+    {
+      "id": "Kingdom_of_Jerusalem",
+      "label": "Kingdom_of_Jerusalem",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 7.0,
+        "after_dep": 4.0
+      },
+      "rank_score": {
+        "before_dep": 0.005361,
+        "after_dep": 0.01852
+      }
+    },
+    {
+      "id": "Lebanon",
+      "label": "Lebanon",
+      "role": "stage1_top1",
+      "rank": {
+        "before_dep": 1.0,
+        "after_dep": 19.0
+      },
+      "rank_score": {
+        "before_dep": 0.111941,
+        "after_dep": 0.002197
+      }
+    },
+    {
+      "id": "Lists_of_World_Heritage_Sites_in_Asia",
+      "label": "Lists_of_World_Heritage_Sites_in_Asia",
+      "role": "context"
+    },
+    {
+      "id": "Marie_of_Champagne",
+      "label": "Marie_of_Champagne",
+      "role": "context"
+    },
+    {
+      "id": "Middle_East",
+      "label": "Middle_East",
+      "role": "context"
+    },
+    {
+      "id": "Mount_Lebanon",
+      "label": "Mount_Lebanon",
+      "role": "context"
+    },
+    {
+      "id": "National_Religious_Party",
+      "label": "National_Religious_Party",
+      "role": "context"
+    },
+    {
+      "id": "Ninth_Crusade",
+      "label": "Ninth_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "Northern_District_(Israel)",
+      "label": "Northern_District_(Israel)",
+      "role": "context"
+    },
+    {
+      "id": "Palestine",
+      "label": "Palestine",
+      "role": "context"
+    },
+    {
+      "id": "Palestinian_territories",
+      "label": "Palestinian_territories",
+      "role": "context"
+    },
+    {
+      "id": "RAI",
+      "label": "RAI",
+      "role": "context"
+    },
+    {
+      "id": "Search_for_Common_Ground",
+      "label": "Search_for_Common_Ground",
+      "role": "context"
+    },
+    {
+      "id": "Second_Crusade",
+      "label": "Second_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "Seventh_Crusade",
+      "label": "Seventh_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "Shas",
+      "label": "Shas",
+      "role": "context"
+    },
+    {
+      "id": "Sibylla,_Queen_of_Jerusalem",
+      "label": "Sibylla,_Queen_of_Jerusalem",
+      "role": "context"
+    },
+    {
+      "id": "Sidon",
+      "label": "Sidon",
+      "role": "context"
+    },
+    {
+      "id": "Sidon_District",
+      "label": "Sidon_District",
+      "role": "context"
+    },
+    {
+      "id": "Siege_of_Acre_(1189–91)",
+      "label": "Siege_of_Acre_(1189–91)",
+      "role": "context"
+    },
+    {
+      "id": "Siege_of_Jerusalem_(1099)",
+      "label": "Siege_of_Jerusalem_(1099)",
+      "role": "context"
+    },
+    {
+      "id": "South_Governorate",
+      "label": "South_Governorate",
+      "role": "query_fixed_entity"
+    },
+    {
+      "id": "State_of_Palestine",
+      "label": "State_of_Palestine",
+      "role": "context"
+    },
+    {
+      "id": "Tadamon_Sour",
+      "label": "Tadamon_Sour",
+      "role": "context"
+    },
+    {
+      "id": "The_Jewish_Home",
+      "label": "The_Jewish_Home",
+      "role": "context"
+    },
+    {
+      "id": "Third_Crusade",
+      "label": "Third_Crusade",
+      "role": "context"
+    },
+    {
+      "id": "Tyre",
+      "label": "Tyre",
+      "role": "gold+stage2_top1",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.016719,
+        "after_dep": 0.025903
+      }
+    },
+    {
+      "id": "Tyre,_Lebanon",
+      "label": "Tyre,_Lebanon",
+      "role": "context"
+    },
+    {
+      "id": "United_Torah_Judaism",
+      "label": "United_Torah_Judaism",
+      "role": "context"
+    },
+    {
+      "id": "War_of_the_Lombards",
+      "label": "War_of_the_Lombards",
+      "role": "context"
+    }
+  ],
+  "kg_edges": [
+    {
+      "source": "train",
+      "line": 18533,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Tyre",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 248286,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 448286,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Acre,_Israel",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 482651,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Jerusalem",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 546373,
+      "subject": "South_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "test",
+      "line": 4275,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 1075508,
+      "subject": "Acre,_Israel",
+      "relation": "isLocatedIn",
+      "object": "Israel",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 839632,
+      "subject": "Israel",
+      "relation": "hasCapital",
+      "object": "Jerusalem",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 883625,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Israel",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 448286,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Acre,_Israel",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 482651,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Jerusalem",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 842834,
+      "subject": "Acre,_Israel",
+      "relation": "participatedIn",
+      "object": "War_of_the_Lombards",
+      "relation_label": "participatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 990864,
+      "subject": "Jerusalem",
+      "relation": "participatedIn",
+      "object": "War_of_the_Lombards",
+      "relation_label": "participatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 2722,
+      "subject": "Sibylla,_Queen_of_Jerusalem",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 831514,
+      "subject": "Sibylla,_Queen_of_Jerusalem",
+      "relation": "wasBornIn",
+      "object": "Jerusalem",
+      "relation_label": "wasBornIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 60541,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "participatedIn",
+      "object": "War_of_the_Lombards",
+      "relation_label": "participatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 694918,
+      "subject": "Siege_of_Acre_(1189–91)",
+      "relation": "happenedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "happenedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 202424,
+      "subject": "Siege_of_Acre_(1189–91)",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 770032,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "participatedIn",
+      "object": "Siege_of_Acre_(1189–91)",
+      "relation_label": "participatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 155281,
+      "subject": "Israel",
+      "relation": "hasNeighbor",
+      "object": "Lebanon",
+      "relation_label": "hasNeighbor",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 613966,
+      "subject": "Lebanon",
+      "relation": "hasNeighbor",
+      "object": "Israel",
+      "relation_label": "hasNeighbor",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 430574,
+      "subject": "War_of_the_Lombards",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 18533,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Tyre",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 836187,
+      "subject": "Siege_of_Jerusalem_(1099)",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 919844,
+      "subject": "Siege_of_Jerusalem_(1099)",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 65802,
+      "subject": "Siege_of_Jerusalem_(1099)",
+      "relation": "happenedIn",
+      "object": "Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 346080,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Asia",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 958012,
+      "subject": "Lebanon",
+      "relation": "isLocatedIn",
+      "object": "Asia",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 246245,
+      "subject": "Search_for_Common_Ground",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 827329,
+      "subject": "Search_for_Common_Ground",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 248286,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 882026,
+      "subject": "Ninth_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 635811,
+      "subject": "Ninth_Crusade",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 966273,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "participatedIn",
+      "object": "Ninth_Crusade",
+      "relation_label": "participatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 482981,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Tyre,_Lebanon",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 869742,
+      "subject": "Tyre,_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "test",
+      "line": 4275,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 113778,
+      "subject": "Tyre,_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 1005891,
+      "subject": "Sidon",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 87641,
+      "subject": "Sidon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 618723,
+      "subject": "South_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Sidon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 983042,
+      "subject": "South_Governorate",
+      "relation": "hasCapital",
+      "object": "Sidon",
+      "relation_label": "hasCapital",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 1047893,
+      "subject": "Mount_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 544250,
+      "subject": "Mount_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 546373,
+      "subject": "South_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 1075508,
+      "subject": "Acre,_Israel",
+      "relation": "isLocatedIn",
+      "object": "Israel",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 228807,
+      "subject": "Acre,_Israel",
+      "relation": "isLocatedIn",
+      "object": "Lists_of_World_Heritage_Sites_in_Asia",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1004935,
+      "subject": "Acre,_Israel",
+      "relation": "isLocatedIn",
+      "object": "Northern_District_(Israel)",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 694918,
+      "subject": "Siege_of_Acre_(1189–91)",
+      "relation": "happenedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 842834,
+      "subject": "Acre,_Israel",
+      "relation": "participatedIn",
+      "object": "War_of_the_Lombards",
+      "relation_label": "participatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 267429,
+      "subject": "Conrad_of_Montferrat",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 201045,
+      "subject": "Fulk,_King_of_Jerusalem",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 280561,
+      "subject": "Isabella_I_of_Jerusalem",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 312952,
+      "subject": "Marie_of_Champagne",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 2722,
+      "subject": "Sibylla,_Queen_of_Jerusalem",
+      "relation": "diedIn",
+      "object": "Acre,_Israel",
+      "relation_label": "diedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 588800,
+      "subject": "Joan_of_Acre",
+      "relation": "wasBornIn",
+      "object": "Acre,_Israel",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 806319,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Middle_East",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 103661,
+      "subject": "Battle_of_Azaz_(1125)",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 343207,
+      "subject": "Battle_of_Hattin",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 698999,
+      "subject": "Battle_of_La_Forbie",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 121464,
+      "subject": "Fifth_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1046537,
+      "subject": "First_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 882026,
+      "subject": "Ninth_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 675982,
+      "subject": "Second_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 606894,
+      "subject": "Seventh_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 202424,
+      "subject": "Siege_of_Acre_(1189–91)",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 919844,
+      "subject": "Siege_of_Jerusalem_(1099)",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 59966,
+      "subject": "Third_Crusade",
+      "relation": "happenedIn",
+      "object": "Kingdom_of_Jerusalem",
+      "relation_label": "happenedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 448286,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Acre,_Israel",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1025325,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Akko",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 482651,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Jerusalem",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 18533,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Tyre",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 482981,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "hasCapital",
+      "object": "Tyre,_Lebanon",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 382176,
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "participatedIn",
+      "object": "Battle_of_Arsuf",
+      "relation_label": "participatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 73244,
+      "subject": "Hapoel_Jerusalem_B.C.",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 592827,
+      "subject": "Hapoel_Katamon_Jerusalem_F.C.",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 521302,
+      "subject": "Hebrew_University_of_Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 346080,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Asia",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 254731,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "East_Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 883625,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Israel",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 475987,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem_District",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 611789,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Palestine",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 544173,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "Palestinian_territories",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 653584,
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "object": "State_of_Palestine",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 295249,
+      "subject": "Jerusalem_District",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 456789,
+      "subject": "National_Religious_Party",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 316006,
+      "subject": "RAI",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 246245,
+      "subject": "Search_for_Common_Ground",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 97234,
+      "subject": "Shas",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 836187,
+      "subject": "Siege_of_Jerusalem_(1099)",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 774845,
+      "subject": "The_Jewish_Home",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 283101,
+      "subject": "United_Torah_Judaism",
+      "relation": "isLocatedIn",
+      "object": "Jerusalem",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1072901,
+      "subject": "2006_Lebanon_War",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 226626,
+      "subject": "Al-Mabarrah",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 778031,
+      "subject": "Aley_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 446144,
+      "subject": "Amal_Movement",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1057289,
+      "subject": "American_University_of_Beirut",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 510469,
+      "subject": "Arab_Open_University",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 703404,
+      "subject": "Ba'ath_Party_(Syrian-dominated_faction)",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 73422,
+      "subject": "Baabda_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 314921,
+      "subject": "Baalbek",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 645765,
+      "subject": "Baalbek_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 915962,
+      "subject": "Batroun_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 519003,
+      "subject": "Beirut",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 426712,
+      "subject": "Beqaa_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 655795,
+      "subject": "Beqaa_Valley",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1045908,
+      "subject": "Bint_Jbeil_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 171957,
+      "subject": "Bsharri_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 387112,
+      "subject": "Byblos",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 183100,
+      "subject": "Chouf_District",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 544250,
+      "subject": "Mount_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 87641,
+      "subject": "Sidon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 236289,
+      "subject": "Sidon_District",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 546373,
+      "subject": "South_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 618723,
+      "subject": "South_Governorate",
+      "relation": "isLocatedIn",
+      "object": "Sidon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 113778,
+      "subject": "Tyre,_Lebanon",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 983042,
+      "subject": "South_Governorate",
+      "relation": "hasCapital",
+      "object": "Sidon",
+      "relation_label": "hasCapital",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1007494,
+      "subject": "Tadamon_Sour",
+      "relation": "isLocatedIn",
+      "object": "Tyre",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 248286,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "Lebanon",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "test",
+      "line": 4275,
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "object": "South_Governorate",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    }
+  ],
+  "prediction_edges": [
+    {
+      "subject": "Tyre",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "South_Governorate",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": true,
+      "is_stage1_top1": false,
+      "is_stage2_top1": true,
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.016719,
+        "after_dep": 0.025903
+      }
+    },
+    {
+      "subject": "Lebanon",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "South_Governorate",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": true,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 1.0,
+        "after_dep": 19.0
+      },
+      "rank_score": {
+        "before_dep": 0.111941,
+        "after_dep": 0.002197
+      }
+    },
+    {
+      "subject": "Jerusalem",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "South_Governorate",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      }
+    },
+    {
+      "subject": "Acre,_Israel",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "South_Governorate",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      }
+    },
+    {
+      "subject": "Kingdom_of_Jerusalem",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "South_Governorate",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 7.0,
+        "after_dep": 4.0
+      },
+      "rank_score": {
+        "before_dep": 0.005361,
+        "after_dep": 0.01852
+      }
+    }
+  ],
+  "candidate_explanations": [
+    {
+      "entity_id": "Tyre",
+      "entity_label": "Tyre",
+      "role": "gold+stage2_top1",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.016719,
+        "after_dep": 0.025903
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -2.803314,
+          "intercept": -4.786611,
+          "rule_total": 1.983297,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.983297
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -2.331659,
+          "intercept": -4.659413,
+          "rule_total": 2.201745,
+          "dependency_total": 0.126009,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 2.201745
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {
+              "synergy": 0.126009
+            },
+            "by_sign": {
+              "positive": 0.126009
+            }
+          }
+        }
+      },
+      "active_rule_count": 5,
+      "active_dependency_count": 1,
+      "active_rules_sample": [
+        "R903078",
+        "R455584",
+        "R228379",
+        "R816397",
+        "R35617"
+      ],
+      "active_dependencies_sample": [
+        "D11674"
+      ],
+      "top_dependency_details": [
+        {
+          "dep_id": "D11674",
+          "dependency_type": "synergy",
+          "sign": "positive",
+          "raw_stage2_weight": 0.126009,
+          "estimated_candidate_contribution": 0.126009,
+          "estimated_fraction_of_dependency_total": 1.0,
+          "left_rule_id": "R455584",
+          "left_rule_type": "B",
+          "left_rule_text": "isConnectedTo(X,Aeroparque_Jorge_Newbery) <= isConnectedTo(Tocumen_International_Airport,X)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R903078",
+          "right_rule_type": "B",
+          "right_rule_text": "isConnectedTo(Münster_Osnabrück_International_Airport,Y) <= isConnectedTo(Y,Valencia_Airport)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 1.744226,
+              "type_weight": 1.0,
+              "effective_weight": 1.744226,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 1.856394,
+              "type_weight": 1.0,
+              "effective_weight": 1.856394,
+              "rule_type": "B"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "entity_id": "Lebanon",
+      "entity_label": "Lebanon",
+      "role": "stage1_top1",
+      "rank": {
+        "before_dep": 1.0,
+        "after_dep": 19.0
+      },
+      "rank_score": {
+        "before_dep": 0.111941,
+        "after_dep": 0.002197
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -0.315044,
+          "intercept": -4.786611,
+          "rule_total": 4.471568,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 4.471568
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -4.785789,
+          "intercept": -4.659413,
+          "rule_total": 7.24565,
+          "dependency_total": -7.372026,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 7.24565
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {
+              "redundancy": -6.477436,
+              "synergy": -0.89459
+            },
+            "by_sign": {
+              "negative": -6.477436,
+              "positive": -0.89459
+            }
+          }
+        }
+      },
+      "active_rule_count": 18,
+      "active_dependency_count": 25,
+      "active_rules_sample": [
+        "R538213",
+        "R798111",
+        "R913444",
+        "R403497",
+        "R471222",
+        "R553731",
+        "R124457",
+        "R86223",
+        "R416520",
+        "R15913",
+        "R939670",
+        "R10936",
+        "R262130",
+        "R352564",
+        "R26865",
+        "R605887",
+        "R378020",
+        "R695849"
+      ],
+      "active_dependencies_sample": [
+        "D2423",
+        "D2444",
+        "D2447",
+        "D2459",
+        "D2463",
+        "D2486",
+        "D3770",
+        "D3815",
+        "D3821",
+        "D3896",
+        "D3943",
+        "D10006",
+        "D10015",
+        "D10019",
+        "D10044",
+        "D10352",
+        "D10359",
+        "D10379",
+        "D10389",
+        "D12020"
+      ],
+      "top_dependency_details": [
+        {
+          "dep_id": "D3821",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -5.773287,
+          "estimated_candidate_contribution": -1.1546573060238823,
+          "estimated_fraction_of_dependency_total": 0.15662686295787376,
+          "left_rule_id": "R124457",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.500951,
+              "type_weight": 1.0,
+              "effective_weight": 0.500951,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R553731",
+          "right_rule_type": "B",
+          "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 4.342746,
+              "type_weight": 1.0,
+              "effective_weight": 4.342746,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 4.108878,
+              "type_weight": 1.0,
+              "effective_weight": 4.108878,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D12020",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -5.730206,
+          "estimated_candidate_contribution": -1.1460411067251441,
+          "estimated_fraction_of_dependency_total": 0.15545809343661351,
+          "left_rule_id": "R471222",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.692833,
+              "type_weight": 1.0,
+              "effective_weight": 0.692833,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R553731",
+          "right_rule_type": "B",
+          "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 4.342746,
+              "type_weight": 1.0,
+              "effective_weight": 4.342746,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 4.108878,
+              "type_weight": 1.0,
+              "effective_weight": 4.108878,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D10019",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -5.291723,
+          "estimated_candidate_contribution": -1.0583445138626604,
+          "estimated_fraction_of_dependency_total": 0.14356223294148182,
+          "left_rule_id": "R403497",
+          "left_rule_type": "B",
+          "left_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.02296,
+              "type_weight": 1.0,
+              "effective_weight": 0.02296,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R553731",
+          "right_rule_type": "B",
+          "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 4.342746,
+              "type_weight": 1.0,
+              "effective_weight": 4.342746,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 4.108878,
+              "type_weight": 1.0,
+              "effective_weight": 4.108878,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D2463",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -4.221309,
+          "estimated_candidate_contribution": -0.8442617312865909,
+          "estimated_fraction_of_dependency_total": 0.11452234857644165,
+          "left_rule_id": "R86223",
+          "left_rule_type": "B",
+          "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R553731",
+          "right_rule_type": "B",
+          "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 4.342746,
+              "type_weight": 1.0,
+              "effective_weight": 4.342746,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 4.108878,
+              "type_weight": 1.0,
+              "effective_weight": 4.108878,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D10352",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -3.205891,
+          "estimated_candidate_contribution": -0.6411781478153105,
+          "estimated_fraction_of_dependency_total": 0.08697448270194794,
+          "left_rule_id": "R416520",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R471222",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.692833,
+              "type_weight": 1.0,
+              "effective_weight": 0.692833,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D10359",
+          "dependency_type": "synergy",
+          "sign": "positive",
+          "raw_stage2_weight": -2.69775,
+          "estimated_candidate_contribution": -0.5395499560867022,
+          "estimated_fraction_of_dependency_total": 0.07318882978528592,
+          "left_rule_id": "R416520",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R538213",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.128821,
+              "type_weight": 1.0,
+              "effective_weight": 0.128821,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 1.92003,
+              "type_weight": 1.0,
+              "effective_weight": 1.92003,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D10389",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -2.460856,
+          "estimated_candidate_contribution": -0.4921711599428033,
+          "estimated_fraction_of_dependency_total": 0.06676199459182636,
+          "left_rule_id": "R416520",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R913444",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          }
+        },
+        {
+          "dep_id": "D13479",
+          "dependency_type": "redundancy",
+          "sign": "negative",
+          "raw_stage2_weight": -2.439881,
+          "estimated_candidate_contribution": -0.48797616028422913,
+          "estimated_fraction_of_dependency_total": 0.06619295160980565,
+          "left_rule_id": "R553731",
+          "left_rule_type": "B",
+          "left_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 4.342746,
+              "type_weight": 1.0,
+              "effective_weight": 4.342746,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 4.108878,
+              "type_weight": 1.0,
+              "effective_weight": 4.108878,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R913444",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "entity_id": "Jerusalem",
+      "entity_label": "Jerusalem",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -2.86819,
+          "intercept": -4.786611,
+          "rule_total": 1.918421,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.918421
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -2.41345,
+          "intercept": -4.659413,
+          "rule_total": 2.245963,
+          "dependency_total": 0.0,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 2.245963
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {},
+            "by_sign": {}
+          }
+        }
+      },
+      "active_rule_count": 4,
+      "active_dependency_count": 0,
+      "active_rules_sample": [
+        "R903078",
+        "R801479",
+        "R695849",
+        "R35617"
+      ],
+      "active_dependencies_sample": [],
+      "top_dependency_details": []
+    },
+    {
+      "entity_id": "Acre,_Israel",
+      "entity_label": "Acre,_Israel",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 3.5,
+        "after_dep": 2.5
+      },
+      "rank_score": {
+        "before_dep": 0.015725,
+        "after_dep": 0.024036
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -2.86819,
+          "intercept": -4.786611,
+          "rule_total": 1.918421,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.918421
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -2.41345,
+          "intercept": -4.659413,
+          "rule_total": 2.245963,
+          "dependency_total": 0.0,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 2.245963
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {},
+            "by_sign": {}
+          }
+        }
+      },
+      "active_rule_count": 2,
+      "active_dependency_count": 0,
+      "active_rules_sample": [
+        "R903078",
+        "R801479"
+      ],
+      "active_dependencies_sample": [],
+      "top_dependency_details": []
+    },
+    {
+      "entity_id": "Kingdom_of_Jerusalem",
+      "entity_label": "Kingdom_of_Jerusalem",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 7.0,
+        "after_dep": 4.0
+      },
+      "rank_score": {
+        "before_dep": 0.005361,
+        "after_dep": 0.01852
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -4.070614,
+          "intercept": -4.786611,
+          "rule_total": 0.715998,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 0.715998
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -2.788101,
+          "intercept": -4.659413,
+          "rule_total": 1.57043,
+          "dependency_total": 0.300882,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.57043
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {
+              "synergy": 0.300882
+            },
+            "by_sign": {
+              "positive": 0.300882
+            }
+          }
+        }
+      },
+      "active_rule_count": 4,
+      "active_dependency_count": 1,
+      "active_rules_sample": [
+        "R961675",
+        "R801479",
+        "R405501",
+        "R846065"
+      ],
+      "active_dependencies_sample": [
+        "D16190"
+      ],
+      "top_dependency_details": [
+        {
+          "dep_id": "D16190",
+          "dependency_type": "synergy",
+          "sign": "positive",
+          "raw_stage2_weight": 0.300882,
+          "estimated_candidate_contribution": 0.300882,
+          "estimated_fraction_of_dependency_total": 1.0,
+          "left_rule_id": "R801479",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,FC_Schalke_04) <= isAffiliatedTo(X,Fortuna_Düsseldorf)",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.174195,
+              "type_weight": 1.0,
+              "effective_weight": 0.174195,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.389569,
+              "type_weight": 1.0,
+              "effective_weight": 0.389569,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R961675",
+          "right_rule_type": "B",
+          "right_rule_text": "isConnectedTo(X,San_Francisco_International_Airport) <= isConnectedTo(Haneda_Airport,X)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.541803,
+              "type_weight": 1.0,
+              "effective_weight": 0.541803,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 1.180861,
+              "type_weight": 1.0,
+              "effective_weight": 1.180861,
+              "rule_type": "B"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rule_dependency_layer": {
+    "rules": [
+      {
+        "rule_id": "R553731",
+        "rule_type": "B",
+        "rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 4.342746,
+            "type_weight": 1.0,
+            "effective_weight": 4.342746,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 4.108878,
+            "type_weight": 1.0,
+            "effective_weight": 4.108878,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R538213",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.128821,
+            "type_weight": 1.0,
+            "effective_weight": 0.128821,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 1.92003,
+            "type_weight": 1.0,
+            "effective_weight": 1.92003,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R903078",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(Münster_Osnabrück_International_Airport,Y) <= isConnectedTo(Y,Valencia_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 1.744226,
+            "type_weight": 1.0,
+            "effective_weight": 1.744226,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 1.856394,
+            "type_weight": 1.0,
+            "effective_weight": 1.856394,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R961675",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,San_Francisco_International_Airport) <= isConnectedTo(Haneda_Airport,X)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.541803,
+            "type_weight": 1.0,
+            "effective_weight": 0.541803,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 1.180861,
+            "type_weight": 1.0,
+            "effective_weight": 1.180861,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R471222",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.692833,
+            "type_weight": 1.0,
+            "effective_weight": 0.692833,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R124457",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.500951,
+            "type_weight": 1.0,
+            "effective_weight": 0.500951,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R801479",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,FC_Schalke_04) <= isAffiliatedTo(X,Fortuna_Düsseldorf)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.174195,
+            "type_weight": 1.0,
+            "effective_weight": 0.174195,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.389569,
+            "type_weight": 1.0,
+            "effective_weight": 0.389569,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R816397",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(Munich_Airport,Y) <= isConnectedTo(Aristides_Pereira_International_Airport,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.239071,
+            "type_weight": 1.0,
+            "effective_weight": 0.239071,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.345351,
+            "type_weight": 1.0,
+            "effective_weight": 0.345351,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R403497",
+        "rule_type": "B",
+        "rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.02296,
+            "type_weight": 1.0,
+            "effective_weight": 0.02296,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R405501",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(Willian_Xavier_Barbosa,Y) <= playsFor(Willian_Xavier_Barbosa,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R26865",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,Treviso_Airport) <= isConnectedTo(X,Munich_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R352564",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,FK_Ekranas) <= playsFor(X,FK_Ekranas)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R605887",
+        "rule_type": "B",
+        "rule_text": "playsFor(Grant_Smith_(footballer),Y) <= isAffiliatedTo(A,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R913444",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R228379",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(Incheon_International_Airport,Y) <= isConnectedTo(Y,Cairo_International_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R378020",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Millwall_F.C.) <= playsFor(X,Newport_County_A.F.C.)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R416520",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R262130",
+        "rule_type": "B",
+        "rule_text": "playsFor(X,Recreativo_de_Huelva) <= isAffiliatedTo(X,Atlético_Madrid)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R939670",
+        "rule_type": "B",
+        "rule_text": "playsFor(Ondřej_Herzán,Y) <= isAffiliatedTo(Ondřej_Herzán,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R15913",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(Adnan_Menderes_Airport,Y) <= isConnectedTo(Y,Toronto_Pearson_International_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R10936",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,C.F._Mérida) <= isAffiliatedTo(X,Mexico_national_football_team)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R695849",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,Copenhagen_Airport) <= isConnectedTo(X,Donetsk_International_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R35617",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Iserlohn_Roosters) <= isAffiliatedTo(X,Adler_Mannheim)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R846065",
+        "rule_type": "B",
+        "rule_text": "diedIn(X,Paris) <= influences(René_Descartes,X)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R798111",
+        "rule_type": "B",
+        "rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R86223",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R455584",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,Aeroparque_Jorge_Newbery) <= isConnectedTo(Tocumen_International_Airport,X)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      }
+    ],
+    "dependencies": [
+      {
+        "dep_id": "D3821",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R124457 + R553731",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -5.773287,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -5.773287
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R553731",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)"
+      },
+      {
+        "dep_id": "D12020",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R471222 + R553731",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -5.730206,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -5.730206
+          }
+        },
+        "left_rule_id": "R471222",
+        "right_rule_id": "R553731",
+        "left_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)",
+        "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)"
+      },
+      {
+        "dep_id": "D10019",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R403497 + R553731",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -5.291723,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -5.291723
+          }
+        },
+        "left_rule_id": "R403497",
+        "right_rule_id": "R553731",
+        "left_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+        "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)"
+      },
+      {
+        "dep_id": "D2463",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R86223 + R553731",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -4.221309,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -4.221309
+          }
+        },
+        "left_rule_id": "R86223",
+        "right_rule_id": "R553731",
+        "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "right_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)"
+      },
+      {
+        "dep_id": "D10352",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R416520 + R471222",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -3.205891,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -3.205891
+          }
+        },
+        "left_rule_id": "R416520",
+        "right_rule_id": "R471222",
+        "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+        "right_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)"
+      },
+      {
+        "dep_id": "D10359",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R416520 + R538213",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -2.69775,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -2.69775
+          }
+        },
+        "left_rule_id": "R416520",
+        "right_rule_id": "R538213",
+        "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+        "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)"
+      },
+      {
+        "dep_id": "D10389",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R416520 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -2.460856,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -2.460856
+          }
+        },
+        "left_rule_id": "R416520",
+        "right_rule_id": "R913444",
+        "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D13479",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R553731 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -2.439881,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -2.439881
+          }
+        },
+        "left_rule_id": "R553731",
+        "right_rule_id": "R913444",
+        "left_rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D10379",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R416520 + R798111",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -2.000561,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -2.000561
+          }
+        },
+        "left_rule_id": "R416520",
+        "right_rule_id": "R798111",
+        "left_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)",
+        "right_rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)"
+      },
+      {
+        "dep_id": "D13153",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R538213 + R798111",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -1.996231,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -1.996231
+          }
+        },
+        "left_rule_id": "R538213",
+        "right_rule_id": "R798111",
+        "left_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+        "right_rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)"
+      },
+      {
+        "dep_id": "D10006",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R403497 + R471222",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -1.97064,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -1.97064
+          }
+        },
+        "left_rule_id": "R403497",
+        "right_rule_id": "R471222",
+        "left_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+        "right_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)"
+      },
+      {
+        "dep_id": "D2447",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R86223 + R416520",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -1.541151,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -1.541151
+          }
+        },
+        "left_rule_id": "R86223",
+        "right_rule_id": "R416520",
+        "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "right_rule_text": "isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)"
+      },
+      {
+        "dep_id": "D12042",
+        "dependency_type": "redundancy",
+        "sign": "negative",
+        "dep_text": "R471222 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -1.293388,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -1.293388
+          }
+        },
+        "left_rule_id": "R471222",
+        "right_rule_id": "R913444",
+        "left_rule_text": "isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D3770",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R124457 + R403497",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 1.029928,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 1.029928
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R403497",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)"
+      },
+      {
+        "dep_id": "D3896",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R124457 + R798111",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.810953,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.810953
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R798111",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)"
+      },
+      {
+        "dep_id": "D3815",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R124457 + R538213",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.693424,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.693424
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R538213",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)"
+      },
+      {
+        "dep_id": "D3943",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R124457 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.623085,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.623085
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R913444",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D10044",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R403497 + R798111",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.614937,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.614937
+          }
+        },
+        "left_rule_id": "R403497",
+        "right_rule_id": "R798111",
+        "left_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+        "right_rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)"
+      },
+      {
+        "dep_id": "D16125",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R798111 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -0.427214,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -0.427214
+          }
+        },
+        "left_rule_id": "R798111",
+        "right_rule_id": "R913444",
+        "left_rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D13206",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R538213 + R913444",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -0.359638,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -0.359638
+          }
+        },
+        "left_rule_id": "R538213",
+        "right_rule_id": "R913444",
+        "left_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+        "right_rule_text": "isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)"
+      },
+      {
+        "dep_id": "D2423",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R86223 + R124457",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.313011,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.313011
+          }
+        },
+        "left_rule_id": "R86223",
+        "right_rule_id": "R124457",
+        "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "right_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= "
+      },
+      {
+        "dep_id": "D2444",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R86223 + R403497",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.312533,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.312533
+          }
+        },
+        "left_rule_id": "R86223",
+        "right_rule_id": "R403497",
+        "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "right_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)"
+      },
+      {
+        "dep_id": "D16190",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R801479 + R961675",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.300882,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.300882
+          }
+        },
+        "left_rule_id": "R801479",
+        "right_rule_id": "R961675",
+        "left_rule_text": "isAffiliatedTo(X,FC_Schalke_04) <= isAffiliatedTo(X,Fortuna_Düsseldorf)",
+        "right_rule_text": "isConnectedTo(X,San_Francisco_International_Airport) <= isConnectedTo(Haneda_Airport,X)"
+      },
+      {
+        "dep_id": "D2459",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R86223 + R538213",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.277393,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.277393
+          }
+        },
+        "left_rule_id": "R86223",
+        "right_rule_id": "R538213",
+        "left_rule_text": "isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)",
+        "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)"
+      },
+      {
+        "dep_id": "D10015",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R403497 + R538213",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": -0.128304,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": -0.128304
+          }
+        },
+        "left_rule_id": "R403497",
+        "right_rule_id": "R538213",
+        "left_rule_text": "wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)",
+        "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)"
+      }
+    ]
+  },
+  "counts": {
+    "seed_node_count": 6,
+    "node_count": 68,
+    "kg_edge_count": 120,
+    "prediction_edge_count": 5,
+    "selected_candidate_count": 5,
+    "top_rule_count": 27,
+    "top_dependency_count": 25
+  }
+}

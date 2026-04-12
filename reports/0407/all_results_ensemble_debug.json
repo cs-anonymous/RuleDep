@@ -2826,10 +2826,10 @@
         "count": 5251
       },
       "19": {
-        "experiment": "structural_dep_scale",
+        "experiment": "dep_scale_surprisal_init",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.5928143858909607,
-        "test_mrr": 0.5882864892482758,
+        "selected_valid_mrr": 0.6048212349414825,
+        "test_mrr": 0.6119133532047272,
         "count": 55675
       },
       "20": {

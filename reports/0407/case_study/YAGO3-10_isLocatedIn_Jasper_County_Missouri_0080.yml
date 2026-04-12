@@ -1,0 +1,3993 @@
+example_id: YAGO3-10_isLocatedIn_Jasper_County_Missouri_0080
+dataset: YAGO3-10
+split: test
+config_id: structural_dep_scale
+query:
+  direction: tail
+  head_id: Jasper_County,_Missouri
+  head_label: Jasper_County,_Missouri
+  relation_id: isLocatedIn
+  relation_label: city isLocatedIn country
+  tail_id: null
+  tail_label: null
+gold:
+  entity_id: Missouri
+  entity_label: Missouri
+relation_context:
+  relation_index: 0
+  relation_gloss_zh: 位于
+  mapping_direction: many-to-many
+  baseline_mrr_relation: 0.38799
+  final_mrr_relation: 0.40666
+type_weights:
+  rule:
+    none: 1.0
+  dependency:
+    none: 1.0
+rules:
+- rule_id: R3724
+  rule_type: Ud
+  rule_text: playsFor(Henrik_Smedegaard,Y) <= playsFor(A,Y)
+  weight:
+    stage1:
+      base_weight: 1.319165
+      type_weight: 1.0
+      effective_weight: 1.319165
+      rule_type: Ud
+    stage2:
+      base_weight: 1.165763
+      type_weight: 1.0
+      effective_weight: 1.165763
+      rule_type: Ud
+- rule_id: R26865
+  rule_type: B
+  rule_text: isConnectedTo(X,Treviso_Airport) <= isConnectedTo(X,Munich_Airport)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R27150
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,P.S.V._Eindhoven) <= isAffiliatedTo(X,Fulham_F.C.)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.000502
+      type_weight: 1.0
+      effective_weight: 0.000502
+      rule_type: Ud
+- rule_id: R56607
+  rule_type: B
+  rule_text: influences(H._P._Lovecraft,Y) <= influences(Y,A)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R59766
+  rule_type: Ud
+  rule_text: isConnectedTo(X,Logan_International_Airport) <= isConnectedTo(Louis_Armstrong_New_Orleans_International_Airport,X)
+  weight:
+    stage1:
+      base_weight: 1.322865
+      type_weight: 1.0
+      effective_weight: 1.322865
+      rule_type: Ud
+    stage2:
+      base_weight: 1.275691
+      type_weight: 1.0
+      effective_weight: 1.275691
+      rule_type: Ud
+- rule_id: R72285
+  rule_type: Ud
+  rule_text: isConnectedTo(X,Huai'an_Lianshui_Airport) <= isConnectedTo(Xining_Caojiabao_Airport,X)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R85186
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Birmingham_City_F.C.) <= isAffiliatedTo(X,Wigan_Athletic_F.C.)
+  weight:
+    stage1:
+      base_weight: 1.358348
+      type_weight: 1.0
+      effective_weight: 1.358348
+      rule_type: Ud
+    stage2:
+      base_weight: 1.315972
+      type_weight: 1.0
+      effective_weight: 1.315972
+      rule_type: Ud
+- rule_id: R86469
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Atlético_Madrid_B) <= isAffiliatedTo(X,Spain_national_under-20_football_team)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R88839
+  rule_type: Ud
+  rule_text: isAffiliatedTo(Juan_Esnáider,Y) <= isAffiliatedTo(Roberto_Bonano,Y)
+  weight:
+    stage1:
+      base_weight: 0.347546
+      type_weight: 1.0
+      effective_weight: 0.347546
+      rule_type: Ud
+    stage2:
+      base_weight: 0.481548
+      type_weight: 1.0
+      effective_weight: 0.481548
+      rule_type: Ud
+- rule_id: R93284
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,R.C._Celta_de_Vigo) <= isAffiliatedTo(X,Boca_Juniors)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.001819
+      type_weight: 1.0
+      effective_weight: 0.001819
+      rule_type: Ud
+- rule_id: R124457
+  rule_type: B
+  rule_text: 'isAffiliatedTo(X,Leicester_City_F.C.) <= '
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.109755
+      type_weight: 1.0
+      effective_weight: 0.109755
+      rule_type: B
+- rule_id: R193987
+  rule_type: Ud
+  rule_text: isAffiliatedTo(Giovanni_Bia,Y) <= playsFor(Giovanni_Bia,Y)
+  weight:
+    stage1:
+      base_weight: 3.261762
+      type_weight: 1.0
+      effective_weight: 3.261762
+      rule_type: Ud
+    stage2:
+      base_weight: 2.82712
+      type_weight: 1.0
+      effective_weight: 2.82712
+      rule_type: Ud
+- rule_id: R224738
+  rule_type: Ud
+  rule_text: playsFor(X,Ascoli_Calcio_1898) <= playsFor(X,S.S._Chieti_Calcio)
+  weight:
+    stage1:
+      base_weight: 1.600065
+      type_weight: 1.0
+      effective_weight: 1.600065
+      rule_type: Ud
+    stage2:
+      base_weight: 1.317728
+      type_weight: 1.0
+      effective_weight: 1.317728
+      rule_type: Ud
+- rule_id: R229767
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Panteras_de_Miranda) <= isAffiliatedTo(X,Liga_Profesional_de_Baloncesto)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R338840
+  rule_type: Ud
+  rule_text: isConnectedTo(X,Bari_Karol_Wojtyła_Airport) <= isConnectedTo(X,Sabiha_Gökçen_International_Airport)
+  weight:
+    stage1:
+      base_weight: 1.18478
+      type_weight: 1.0
+      effective_weight: 1.18478
+      rule_type: Ud
+    stage2:
+      base_weight: 1.070974
+      type_weight: 1.0
+      effective_weight: 1.070974
+      rule_type: Ud
+- rule_id: R430715
+  rule_type: Ud
+  rule_text: isConnectedTo(Rhodes_International_Airport,Y) <= isConnectedTo(Y,Riga_International_Airport)
+  weight:
+    stage1:
+      base_weight: 0.839187
+      type_weight: 1.0
+      effective_weight: 0.839187
+      rule_type: Ud
+    stage2:
+      base_weight: 0.913497
+      type_weight: 1.0
+      effective_weight: 0.913497
+      rule_type: Ud
+- rule_id: R448490
+  rule_type: Ud
+  rule_text: isConnectedTo(Frankfurt_Airport,Y) <= isConnectedTo(Y,Monastir_Habib_Bourguiba_International_Airport)
+  weight:
+    stage1:
+      base_weight: 0.992397
+      type_weight: 1.0
+      effective_weight: 0.992397
+      rule_type: Ud
+    stage2:
+      base_weight: 1.273863
+      type_weight: 1.0
+      effective_weight: 1.273863
+      rule_type: Ud
+- rule_id: R449809
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Cruzeiro_Esporte_Clube) <= isAffiliatedTo(X,América_Futebol_Clube_(MG))
+  weight:
+    stage1:
+      base_weight: 0.502527
+      type_weight: 1.0
+      effective_weight: 0.502527
+      rule_type: Ud
+    stage2:
+      base_weight: 0.643159
+      type_weight: 1.0
+      effective_weight: 0.643159
+      rule_type: Ud
+- rule_id: R460555
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Juventus_F.C.) <= isAffiliatedTo(X,Italy_national_under-20_football_team)
+  weight:
+    stage1:
+      base_weight: 0.563372
+      type_weight: 1.0
+      effective_weight: 0.563372
+      rule_type: Ud
+    stage2:
+      base_weight: 0.391448
+      type_weight: 1.0
+      effective_weight: 0.391448
+      rule_type: Ud
+- rule_id: R494231
+  rule_type: B
+  rule_text: isAffiliatedTo(Leandro_Alves_da_Cunha,Y) <= playsFor(Leandro_Alves_da_Cunha,Y)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R503336
+  rule_type: B
+  rule_text: isAffiliatedTo(X,Associação_Desportiva_Cabofriense) <= isAffiliatedTo(X,Marília_Atlético_Clube)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R510510
+  rule_type: Ud
+  rule_text: hasChild(Gratian,Y) <= hasChild(Y,Gratian)
+  weight:
+    stage1:
+      base_weight: 1.490297
+      type_weight: 1.0
+      effective_weight: 1.490297
+      rule_type: Ud
+    stage2:
+      base_weight: 1.407863
+      type_weight: 1.0
+      effective_weight: 1.407863
+      rule_type: Ud
+- rule_id: R517242
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Italy_national_football_team) <= playsFor(X,Genoa_C.F.C.)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R538213
+  rule_type: B
+  rule_text: isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)
+  weight:
+    stage1:
+      base_weight: 0.128821
+      type_weight: 1.0
+      effective_weight: 0.128821
+      rule_type: B
+    stage2:
+      base_weight: 1.17318
+      type_weight: 1.0
+      effective_weight: 1.17318
+      rule_type: B
+- rule_id: R553731
+  rule_type: B
+  rule_text: playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)
+  weight:
+    stage1:
+      base_weight: 4.342746
+      type_weight: 1.0
+      effective_weight: 4.342746
+      rule_type: B
+    stage2:
+      base_weight: 3.663963
+      type_weight: 1.0
+      effective_weight: 3.663963
+      rule_type: B
+- rule_id: R555905
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Iceland_national_under-21_football_team) <= playsFor(X,Fimleikafélag_Hafnarfjarðar)
+  weight:
+    stage1:
+      base_weight: 1.025505
+      type_weight: 1.0
+      effective_weight: 1.025505
+      rule_type: Ud
+    stage2:
+      base_weight: 1.041634
+      type_weight: 1.0
+      effective_weight: 1.041634
+      rule_type: Ud
+- rule_id: R618572
+  rule_type: Ud
+  rule_text: playsFor(Amir_Lowery,Y) <= playsFor(A,Y)
+  weight:
+    stage1:
+      base_weight: 1.198376
+      type_weight: 1.0
+      effective_weight: 1.198376
+      rule_type: Ud
+    stage2:
+      base_weight: 0.957903
+      type_weight: 1.0
+      effective_weight: 0.957903
+      rule_type: Ud
+- rule_id: R628132
+  rule_type: B
+  rule_text: isAffiliatedTo(X,Wycombe_Wanderers_F.C.) <= playsFor(X,Grays_Athletic_F.C.)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R644624
+  rule_type: Ud
+  rule_text: isConnectedTo(X,Friedrichshafen_Airport) <= isConnectedTo(Cologne_Bonn_Airport,X)
+  weight:
+    stage1:
+      base_weight: 0.439978
+      type_weight: 1.0
+      effective_weight: 0.439978
+      rule_type: Ud
+    stage2:
+      base_weight: 0.526599
+      type_weight: 1.0
+      effective_weight: 0.526599
+      rule_type: Ud
+- rule_id: R649589
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Wycombe_Wanderers_F.C.) <= isAffiliatedTo(X,Millwall_F.C.)
+  weight:
+    stage1:
+      base_weight: 1.447398
+      type_weight: 1.0
+      effective_weight: 1.447398
+      rule_type: Ud
+    stage2:
+      base_weight: 1.603527
+      type_weight: 1.0
+      effective_weight: 1.603527
+      rule_type: Ud
+- rule_id: R657897
+  rule_type: Ud
+  rule_text: isAffiliatedTo(Goce_Sedloski,Y) <= playsFor(A,Y)
+  weight:
+    stage1:
+      base_weight: 1.297897
+      type_weight: 1.0
+      effective_weight: 1.297897
+      rule_type: Ud
+    stage2:
+      base_weight: 1.483392
+      type_weight: 1.0
+      effective_weight: 1.483392
+      rule_type: Ud
+- rule_id: R671371
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Bologna_F.C._1909) <= playsFor(X,A.C._Siena)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.00879
+      type_weight: 1.0
+      effective_weight: 0.00879
+      rule_type: Ud
+- rule_id: R674298
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Boston_Celtics) <= isAffiliatedTo(X,Golden_State_Warriors)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R695849
+  rule_type: B
+  rule_text: isConnectedTo(X,Copenhagen_Airport) <= isConnectedTo(X,Donetsk_International_Airport)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R699949
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Greenock_Morton_F.C.) <= playsFor(X,Airdrieonians_F.C._(1878))
+  weight:
+    stage1:
+      base_weight: 0.828597
+      type_weight: 1.0
+      effective_weight: 0.828597
+      rule_type: Ud
+    stage2:
+      base_weight: 0.923778
+      type_weight: 1.0
+      effective_weight: 0.923778
+      rule_type: Ud
+- rule_id: R700829
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Feyenoord) <= hasGender(X,male)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 8.0e-06
+      type_weight: 1.0
+      effective_weight: 8.0e-06
+      rule_type: Ud
+- rule_id: R718404
+  rule_type: Ud
+  rule_text: hasGender(X,male) <= isAffiliatedTo(X,South_China_Athletic_Association)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R728219
+  rule_type: Ud
+  rule_text: isConnectedTo(Venice_Marco_Polo_Airport,Y) <= isConnectedTo(Y,Brussels_Airport)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R731159
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,A.C._Prato) <= playsFor(X,A.C._Prato)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R743717
+  rule_type: Ud
+  rule_text: playsFor(Peter_Lassen_(footballer),Y) <= isAffiliatedTo(Peter_Lassen_(footballer),Y)
+  weight:
+    stage1:
+      base_weight: 3.091962
+      type_weight: 1.0
+      effective_weight: 3.091962
+      rule_type: Ud
+    stage2:
+      base_weight: 2.483993
+      type_weight: 1.0
+      effective_weight: 2.483993
+      rule_type: Ud
+- rule_id: R748060
+  rule_type: Ud
+  rule_text: playsFor(Santiago_Ezquerro,Y) <= playsFor(A,Y)
+  weight:
+    stage1:
+      base_weight: 1.532407
+      type_weight: 1.0
+      effective_weight: 1.532407
+      rule_type: Ud
+    stage2:
+      base_weight: 1.581416
+      type_weight: 1.0
+      effective_weight: 1.581416
+      rule_type: Ud
+- rule_id: R783369
+  rule_type: Ud
+  rule_text: playsFor(Simon_Grayson,Y) <= playsFor(A,Y)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+- rule_id: R798111
+  rule_type: B
+  rule_text: playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.000328
+      type_weight: 1.0
+      effective_weight: 0.000328
+      rule_type: B
+- rule_id: R805462
+  rule_type: Ud
+  rule_text: isConnectedTo(Malpensa_Airport,Y) <= isConnectedTo(Koltsovo_Airport,Y)
+  weight:
+    stage1:
+      base_weight: 1.894032
+      type_weight: 1.0
+      effective_weight: 1.894032
+      rule_type: Ud
+    stage2:
+      base_weight: 1.529818
+      type_weight: 1.0
+      effective_weight: 1.529818
+      rule_type: Ud
+- rule_id: R880855
+  rule_type: Ud
+  rule_text: isAffiliatedTo(X,Chester_City_F.C.) <= isAffiliatedTo(X,Brighton_&_Hove_Albion_F.C.)
+  weight:
+    stage1:
+      base_weight: 1.879009
+      type_weight: 1.0
+      effective_weight: 1.879009
+      rule_type: Ud
+    stage2:
+      base_weight: 1.609251
+      type_weight: 1.0
+      effective_weight: 1.609251
+      rule_type: Ud
+- rule_id: R905299
+  rule_type: Ud
+  rule_text: playsFor(X,Hannover_96) <= isAffiliatedTo(X,FC_Bayern_Munich)
+  weight:
+    stage1:
+      base_weight: 0.684521
+      type_weight: 1.0
+      effective_weight: 0.684521
+      rule_type: Ud
+    stage2:
+      base_weight: 0.535483
+      type_weight: 1.0
+      effective_weight: 0.535483
+      rule_type: Ud
+- rule_id: R921840
+  rule_type: B
+  rule_text: playsFor(X,Paysandu_Sport_Club) <= playsFor(X,Associação_Atlética_Ponte_Preta)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: B
+- rule_id: R986939
+  rule_type: Ud
+  rule_text: isAffiliatedTo(Damon_Jones,Y) <= isAffiliatedTo(Mikki_Moore,Y)
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+    stage2:
+      base_weight: 0.0
+      type_weight: 1.0
+      effective_weight: 0.0
+      rule_type: Ud
+dependencies:
+- dep_id: D3815
+  left_rule_id: R124457
+  right_rule_id: R538213
+  dependency_type: synergy
+  sign: positive
+  dep_text: R124457 + R538213
+  weight:
+    stage1:
+      base_weight: 0.0
+      type_weight: null
+      effective_weight: 0.0
+      note: dependency absent in stage1
+    stage2:
+      base_weight: 0.616094
+      type_weight: 1.0
+      effective_weight_without_active_scaling: 0.616094
+candidates:
+- entity_id: Boston
+  entity_label: Boston
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Western_United_States
+  entity_label: Western_United_States
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 62.0
+    after_dep: 62.0
+  rank_score:
+    before_dep: 7.4e-05
+    after_dep: 9.4e-05
+  active_rules: [R695849, R229767]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Wisconsin
+  entity_label: Wisconsin
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 35.0
+    after_dep: 36.0
+  rank_score:
+    before_dep: 0.000284
+    after_dep: 0.000275
+  active_rules: [R695849, R880855]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -2.907602
+      intercept: -4.786611
+      rule_total: 1.879009
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.879009
+    after_dep:
+      total_linear: -2.941604
+      intercept: -4.550855
+      rule_total: 1.609251
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.609251
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Kansas_City,_Missouri
+  entity_label: Kansas_City,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: St._Joseph,_Missouri
+  entity_label: St._Joseph,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Michigan
+  entity_label: Michigan
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 42.0
+    after_dep: 41.0
+  rank_score:
+    before_dep: 0.000182
+    after_dep: 0.000218
+  active_rules: [R695849, R59766]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.463746
+      intercept: -4.786611
+      rule_total: 1.322865
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.322865
+    after_dep:
+      total_linear: -3.275163
+      intercept: -4.550855
+      rule_total: 1.275691
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.275691
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Chicago
+  entity_label: Chicago
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: San_Bernardino,_California
+  entity_label: San_Bernardino,_California
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Maryville,_Missouri
+  entity_label: Maryville,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: St._Louis
+  entity_label: St._Louis
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Kansas_City
+  entity_label: Kansas_City
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 49.5
+    after_dep: 49.5
+  rank_score:
+    before_dep: 0.000153
+    after_dep: 0.000193
+  active_rules: [R494231, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: China
+  entity_label: China
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 65.5
+    after_dep: 65.5
+  rank_score:
+    before_dep: 5.4e-05
+    after_dep: 6.8e-05
+  active_rules: [R628132, R56607, R718404]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Amarillo,_Texas
+  entity_label: Amarillo,_Texas
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Arkansas
+  entity_label: Arkansas
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Jefferson_City
+  entity_label: Jefferson_City
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 49.5
+    after_dep: 49.5
+  rank_score:
+    before_dep: 0.000153
+    after_dep: 0.000193
+  active_rules: [R494231, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Webb_City,_Missouri
+  entity_label: Webb_City,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 2.0
+    after_dep: 3.0
+  rank_score:
+    before_dep: 0.087715
+    after_dep: 0.065496
+  active_rules: [R798111, R553731, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -0.443865
+      intercept: -4.786611
+      rule_total: 4.342746
+      rule_components:
+        by_rule_type:
+          B: 4.342746
+    after_dep:
+      total_linear: -0.886564
+      intercept: -4.550855
+      rule_total: 3.664291
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 3.664291
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Pennsylvania
+  entity_label: Pennsylvania
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 36.0
+    after_dep: 35.0
+  rank_score:
+    before_dep: 0.000267
+    after_dep: 0.000309
+  active_rules: [R695849, R510510]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.296314
+      intercept: -4.786611
+      rule_total: 1.490297
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.490297
+    after_dep:
+      total_linear: -3.142991
+      intercept: -4.550855
+      rule_total: 1.407863
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.407863
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Fort_Smith,_Arkansas
+  entity_label: Fort_Smith,_Arkansas
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Palau
+  entity_label: Palau
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849, R56607]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Willmar,_Minnesota
+  entity_label: Willmar,_Minnesota
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Philadelphia
+  entity_label: Philadelphia
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Republican_Party_(United_States)
+  entity_label: Republican_Party_(United_States)
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Neosho,_Missouri
+  entity_label: Neosho,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 29.0
+    after_dep: 29.0
+  rank_score:
+    before_dep: 0.001242
+    after_dep: 0.001748
+  active_rules: [R124457, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.4411
+      intercept: -4.550855
+      rule_total: 0.109755
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.109755
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: United_States
+  entity_label: United_States
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 5.5
+    after_dep: 5.0
+  rank_score:
+    before_dep: 0.002494
+    after_dep: 0.017479
+  active_rules: [R538213, R124457, R728219]
+  active_dependencies: [D3815]
+  score:
+    before_dep:
+      total_linear: -4.65779
+      intercept: -4.786611
+      rule_total: 0.128821
+      rule_components:
+        by_rule_type:
+          B: 0.128821
+          Ud: 0.0
+    after_dep:
+      total_linear: -2.651825
+      intercept: -4.550855
+      rule_total: 1.282935
+      dependency_total: 0.616094
+      rule_components:
+        by_rule_type:
+          B: 1.282935
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type:
+          synergy: 0.616094
+        by_sign:
+          positive: 0.616094
+- entity_id: Storm_Lake,_Iowa
+  entity_label: Storm_Lake,_Iowa
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Cuba
+  entity_label: Cuba
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 68.0
+    after_dep: 68.0
+  rank_score:
+    before_dep: 5.0e-05
+    after_dep: 6.3e-05
+  active_rules: [R921840, R56607, R503336]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Massachusetts_Institute_of_Technology
+  entity_label: Massachusetts_Institute_of_Technology
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Japan
+  entity_label: Japan
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 58.0
+    after_dep: 59.0
+  rank_score:
+    before_dep: 9.1e-05
+    after_dep: 0.000115
+  active_rules: [R628132, R56607, R27150]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550353
+      intercept: -4.550855
+      rule_total: 0.000502
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.000502
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Oklahoma
+  entity_label: Oklahoma
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 32.0
+    after_dep: 33.0
+  rank_score:
+    before_dep: 0.000851
+    after_dep: 0.000616
+  active_rules: [R695849, R743717]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -1.694649
+      intercept: -4.786611
+      rule_total: 3.091962
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 3.091962
+    after_dep:
+      total_linear: -2.066862
+      intercept: -4.550855
+      rule_total: 2.483993
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 2.483993
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Maryland
+  entity_label: Maryland
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 64.0
+    after_dep: 63.0
+  rank_score:
+    before_dep: 6.4e-05
+    after_dep: 9.2e-05
+  active_rules: [R695849, R88839]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.439065
+      intercept: -4.786611
+      rule_total: 0.347546
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.347546
+    after_dep:
+      total_linear: -4.069306
+      intercept: -4.550855
+      rule_total: 0.481548
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.481548
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Bannered_routes_of_U.S._Route_66
+  entity_label: Bannered_routes_of_U.S._Route_66
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 44.5
+    after_dep: 43.5
+  rank_score:
+    before_dep: 0.000169
+    after_dep: 0.000214
+  active_rules: [R26865]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Carthage,_Missouri
+  entity_label: Carthage,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 2.0
+    after_dep: 3.0
+  rank_score:
+    before_dep: 0.087715
+    after_dep: 0.065496
+  active_rules: [R798111, R553731, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -0.443865
+      intercept: -4.786611
+      rule_total: 4.342746
+      rule_components:
+        by_rule_type:
+          B: 4.342746
+    after_dep:
+      total_linear: -0.886564
+      intercept: -4.550855
+      rule_total: 3.664291
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 3.664291
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Kansas
+  entity_label: Kansas
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Kingdom_of_Great_Britain
+  entity_label: Kingdom_of_Great_Britain
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 65.5
+    after_dep: 65.5
+  rank_score:
+    before_dep: 5.4e-05
+    after_dep: 6.8e-05
+  active_rules: [R628132]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Joliet,_Illinois
+  entity_label: Joliet,_Illinois
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Canada
+  entity_label: Canada
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 52.0
+    after_dep: 52.0
+  rank_score:
+    before_dep: 0.000149
+    after_dep: 0.000189
+  active_rules: [R628132, R921840, R56607, R503336, R671371]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.542064
+      intercept: -4.550855
+      rule_total: 0.00879
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.00879
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Connecticut
+  entity_label: Connecticut
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 68.0
+    after_dep: 68.0
+  rank_score:
+    before_dep: 5.0e-05
+    after_dep: 6.3e-05
+  active_rules: [R695849, R986939]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Virginia
+  entity_label: Virginia
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 53.0
+    after_dep: 54.0
+  rank_score:
+    before_dep: 0.000146
+    after_dep: 0.000164
+  active_rules: [R695849, R338840]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.601831
+      intercept: -4.786611
+      rule_total: 1.18478
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.18478
+    after_dep:
+      total_linear: -3.47988
+      intercept: -4.550855
+      rule_total: 1.070974
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.070974
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Massachusetts
+  entity_label: Massachusetts
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 68.0
+    after_dep: 68.0
+  rank_score:
+    before_dep: 5.0e-05
+    after_dep: 6.3e-05
+  active_rules: [R695849, R86469]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Joplin,_Missouri
+  entity_label: Joplin,_Missouri
+  is_gold: false
+  is_stage1_top1: true
+  is_stage2_top1: false
+  rank:
+    before_dep: 2.0
+    after_dep: 3.0
+  rank_score:
+    before_dep: 0.087715
+    after_dep: 0.065496
+  active_rules: [R798111, R553731, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -0.443865
+      intercept: -4.786611
+      rule_total: 4.342746
+      rule_components:
+        by_rule_type:
+          B: 4.342746
+    after_dep:
+      total_linear: -0.886564
+      intercept: -4.550855
+      rule_total: 3.664291
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 3.664291
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Democratic_Party_(United_States)
+  entity_label: Democratic_Party_(United_States)
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Missouri
+  entity_label: Missouri
+  is_gold: true
+  is_stage1_top1: false
+  is_stage2_top1: true
+  rank:
+    before_dep: 4.0
+    after_dep: 1.0
+  rank_score:
+    before_dep: 0.010289
+    after_dep: 0.068869
+  active_rules: [R538213, R124457, R695849, R649589]
+  active_dependencies: [D3815]
+  score:
+    before_dep:
+      total_linear: -3.210392
+      intercept: -4.786611
+      rule_total: 1.576219
+      rule_components:
+        by_rule_type:
+          B: 0.128821
+          Ud: 1.447398
+    after_dep:
+      total_linear: -1.048298
+      intercept: -4.550855
+      rule_total: 2.886462
+      dependency_total: 0.616094
+      rule_components:
+        by_rule_type:
+          B: 1.282935
+          Ud: 1.603527
+      dependency_components:
+        by_dependency_type:
+          synergy: 0.616094
+        by_sign:
+          positive: 0.616094
+- entity_id: University_of_Chicago
+  entity_label: University_of_Chicago
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Princeton_University
+  entity_label: Princeton_University
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Rolla,_Missouri
+  entity_label: Rolla,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Puerto_Rico
+  entity_label: Puerto_Rico
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849, R56607]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Minnesota
+  entity_label: Minnesota
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 31.0
+    after_dep: 31.0
+  rank_score:
+    before_dep: 0.000981
+    after_dep: 0.000831
+  active_rules: [R695849, R193987]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -1.524849
+      intercept: -4.786611
+      rule_total: 3.261762
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 3.261762
+    after_dep:
+      total_linear: -1.723735
+      intercept: -4.550855
+      rule_total: 2.82712
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 2.82712
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: North_Carolina
+  entity_label: North_Carolina
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 40.0
+    after_dep: 47.0
+  rank_score:
+    before_dep: 0.000201
+    after_dep: 0.0002
+  active_rules: [R695849, R618572]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.588235
+      intercept: -4.786611
+      rule_total: 1.198376
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.198376
+    after_dep:
+      total_linear: -3.592951
+      intercept: -4.550855
+      rule_total: 0.957903
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.957903
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Alexandria,_Louisiana
+  entity_label: Alexandria,_Louisiana
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Lebanon,_Missouri
+  entity_label: Lebanon,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Florida
+  entity_label: Florida
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 63.0
+    after_dep: 61.0
+  rank_score:
+    before_dep: 7.0e-05
+    after_dep: 9.6e-05
+  active_rules: [R695849, R644624]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.346633
+      intercept: -4.786611
+      rule_total: 0.439978
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.439978
+    after_dep:
+      total_linear: -4.024255
+      intercept: -4.550855
+      rule_total: 0.526599
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.526599
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: San_Francisco_Bay_Area
+  entity_label: San_Francisco_Bay_Area
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 43.0
+    after_dep: 46.0
+  rank_score:
+    before_dep: 0.000172
+    after_dep: 0.000208
+  active_rules: [R695849, R85186]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.428263
+      intercept: -4.786611
+      rule_total: 1.358348
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.358348
+    after_dep:
+      total_linear: -3.234883
+      intercept: -4.550855
+      rule_total: 1.315972
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.315972
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Golden_Globe_Award
+  entity_label: Golden_Globe_Award
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Tennessee
+  entity_label: Tennessee
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 46.0
+    after_dep: 53.0
+  rank_score:
+    before_dep: 0.000166
+    after_dep: 0.00018
+  active_rules: [R695849, R3724]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.467446
+      intercept: -4.786611
+      rule_total: 1.319165
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.319165
+    after_dep:
+      total_linear: -3.385092
+      intercept: -4.550855
+      rule_total: 1.165763
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.165763
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Bannered_routes_of_U.S._Route_71
+  entity_label: Bannered_routes_of_U.S._Route_71
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 44.5
+    after_dep: 43.5
+  rank_score:
+    before_dep: 0.000169
+    after_dep: 0.000214
+  active_rules: [R26865]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: New_York_City
+  entity_label: New_York_City
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849, R72285]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Alabama
+  entity_label: Alabama
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 56.0
+    after_dep: 57.0
+  rank_score:
+    before_dep: 0.000104
+    after_dep: 0.000141
+  active_rules: [R695849, R430715]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.947424
+      intercept: -4.786611
+      rule_total: 0.839187
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.839187
+    after_dep:
+      total_linear: -3.637357
+      intercept: -4.550855
+      rule_total: 0.913497
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.913497
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Jefferson_City,_Missouri
+  entity_label: Jefferson_City,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 49.5
+    after_dep: 49.5
+  rank_score:
+    before_dep: 0.000153
+    after_dep: 0.000193
+  active_rules: [R494231, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: New_Jersey
+  entity_label: New_Jersey
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 34.0
+    after_dep: 34.0
+  rank_score:
+    before_dep: 0.000393
+    after_dep: 0.000348
+  active_rules: [R695849, R805462]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -2.892579
+      intercept: -4.786611
+      rule_total: 1.894032
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.894032
+    after_dep:
+      total_linear: -3.021037
+      intercept: -4.550855
+      rule_total: 1.529818
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.529818
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Bloomington,_Illinois
+  entity_label: Bloomington,_Illinois
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Kentucky
+  entity_label: Kentucky
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 57.0
+    after_dep: 56.0
+  rank_score:
+    before_dep: 0.000103
+    after_dep: 0.000142
+  active_rules: [R695849, R699949]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.958014
+      intercept: -4.786611
+      rule_total: 0.828597
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.828597
+    after_dep:
+      total_linear: -3.627077
+      intercept: -4.550855
+      rule_total: 0.923778
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.923778
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Utah
+  entity_label: Utah
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 61.0
+    after_dep: 64.0
+  rank_score:
+    before_dep: 7.9e-05
+    after_dep: 8.4e-05
+  active_rules: [R695849, R460555]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.223239
+      intercept: -4.786611
+      rule_total: 0.563372
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.563372
+    after_dep:
+      total_linear: -4.159406
+      intercept: -4.550855
+      rule_total: 0.391448
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.391448
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: D.C._United
+  entity_label: D.C._United
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: West_Virginia
+  entity_label: West_Virginia
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 38.0
+    after_dep: 37.0
+  rank_score:
+    before_dep: 0.000204
+    after_dep: 0.000268
+  active_rules: [R695849, R748060]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.254204
+      intercept: -4.786611
+      rule_total: 1.532407
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.532407
+    after_dep:
+      total_linear: -2.969439
+      intercept: -4.550855
+      rule_total: 1.581416
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.581416
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Los_Angeles
+  entity_label: Los_Angeles
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Oceania
+  entity_label: Oceania
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 29.0
+    after_dep: 29.0
+  rank_score:
+    before_dep: 0.001242
+    after_dep: 0.001748
+  active_rules: [R124457, R517242]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.4411
+      intercept: -4.550855
+      rule_total: 0.109755
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.109755
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Columbia_University
+  entity_label: Columbia_University
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Clinton,_Oklahoma
+  entity_label: Clinton,_Oklahoma
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Georgia_(U.S._state)
+  entity_label: Georgia_(U.S._state)
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Springfield,_Missouri
+  entity_label: Springfield,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Germany
+  entity_label: Germany
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 55.0
+    after_dep: 55.0
+  rank_score:
+    before_dep: 0.000128
+    after_dep: 0.000162
+  active_rules: [R628132, R56607, R731159]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Yale_University
+  entity_label: Yale_University
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Washington,_D.C.
+  entity_label: Washington,_D.C.
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 49.5
+    after_dep: 49.5
+  rank_score:
+    before_dep: 0.000153
+    after_dep: 0.000193
+  active_rules: [R494231, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: East_St._Louis,_Illinois
+  entity_label: East_St._Louis,_Illinois
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Santa_Monica,_California
+  entity_label: Santa_Monica,_California
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Baltimore
+  entity_label: Baltimore
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Detroit
+  entity_label: Detroit
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Grammy_Award
+  entity_label: Grammy_Award
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: South_Carolina
+  entity_label: South_Carolina
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 59.0
+    after_dep: 60.0
+  rank_score:
+    before_dep: 8.9e-05
+    after_dep: 9.7e-05
+  active_rules: [R695849, R905299]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.10209
+      intercept: -4.786611
+      rule_total: 0.684521
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.684521
+    after_dep:
+      total_linear: -4.015372
+      intercept: -4.550855
+      rule_total: 0.535483
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.535483
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Texas
+  entity_label: Texas
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 60.0
+    after_dep: 58.0
+  rank_score:
+    before_dep: 8.1e-05
+    after_dep: 0.000118
+  active_rules: [R695849, R449809]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.284085
+      intercept: -4.786611
+      rule_total: 0.502527
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.502527
+    after_dep:
+      total_linear: -3.907696
+      intercept: -4.550855
+      rule_total: 0.643159
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.643159
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: California
+  entity_label: California
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 39.0
+    after_dep: 38.0
+  rank_score:
+    before_dep: 0.000202
+    after_dep: 0.000256
+  active_rules: [R695849, R93284]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.549035
+      intercept: -4.550855
+      rule_total: 0.001819
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.001819
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Beverly_Hills,_California
+  entity_label: Beverly_Hills,_California
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Tony_Award
+  entity_label: Tony_Award
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Illinois
+  entity_label: Illinois
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 41.0
+    after_dep: 39.0
+  rank_score:
+    before_dep: 0.000193
+    after_dep: 0.000246
+  active_rules: [R695849, R555905]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.761106
+      intercept: -4.786611
+      rule_total: 1.025505
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.025505
+    after_dep:
+      total_linear: -3.50922
+      intercept: -4.550855
+      rule_total: 1.041634
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.041634
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Newton_County,_Missouri
+  entity_label: Newton_County,_Missouri
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 5.5
+    after_dep: 6.0
+  rank_score:
+    before_dep: 0.002494
+    after_dep: 0.008756
+  active_rules: [R538213, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.65779
+      intercept: -4.786611
+      rule_total: 0.128821
+      rule_components:
+        by_rule_type:
+          B: 0.128821
+    after_dep:
+      total_linear: -3.377675
+      intercept: -4.550855
+      rule_total: 1.17318
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 1.17318
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: North_America
+  entity_label: North_America
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 29.0
+    after_dep: 29.0
+  rank_score:
+    before_dep: 0.001242
+    after_dep: 0.001748
+  active_rules: [R124457, R674298]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.4411
+      intercept: -4.550855
+      rule_total: 0.109755
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.109755
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: New_York_metropolitan_area
+  entity_label: New_York_metropolitan_area
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Primetime_Emmy_Award
+  entity_label: Primetime_Emmy_Award
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Clarinda,_Iowa
+  entity_label: Clarinda,_Iowa
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Iowa
+  entity_label: Iowa
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 47.0
+    after_dep: 40.0
+  rank_score:
+    before_dep: 0.000163
+    after_dep: 0.000244
+  active_rules: [R695849, R657897]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.488714
+      intercept: -4.786611
+      rule_total: 1.297897
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.297897
+    after_dep:
+      total_linear: -3.067462
+      intercept: -4.550855
+      rule_total: 1.483392
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.483392
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Tulsa,_Oklahoma
+  entity_label: Tulsa,_Oklahoma
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: San_Francisco
+  entity_label: San_Francisco
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Europe
+  entity_label: Europe
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 33.0
+    after_dep: 32.0
+  rank_score:
+    before_dep: 0.000491
+    after_dep: 0.00062
+  active_rules: [R783369]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          Ud: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Confederate_States_of_America
+  entity_label: Confederate_States_of_America
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 70.0
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849, R700829]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.0
+    after_dep:
+      total_linear: -4.550846
+      intercept: -4.550855
+      rule_total: 8.0e-06
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 8.0e-06
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Washington_(state)
+  entity_label: Washington_(state)
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 37.0
+    after_dep: 45.0
+  rank_score:
+    before_dep: 0.000218
+    after_dep: 0.000208
+  active_rules: [R695849, R224738]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.186546
+      intercept: -4.786611
+      rule_total: 1.600065
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.600065
+    after_dep:
+      total_linear: -3.233127
+      intercept: -4.550855
+      rule_total: 1.317728
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.317728
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Indiana
+  entity_label: Indiana
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 54.0
+    after_dep: 42.0
+  rank_score:
+    before_dep: 0.000132
+    after_dep: 0.000218
+  active_rules: [R695849, R448490]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -3.794215
+      intercept: -4.786611
+      rule_total: 0.992397
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 0.992397
+    after_dep:
+      total_linear: -3.276992
+      intercept: -4.550855
+      rule_total: 1.273863
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+          Ud: 1.273863
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Harvard_University
+  entity_label: Harvard_University
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Springfield,_Illinois
+  entity_label: Springfield,_Illinois
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: Oklahoma_City
+  entity_label: Oklahoma_City
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 17.0
+    after_dep: 17.0
+  rank_score:
+    before_dep: 0.001856
+    after_dep: 0.002346
+  active_rules: [R798111, R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550527
+      intercept: -4.550855
+      rule_total: 0.000328
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.000328
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}
+- entity_id: University_of_California,_Berkeley
+  entity_label: University_of_California,_Berkeley
+  is_gold: false
+  is_stage1_top1: false
+  is_stage2_top1: false
+  rank:
+    before_dep: 85.0
+    after_dep: 85.5
+  rank_score:
+    before_dep: 4.5e-05
+    after_dep: 5.7e-05
+  active_rules: [R695849]
+  active_dependencies: []
+  score:
+    before_dep:
+      total_linear: -4.786611
+      intercept: -4.786611
+      rule_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+    after_dep:
+      total_linear: -4.550855
+      intercept: -4.550855
+      rule_total: 0.0
+      dependency_total: 0.0
+      rule_components:
+        by_rule_type:
+          B: 0.0
+      dependency_components:
+        by_dependency_type: {}
+        by_sign: {}

@@ -1,0 +1,8 @@
+dataset,best_config,canonical_time_s,canonical_time_source,ruledep_stage1_time_s,ruledep_stage2_time_s,ruledep_total_time_s,relation_count,missing_epoch_count
+KG20C,init_dep_with_lift,2448.914000,actual,225.424290,208.297789,433.722079,5,0
+codex-m,structural_r3d6,7890.144000,actual,1484.923102,801.030448,2285.953550,46,0
+WN18RR,structural_rd,6391.193000,actual,894.579796,361.305494,1255.885290,11,0
+FB15k-237,best_combination,15532.391000,actual,3466.393995,1878.079785,5344.473781,237,0
+codex-l,structural_dep_scale,33685.558747,estimated,2953.679018,2677.159422,5630.838440,65,0
+YAGO3-10,structural_dep_scale,18013.941000,actual,2294.825899,1439.794369,3734.620268,37,0
+hetionet,dep_scale_surprisal_init,,,3676.193010,2731.743648,6407.936658,24,0

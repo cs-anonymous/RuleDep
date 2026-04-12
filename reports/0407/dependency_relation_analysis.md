@@ -11,8 +11,6 @@
 - `relation_gain_dep_density_bucket_summary.csv`
 - `relation_relative_gain_gt_3pct_best_config.csv`
 - `relation_relative_gain_lt_0_best_config.csv`
-- `relation_positive_examples_gt3_dependency.csv`
-- `relation_positive_examples_gt3_dependency.md`
 
 实验口径如下：
 
@@ -28,11 +26,11 @@
 - `FB15k-237` -> `best_combination`
 - `codex-l` -> `structural_dep_scale`
 - `YAGO3-10` -> `structural_dep_scale`
-- `hetionet` -> `best_combination`
+- `hetionet` -> `dep_scale_surprisal_init`
 
 ## Main Findings
 
-在全部 `425` 个 relation 中，`83` 个 relation 的相对增益超过 `3%`，`217` 个 relation 落在 `0%-3%` 的稳定提升区间，另有 `125` 个 relation 出现负迁移。整体上，dependency 的收益并不是均匀分布的，而更像是集中出现在一批“baseline 尚未饱和但结构信号较强”的 relation 上。
+在全部 `425` 个 relation 中，`77` 个 relation 的相对增益超过 `3%`，`225` 个 relation 落在 `0%-3%` 的稳定提升区间，另有 `123` 个 relation 出现负迁移。整体上，dependency 的收益并不是均匀分布的，而更像是集中出现在一批“baseline 尚未饱和但结构信号较强”的 relation 上。
 
 <p align="center"><img src="plot_gain_vs_stage1.png" alt="Gain vs Stage1" width="60%"></p>
 
@@ -44,20 +42,20 @@
 
 ## Positive vs Negative Relations
 
-正增益 relation 的平均 stage1 MRR 为 `0.27965`，低于负增益 relation 的 `0.42066`；而其平均 dependency density 为 `1.23303`，高于负增益 relation 的 `1.59494`。 这说明 dependency 更容易帮助那些仍有提升空间、且规则交互相对更密的 relation。
+正增益 relation 的平均 stage1 MRR 为 `0.28299`，低于负增益 relation 的 `0.43039`；而其平均 dependency density 为 `1.28069`，高于负增益 relation 的 `1.65031`。 这说明 dependency 更容易帮助那些仍有提升空间、且规则交互相对更密的 relation。
 
 进一步看中位数统计，正增益 relation 的典型规模特征如下：
 
-- `train triples` 中位数：`797.00000`，负增益为 `664.00000`
-- `test triples` 中位数：`41.00000`，负增益为 `36.00000`
+- `train triples` 中位数：`788.00000`，负增益为 `664.00000`
+- `test triples` 中位数：`34.00000`，负增益为 `36.00000`
 - `#rules` 中位数：`1396.00000`，负增益为 `1211.00000`
-- `#dependencies` 中位数：`1283.00000`，负增益为 `1961.00000`
-- `dep_per_rule` 中位数：`0.77006`，负增益为 `1.18426`
+- `#dependencies` 中位数：`1189.00000`，负增益为 `1981.00000`
+- `dep_per_rule` 中位数：`0.79740`，负增益为 `1.31732`
 
 按最终被选中的 stage 看，正增益 relation 更常落在 dependency stage：
 
-- 正增益 relation：`dependency = 56`，`rule_only = 27`
-- 负增益 relation：`dependency = 81`，`rule_only = 44`
+- 正增益 relation：`dependency = 53`，`rule_only = 24`
+- 负增益 relation：`dependency = 82`，`rule_only = 41`
 
 <p align="center"><img src="plot_stage1_bucket_summary.png" alt="Stage1 Bucket Summary" width="60%"></p>
 
@@ -79,7 +77,7 @@
 | FB15k-237 | best_combination | 62 | 92 | 83 | 1.66240 |
 | codex-l | structural_dep_scale | 4 | 48 | 13 | 0.57201 |
 | YAGO3-10 | structural_dep_scale | 4 | 28 | 5 | 1.41338 |
-| hetionet | best_combination | 7 | 8 | 9 | 2.84077 |
+| hetionet | dep_scale_surprisal_init | 1 | 16 | 7 | 0.98626 |
 
 <p align="center"><img src="plot_dataset_gain_mix.png" alt="Dataset Gain Mix" width="60%"></p>
 
@@ -98,21 +96,23 @@
 - 很多例子最终还是选择了 `dependency` stage，而不是只靠更强的 stage1
 - 更适合被多条互补规则共同支持
 
-更细的一张表已经单独放到 `relation_positive_examples_gt3_dependency.{csv,md}` 中。那张表只保留真正满足以下条件的 relation：
+表格文件 `relation_relative_gain_gt_3pct_best_config.csv` 给出了完整列表，下面列出最有代表性的正例及其规模信息：
 
-- 使用该数据集当前最佳已完成配置
-- `selected_stage = dependency`
-- 相对 `test_after_stage1` 的最终 `test.mrr` 提升 `> 3%`
+- `FB15k-237` / `/base/popstra/celebrity/friendship./base/popstra/friendship/participant`: baseline `0.05312`, final `0.07153`, rel_gain `34.65679%`, `train=1511`, `test=32`, `rules=2911`, `deps=464`, `dep_per_rule=0.15940`, `selected_stage=rule_only`
+- `FB15k-237` / `/film/film/film_festivals`: baseline `0.19895`, final `0.25978`, rel_gain `30.57209%`, `train=264`, `test=18`, `rules=827`, `deps=157`, `dep_per_rule=0.18984`, `selected_stage=dependency`
+- `FB15k-237` / `/music/genre/parent_genre`: baseline `0.16270`, final `0.20418`, rel_gain `25.49437%`, `train=678`, `test=97`, `rules=454`, `deps=188`, `dep_per_rule=0.41410`, `selected_stage=rule_only`
+- `FB15k-237` / `/military/military_combatant/military_conflicts./military/military_combatant_group/combatants`: baseline `0.26036`, final `0.32488`, rel_gain `24.78345%`, `train=747`, `test=17`, `rules=28658`, `deps=80136`, `dep_per_rule=2.79629`, `selected_stage=dependency`
+- `FB15k-237` / `/location/country/official_language`: baseline `0.27862`, final `0.34660`, rel_gain `24.40022%`, `train=225`, `test=16`, `rules=991`, `deps=3964`, `dep_per_rule=4.00000`, `selected_stage=rule_only`
+- `YAGO3-10` / `dealsWith`: baseline `0.26473`, final `0.32516`, rel_gain `22.82627%`, `train=1302`, `test=7`, `rules=5173`, `deps=15381`, `dep_per_rule=2.97332`, `selected_stage=dependency`
+- `FB15k-237` / `/award/award_nominee/award_nominations./award/award_nomination/award_nominee`: baseline `0.27075`, final `0.32256`, rel_gain `19.13285%`, `train=15989`, `test=214`, `rules=126142`, `deps=379530`, `dep_per_rule=3.00875`, `selected_stage=dependency`
+- `FB15k-237` / `/music/performance_role/regular_performances./music/group_membership/role`: baseline `0.09913`, final `0.11709`, rel_gain `18.12076%`, `train=2655`, `test=40`, `rules=91633`, `deps=194070`, `dep_per_rule=2.11791`, `selected_stage=rule_only`
+- `FB15k-237` / `/award/award_winning_work/awards_won./award/award_honor/award`: baseline `0.17743`, final `0.20912`, rel_gain `17.86588%`, `train=3310`, `test=118`, `rules=19741`, `deps=40669`, `dep_per_rule=2.06013`, `selected_stage=dependency`
+- `FB15k-237` / `/award/award_winner/awards_won./award/award_honor/award_winner`: baseline `0.26534`, final `0.31252`, rel_gain `17.78089%`, `train=8423`, `test=41`, `rules=79116`, `deps=316464`, `dep_per_rule=4.00000`, `selected_stage=rule_only`
 
-也就是说，那张表排除了所有 “最终还是回退到 rule_only” 的伪正例，只保留真正因为 dependency stage 被选中、且带来显著 test 提升的 relation。
+从这些代表性正例可以看到两类模式：
 
-从这批严格正例可以看到几条更稳定的模式：
-
-- `FB15k-237` 的正例大量出现在 mediator/CVT 风格关系上，例如 distributor、award、team roster、organization role。这类关系通常需要多个局部槽位同时命中，dependency 更像是在做“多规则共识”。
-- `YAGO3-10` 的强正例更偏事件参与、地点定位与语义关联，如 `dealsWith / participatedIn / isLocatedIn`。它们通常需要来自不同 path 的证据共同成立。
-- `WN18RR` 的正例集中在 `has_part / member_meronym` 这类层级或部件关系上，说明 dependency 对层级一致性较强的 one-to-many 关系更自然。
-- `hetionet` 的强正例是 `DrD` 和 `DpS`，都属于多跳生物医学关系；这里 dependency 的作用更像是要求多个生物学信号同时支持同一个候选。
-- `codex-l` 虽然只有少量正例，但都出现在 baseline 较低、dependency-per-rule 也不高的 relation 上，说明少量高精度 dependency 就足以改变排序。
+- 一类是 `FB15k-237` 上那种高规则数、高 dependency 数的 dense relation，dependency 更像是在已有 rule pool 上做强组合。
+- 另一类是 `hetionet: DrD` 这种规模并不大、但结构很明确的 relation，少量高质量 dependency 也能带来明显收益。
 
 ## Representative Negative Relations
 

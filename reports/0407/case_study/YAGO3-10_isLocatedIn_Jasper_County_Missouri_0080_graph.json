@@ -1,0 +1,1801 @@
+{
+  "example_id": "YAGO3-10_isLocatedIn_Jasper_County_Missouri_0080",
+  "case_role": "synergy: Missouri receives a positive dependency while nearby-city distractors have no active dependency",
+  "dataset": "YAGO3-10",
+  "split": "test",
+  "config_id": "structural_dep_scale",
+  "query": {
+    "direction": "tail",
+    "head_id": "Jasper_County,_Missouri",
+    "head_label": "Jasper_County,_Missouri",
+    "relation_id": "isLocatedIn",
+    "relation_label": "city isLocatedIn country",
+    "tail_id": null,
+    "tail_label": null
+  },
+  "gold": {
+    "entity_id": "Missouri",
+    "entity_label": "Missouri"
+  },
+  "relation_context": {
+    "relation_index": 0,
+    "relation_gloss_zh": "位于",
+    "mapping_direction": "many-to-many",
+    "baseline_mrr_relation": 0.38799,
+    "final_mrr_relation": 0.40666
+  },
+  "graph_semantics": {
+    "kg_edges": "Observed triples from train/valid/test around query/candidate seeds; intended for drawing the local KG neighborhood.",
+    "prediction_edges": "Candidate answer edges for the query, annotated with before/after ranks and scores.",
+    "rule_dependency_layer": "Top active rule/dependency identifiers and weights from the aggregation explanation. Full grounding witnesses were not saved by the application files, so this layer annotates candidates rather than claiming each rule edge is an observed KG edge."
+  },
+  "nodes": [
+    {
+      "id": "$_(film)",
+      "label": "$_(film)",
+      "role": "context"
+    },
+    {
+      "id": "'Til_There_Was_You",
+      "label": "'Til_There_Was_You",
+      "role": "context"
+    },
+    {
+      "id": "'Til_We_Meet_Again",
+      "label": "'Til_We_Meet_Again",
+      "role": "context"
+    },
+    {
+      "id": "10,000_BC_(film)",
+      "label": "10,000_BC_(film)",
+      "role": "context"
+    },
+    {
+      "id": "10.5_(miniseries)",
+      "label": "10.5_(miniseries)",
+      "role": "context"
+    },
+    {
+      "id": "10_(film)",
+      "label": "10_(film)",
+      "role": "context"
+    },
+    {
+      "id": "10_Things_I_Hate_About_You",
+      "label": "10_Things_I_Hate_About_You",
+      "role": "context"
+    },
+    {
+      "id": "10th_&_Wolf",
+      "label": "10th_&_Wolf",
+      "role": "context"
+    },
+    {
+      "id": "12_Angry_Men_(1957_film)",
+      "label": "12_Angry_Men_(1957_film)",
+      "role": "context"
+    },
+    {
+      "id": "12_Angry_Men_(1997_film)",
+      "label": "12_Angry_Men_(1997_film)",
+      "role": "context"
+    },
+    {
+      "id": "12_Rounds_(film)",
+      "label": "12_Rounds_(film)",
+      "role": "context"
+    },
+    {
+      "id": "13_Going_on_30",
+      "label": "13_Going_on_30",
+      "role": "context"
+    },
+    {
+      "id": "1408_(film)",
+      "label": "1408_(film)",
+      "role": "context"
+    },
+    {
+      "id": "1941_(film)",
+      "label": "1941_(film)",
+      "role": "context"
+    },
+    {
+      "id": "1969_(film)",
+      "label": "1969_(film)",
+      "role": "context"
+    },
+    {
+      "id": "200_Cigarettes",
+      "label": "200_Cigarettes",
+      "role": "context"
+    },
+    {
+      "id": "200_Motels",
+      "label": "200_Motels",
+      "role": "context"
+    },
+    {
+      "id": "2010_(film)",
+      "label": "2010_(film)",
+      "role": "context"
+    },
+    {
+      "id": "360_Architecture",
+      "label": "360_Architecture",
+      "role": "context"
+    },
+    {
+      "id": "Adair_County,_Missouri",
+      "label": "Adair_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Andrew_County,_Missouri",
+      "label": "Andrew_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Atchison_County,_Missouri",
+      "label": "Atchison_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Audrain_County,_Missouri",
+      "label": "Audrain_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Aurora,_Missouri",
+      "label": "Aurora,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Ballwin,_Missouri",
+      "label": "Ballwin,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Bannered_routes_of_U.S._Route_66",
+      "label": "Bannered_routes_of_U.S._Route_66",
+      "role": "context"
+    },
+    {
+      "id": "Bannered_routes_of_U.S._Route_71",
+      "label": "Bannered_routes_of_U.S._Route_71",
+      "role": "context"
+    },
+    {
+      "id": "Barry_County,_Missouri",
+      "label": "Barry_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Bates_County,_Missouri",
+      "label": "Bates_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Benton_County,_Missouri",
+      "label": "Benton_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Bollinger_County,_Missouri",
+      "label": "Bollinger_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Boone_County,_Missouri",
+      "label": "Boone_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Boonville,_Missouri",
+      "label": "Boonville,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Branson,_Missouri",
+      "label": "Branson,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Bridgeton,_Missouri",
+      "label": "Bridgeton,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Brookfield,_Missouri",
+      "label": "Brookfield,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Buchanan_County,_Missouri",
+      "label": "Buchanan_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Butler,_Missouri",
+      "label": "Butler,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Carthage,_Missouri",
+      "label": "Carthage,_Missouri",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "id": "Corn_Belt",
+      "label": "Corn_Belt",
+      "role": "context"
+    },
+    {
+      "id": "Jack_Jewsbury",
+      "label": "Jack_Jewsbury",
+      "role": "context"
+    },
+    {
+      "id": "Jasper_County,_Missouri",
+      "label": "Jasper_County,_Missouri",
+      "role": "query_fixed_entity"
+    },
+    {
+      "id": "Jefferson_City",
+      "label": "Jefferson_City",
+      "role": "context"
+    },
+    {
+      "id": "Joplin,_Missouri",
+      "label": "Joplin,_Missouri",
+      "role": "stage1_top1",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "id": "Kemper_Arena",
+      "label": "Kemper_Arena",
+      "role": "context"
+    },
+    {
+      "id": "Langston_Hughes",
+      "label": "Langston_Hughes",
+      "role": "context"
+    },
+    {
+      "id": "Missouri",
+      "label": "Missouri",
+      "role": "gold+stage2_top1",
+      "rank": {
+        "before_dep": 4.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.010289,
+        "after_dep": 0.068869
+      }
+    },
+    {
+      "id": "Newton_County,_Missouri",
+      "label": "Newton_County,_Missouri",
+      "role": "context"
+    },
+    {
+      "id": "Pauline_Starke",
+      "label": "Pauline_Starke",
+      "role": "context"
+    },
+    {
+      "id": "Robert_Cummings",
+      "label": "Robert_Cummings",
+      "role": "context"
+    },
+    {
+      "id": "Sprint_Center",
+      "label": "Sprint_Center",
+      "role": "context"
+    },
+    {
+      "id": "St._Louis",
+      "label": "St._Louis",
+      "role": "context"
+    },
+    {
+      "id": "United_States",
+      "label": "United_States",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 5.5,
+        "after_dep": 5.0
+      },
+      "rank_score": {
+        "before_dep": 0.002494,
+        "after_dep": 0.017479
+      }
+    },
+    {
+      "id": "Webb_City,_Missouri",
+      "label": "Webb_City,_Missouri",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "id": "William_K._Jones",
+      "label": "William_K._Jones",
+      "role": "context"
+    }
+  ],
+  "kg_edges": [
+    {
+      "source": "train",
+      "line": 15005,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 83995,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 151929,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 170320,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 209948,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 307638,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 613194,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 895833,
+      "subject": "Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 959631,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 1065341,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "test",
+      "line": 859,
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_direct"
+    },
+    {
+      "source": "train",
+      "line": 959631,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "test",
+      "line": 859,
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 83995,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 1065341,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 15005,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 151929,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 307638,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 251985,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Carthage,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 874768,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 895833,
+      "subject": "Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 613194,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 209948,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 170320,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 258670,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Webb_City,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 1043545,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Newton_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 753934,
+      "subject": "Newton_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 576212,
+      "subject": "Corn_Belt",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 808145,
+      "subject": "Corn_Belt",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 139724,
+      "subject": "St._Louis",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 469528,
+      "subject": "St._Louis",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 277318,
+      "subject": "Kemper_Arena",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 159877,
+      "subject": "Kemper_Arena",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 595954,
+      "subject": "Sprint_Center",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 940528,
+      "subject": "Sprint_Center",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 309005,
+      "subject": "Jefferson_City",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 562326,
+      "subject": "Jefferson_City",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "two_hop_seed_path"
+    },
+    {
+      "source": "train",
+      "line": 45785,
+      "subject": "$_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 407391,
+      "subject": "'Til_There_Was_You",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 279148,
+      "subject": "'Til_We_Meet_Again",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 29771,
+      "subject": "10,000_BC_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 898539,
+      "subject": "10.5_(miniseries)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 30522,
+      "subject": "10_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 851982,
+      "subject": "10_Things_I_Hate_About_You",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 229215,
+      "subject": "10th_&_Wolf",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 383194,
+      "subject": "12_Angry_Men_(1957_film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 90541,
+      "subject": "12_Angry_Men_(1997_film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 64268,
+      "subject": "12_Rounds_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 763923,
+      "subject": "13_Going_on_30",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 94344,
+      "subject": "1408_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 948492,
+      "subject": "1941_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 715068,
+      "subject": "1969_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 534896,
+      "subject": "200_Cigarettes",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 661443,
+      "subject": "200_Motels",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 99084,
+      "subject": "2010_(film)",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1004374,
+      "subject": "360_Architecture",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 685381,
+      "subject": "Adair_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 541518,
+      "subject": "Andrew_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 193551,
+      "subject": "Atchison_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 633500,
+      "subject": "Audrain_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 658088,
+      "subject": "Aurora,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 635063,
+      "subject": "Ballwin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 474695,
+      "subject": "Barry_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 485865,
+      "subject": "Bates_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 922452,
+      "subject": "Benton_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 963810,
+      "subject": "Bollinger_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 973269,
+      "subject": "Boone_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 888805,
+      "subject": "Boonville,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 322261,
+      "subject": "Branson,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1004440,
+      "subject": "Bridgeton,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 295725,
+      "subject": "Brookfield,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 64989,
+      "subject": "Buchanan_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 568955,
+      "subject": "Butler,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 874768,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 643109,
+      "subject": "Bannered_routes_of_U.S._Route_71",
+      "relation": "isLocatedIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 307638,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 83995,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1043545,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Newton_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 15005,
+      "subject": "Joplin,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 432026,
+      "subject": "Jack_Jewsbury",
+      "relation": "wasBornIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 857673,
+      "subject": "Langston_Hughes",
+      "relation": "wasBornIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 332164,
+      "subject": "Pauline_Starke",
+      "relation": "wasBornIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 746283,
+      "subject": "Robert_Cummings",
+      "relation": "wasBornIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 465729,
+      "subject": "William_K._Jones",
+      "relation": "wasBornIn",
+      "object": "Joplin,_Missouri",
+      "relation_label": "wasBornIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 251985,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Carthage,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 151929,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 959631,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 1065341,
+      "subject": "Carthage,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 258670,
+      "subject": "Bannered_routes_of_U.S._Route_66",
+      "relation": "isLocatedIn",
+      "object": "Webb_City,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 170320,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Jasper_County,_Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 613194,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "train",
+      "line": 209948,
+      "subject": "Webb_City,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "United_States",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    },
+    {
+      "source": "test",
+      "line": 859,
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "object": "Missouri",
+      "relation_label": "isLocatedIn",
+      "edge_kind": "seed_one_hop_context"
+    }
+  ],
+  "prediction_edges": [
+    {
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "Missouri",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": true,
+      "is_stage1_top1": false,
+      "is_stage2_top1": true,
+      "rank": {
+        "before_dep": 4.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.010289,
+        "after_dep": 0.068869
+      }
+    },
+    {
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "Joplin,_Missouri",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": true,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "Webb_City,_Missouri",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "Carthage,_Missouri",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      }
+    },
+    {
+      "subject": "Jasper_County,_Missouri",
+      "relation": "isLocatedIn",
+      "relation_label": "city isLocatedIn country",
+      "object": "United_States",
+      "edge_kind": "predicted_query_edge",
+      "is_gold": false,
+      "is_stage1_top1": false,
+      "is_stage2_top1": false,
+      "rank": {
+        "before_dep": 5.5,
+        "after_dep": 5.0
+      },
+      "rank_score": {
+        "before_dep": 0.002494,
+        "after_dep": 0.017479
+      }
+    }
+  ],
+  "candidate_explanations": [
+    {
+      "entity_id": "Missouri",
+      "entity_label": "Missouri",
+      "role": "gold+stage2_top1",
+      "rank": {
+        "before_dep": 4.0,
+        "after_dep": 1.0
+      },
+      "rank_score": {
+        "before_dep": 0.010289,
+        "after_dep": 0.068869
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -3.210392,
+          "intercept": -4.786611,
+          "rule_total": 1.576219,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 0.128821,
+              "Ud": 1.447398
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -1.048298,
+          "intercept": -4.550855,
+          "rule_total": 2.886462,
+          "dependency_total": 0.616094,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.282935,
+              "Ud": 1.603527
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {
+              "synergy": 0.616094
+            },
+            "by_sign": {
+              "positive": 0.616094
+            }
+          }
+        }
+      },
+      "active_rule_count": 4,
+      "active_dependency_count": 1,
+      "active_rules_sample": [
+        "R538213",
+        "R124457",
+        "R695849",
+        "R649589"
+      ],
+      "active_dependencies_sample": [
+        "D3815"
+      ],
+      "top_dependency_details": [
+        {
+          "dep_id": "D3815",
+          "dependency_type": "synergy",
+          "sign": "positive",
+          "raw_stage2_weight": 0.616094,
+          "estimated_candidate_contribution": 0.616094,
+          "estimated_fraction_of_dependency_total": 1.0,
+          "left_rule_id": "R124457",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.109755,
+              "type_weight": 1.0,
+              "effective_weight": 0.109755,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R538213",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.128821,
+              "type_weight": 1.0,
+              "effective_weight": 0.128821,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 1.17318,
+              "type_weight": 1.0,
+              "effective_weight": 1.17318,
+              "rule_type": "B"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "entity_id": "Joplin,_Missouri",
+      "entity_label": "Joplin,_Missouri",
+      "role": "stage1_top1",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -0.443865,
+          "intercept": -4.786611,
+          "rule_total": 4.342746,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 4.342746
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -0.886564,
+          "intercept": -4.550855,
+          "rule_total": 3.664291,
+          "dependency_total": 0.0,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 3.664291
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {},
+            "by_sign": {}
+          }
+        }
+      },
+      "active_rule_count": 3,
+      "active_dependency_count": 0,
+      "active_rules_sample": [
+        "R798111",
+        "R553731",
+        "R695849"
+      ],
+      "active_dependencies_sample": [],
+      "top_dependency_details": []
+    },
+    {
+      "entity_id": "Webb_City,_Missouri",
+      "entity_label": "Webb_City,_Missouri",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -0.443865,
+          "intercept": -4.786611,
+          "rule_total": 4.342746,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 4.342746
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -0.886564,
+          "intercept": -4.550855,
+          "rule_total": 3.664291,
+          "dependency_total": 0.0,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 3.664291
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {},
+            "by_sign": {}
+          }
+        }
+      },
+      "active_rule_count": 3,
+      "active_dependency_count": 0,
+      "active_rules_sample": [
+        "R798111",
+        "R553731",
+        "R695849"
+      ],
+      "active_dependencies_sample": [],
+      "top_dependency_details": []
+    },
+    {
+      "entity_id": "Carthage,_Missouri",
+      "entity_label": "Carthage,_Missouri",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 2.0,
+        "after_dep": 3.0
+      },
+      "rank_score": {
+        "before_dep": 0.087715,
+        "after_dep": 0.065496
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -0.443865,
+          "intercept": -4.786611,
+          "rule_total": 4.342746,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 4.342746
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -0.886564,
+          "intercept": -4.550855,
+          "rule_total": 3.664291,
+          "dependency_total": 0.0,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 3.664291
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {},
+            "by_sign": {}
+          }
+        }
+      },
+      "active_rule_count": 3,
+      "active_dependency_count": 0,
+      "active_rules_sample": [
+        "R798111",
+        "R553731",
+        "R695849"
+      ],
+      "active_dependencies_sample": [],
+      "top_dependency_details": []
+    },
+    {
+      "entity_id": "United_States",
+      "entity_label": "United_States",
+      "role": "near_top_candidate",
+      "rank": {
+        "before_dep": 5.5,
+        "after_dep": 5.0
+      },
+      "rank_score": {
+        "before_dep": 0.002494,
+        "after_dep": 0.017479
+      },
+      "score": {
+        "before_dep": {
+          "total_linear": -4.65779,
+          "intercept": -4.786611,
+          "rule_total": 0.128821,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 0.128821,
+              "Ud": 0.0
+            }
+          }
+        },
+        "after_dep": {
+          "total_linear": -2.651825,
+          "intercept": -4.550855,
+          "rule_total": 1.282935,
+          "dependency_total": 0.616094,
+          "rule_components": {
+            "by_rule_type": {
+              "B": 1.282935,
+              "Ud": 0.0
+            }
+          },
+          "dependency_components": {
+            "by_dependency_type": {
+              "synergy": 0.616094
+            },
+            "by_sign": {
+              "positive": 0.616094
+            }
+          }
+        }
+      },
+      "active_rule_count": 3,
+      "active_dependency_count": 1,
+      "active_rules_sample": [
+        "R538213",
+        "R124457",
+        "R728219"
+      ],
+      "active_dependencies_sample": [
+        "D3815"
+      ],
+      "top_dependency_details": [
+        {
+          "dep_id": "D3815",
+          "dependency_type": "synergy",
+          "sign": "positive",
+          "raw_stage2_weight": 0.616094,
+          "estimated_candidate_contribution": 0.616094,
+          "estimated_fraction_of_dependency_total": 1.0,
+          "left_rule_id": "R124457",
+          "left_rule_type": "B",
+          "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+          "left_rule_weight": {
+            "stage1": {
+              "base_weight": 0.0,
+              "type_weight": 1.0,
+              "effective_weight": 0.0,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 0.109755,
+              "type_weight": 1.0,
+              "effective_weight": 0.109755,
+              "rule_type": "B"
+            }
+          },
+          "right_rule_id": "R538213",
+          "right_rule_type": "B",
+          "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+          "right_rule_weight": {
+            "stage1": {
+              "base_weight": 0.128821,
+              "type_weight": 1.0,
+              "effective_weight": 0.128821,
+              "rule_type": "B"
+            },
+            "stage2": {
+              "base_weight": 1.17318,
+              "type_weight": 1.0,
+              "effective_weight": 1.17318,
+              "rule_type": "B"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rule_dependency_layer": {
+    "rules": [
+      {
+        "rule_id": "R553731",
+        "rule_type": "B",
+        "rule_text": "playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)",
+        "weight": {
+          "stage1": {
+            "base_weight": 4.342746,
+            "type_weight": 1.0,
+            "effective_weight": 4.342746,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 3.663963,
+            "type_weight": 1.0,
+            "effective_weight": 3.663963,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R649589",
+        "rule_type": "Ud",
+        "rule_text": "isAffiliatedTo(X,Wycombe_Wanderers_F.C.) <= isAffiliatedTo(X,Millwall_F.C.)",
+        "weight": {
+          "stage1": {
+            "base_weight": 1.447398,
+            "type_weight": 1.0,
+            "effective_weight": 1.447398,
+            "rule_type": "Ud"
+          },
+          "stage2": {
+            "base_weight": 1.603527,
+            "type_weight": 1.0,
+            "effective_weight": 1.603527,
+            "rule_type": "Ud"
+          }
+        }
+      },
+      {
+        "rule_id": "R538213",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.128821,
+            "type_weight": 1.0,
+            "effective_weight": 0.128821,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 1.17318,
+            "type_weight": 1.0,
+            "effective_weight": 1.17318,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R124457",
+        "rule_type": "B",
+        "rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.109755,
+            "type_weight": 1.0,
+            "effective_weight": 0.109755,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R798111",
+        "rule_type": "B",
+        "rule_text": "playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.000328,
+            "type_weight": 1.0,
+            "effective_weight": 0.000328,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R695849",
+        "rule_type": "B",
+        "rule_text": "isConnectedTo(X,Copenhagen_Airport) <= isConnectedTo(X,Donetsk_International_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "B"
+          }
+        }
+      },
+      {
+        "rule_id": "R728219",
+        "rule_type": "Ud",
+        "rule_text": "isConnectedTo(Venice_Marco_Polo_Airport,Y) <= isConnectedTo(Y,Brussels_Airport)",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "Ud"
+          },
+          "stage2": {
+            "base_weight": 0.0,
+            "type_weight": 1.0,
+            "effective_weight": 0.0,
+            "rule_type": "Ud"
+          }
+        }
+      }
+    ],
+    "dependencies": [
+      {
+        "dep_id": "D3815",
+        "dependency_type": "synergy",
+        "sign": "positive",
+        "dep_text": "R124457 + R538213",
+        "weight": {
+          "stage1": {
+            "base_weight": 0.0,
+            "type_weight": null,
+            "effective_weight": 0.0,
+            "note": "dependency absent in stage1"
+          },
+          "stage2": {
+            "base_weight": 0.616094,
+            "type_weight": 1.0,
+            "effective_weight_without_active_scaling": 0.616094
+          }
+        },
+        "left_rule_id": "R124457",
+        "right_rule_id": "R538213",
+        "left_rule_text": "isAffiliatedTo(X,Leicester_City_F.C.) <= ",
+        "right_rule_text": "isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)"
+      }
+    ]
+  },
+  "counts": {
+    "seed_node_count": 6,
+    "node_count": 55,
+    "kg_edge_count": 93,
+    "prediction_edge_count": 5,
+    "selected_candidate_count": 5,
+    "top_rule_count": 7,
+    "top_dependency_count": 1
+  }
+}
