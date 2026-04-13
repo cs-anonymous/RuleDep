@@ -1,8 +1,8 @@
 dataset,aggregation,rule_weight_B,rule_weight_U,rule_weight_Uc,rule_weight_Ud,dep_weight_BB,dep_weight_BU,dep_weight_UU,dep_weight_B_Uc,dep_weight_B_Ud,dep_weight_Uc_Uc,dep_weight_Uc_Ud,dep_weight_Ud_Ud
-KG20C,init_dep_with_lift,,,,,,,,,,,,
-codex-m,structural_r3d6,0.839027,,1.519608,1.096309,1.128951,,,1.086757,,1.119368,1.107106,1.050389
-WN18RR,structural_rd,,,,,,,,,,,,
-FB15k-237,best_combination,0.867039,1.018731,,,1.022583,1.020035,1.021785,,,,,
-codex-l,structural_dep_scale,,,,,,,,,,,,
-YAGO3-10,structural_dep_scale,,,,,,,,,,,,
-hetionet,dep_scale_surprisal_init,,,,,,,,,,,,
+KG20C,best_combination_dep_l1_regularization_dep_fix_topk8_0412,,,,,,,,,,,,
+codex-m,best_combination_dep_l1_regularization_dep_fix_topk8_0412,0.857143,,1.557762,1.152033,1.098542,,,1.076794,,1.125505,1.072753,1.016463
+WN18RR,best_combination_dep_l1_regularization_dep_fix_topk8_0412,,,,,,,,,,,,
+FB15k-237,best_combination_dep_l1_regularization_dep_fix_topk8_0412,0.874891,1.045590,,,1.046069,1.050677,1.049162,,,,,
+codex-l,best_combination_dep_l1_regularization_dep_fix_topk8_0412,,,,,,,,,,,,
+YAGO3-10,best_combination_dep_l1_regularization_dep_fix_topk8_0412,0.981356,1.112677,,,0.776220,0.685037,1.119908,,,,,
+hetionet,best_combination_dep_l1_regularization_dep_fix_topk8_0412,0.626415,0.891258,,,0.664618,0.667848,0.701781,,,,,

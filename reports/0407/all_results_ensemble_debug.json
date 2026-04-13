@@ -50,10 +50,10 @@
         "count": 448
       },
       "1": {
-        "experiment": "structural_r2d3",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.4039275497198105,
-        "test_mrr": 0.43828605115413666,
+        "selected_valid_mrr": 0.4041382968425751,
+        "test_mrr": 0.4370252341032028,
         "count": 583
       },
       "2": {
@@ -78,10 +78,10 @@
         "count": 498
       },
       "5": {
-        "experiment": "structural_r3d6",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.4790954813361168,
-        "test_mrr": 0.47078945487737656,
+        "selected_valid_mrr": 0.47955168038606644,
+        "test_mrr": 0.4734441265463829,
         "count": 132
       },
       "6": {
@@ -197,10 +197,10 @@
         "count": 104
       },
       "22": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.31516028940677643,
-        "test_mrr": 0.3331373855471611,
+        "selected_valid_mrr": 0.3161836601793766,
+        "test_mrr": 0.33395151048898697,
         "count": 260
       },
       "23": {
@@ -370,9 +370,9 @@
         "count": 122
       },
       "3": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.6342300474643707,
+        "selected_valid_mrr": 0.6342418193817139,
         "test_mrr": 0.6511459648609161,
         "count": 56
       },
@@ -384,17 +384,17 @@
         "count": 253
       },
       "5": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_score_clip_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.40026646107435226,
-        "test_mrr": 0.38926826417446136,
+        "selected_valid_mrr": 0.4027889370918274,
+        "test_mrr": 0.3891403377056122,
         "count": 114
       },
       "6": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.2662746459245682,
-        "test_mrr": 0.2215644046664238,
+        "selected_valid_mrr": 0.26699575036764145,
+        "test_mrr": 0.22029173374176025,
         "count": 172
       },
       "7": {
@@ -487,10 +487,10 @@
         "count": 858
       },
       "8": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.2884700894355774,
-        "test_mrr": 0.3225557208061218,
+        "selected_valid_mrr": 0.29257790744304657,
+        "test_mrr": 0.32951776683330536,
         "count": 214
       },
       "9": {
@@ -648,10 +648,10 @@
         "count": 118
       },
       "31": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3286861553788185,
-        "test_mrr": 0.3138056956231594,
+        "selected_valid_mrr": 0.330659918487072,
+        "test_mrr": 0.31311286240816116,
         "count": 722
       },
       "32": {
@@ -690,10 +690,10 @@
         "count": 1
       },
       "37": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.6079010963439941,
-        "test_mrr": 0.526995912194252,
+        "selected_valid_mrr": 0.6135015487670898,
+        "test_mrr": 0.5365523546934128,
         "count": 91
       },
       "38": {
@@ -781,10 +781,10 @@
         "count": 3
       },
       "50": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_score_clip_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.1770514640957117,
-        "test_mrr": 0.1719922898337245,
+        "selected_valid_mrr": 0.17705735610798,
+        "test_mrr": 0.17192662321031094,
         "count": 94
       },
       "51": {
@@ -921,17 +921,17 @@
         "count": 25
       },
       "71": {
-        "experiment": "sign_constraint_dependency",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.2922774162143469,
-        "test_mrr": 0.32243102230131626,
+        "selected_valid_mrr": 0.2924181651324034,
+        "test_mrr": 0.3135184347629547,
         "count": 251
       },
       "72": {
-        "experiment": "best_combination",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.446463979780674,
-        "test_mrr": 0.3626648634672165,
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.4466886520385742,
+        "test_mrr": 0.36279767751693726,
         "count": 31
       },
       "73": {
@@ -998,10 +998,10 @@
         "count": 13
       },
       "82": {
-        "experiment": "redundancy",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3244945965707302,
-        "test_mrr": 0.31942810863256454,
+        "selected_valid_mrr": 0.3257039850577712,
+        "test_mrr": 0.3136152308434248,
         "count": 127
       },
       "83": {
@@ -1012,10 +1012,10 @@
         "count": 55
       },
       "84": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.41184622049331665,
-        "test_mrr": 0.3955957740545273,
+        "selected_valid_mrr": 0.41704118251800537,
+        "test_mrr": 0.391299769282341,
         "count": 60
       },
       "85": {
@@ -1159,9 +1159,9 @@
         "count": 8
       },
       "105": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3124645296484232,
+        "selected_valid_mrr": 0.3128613568842411,
         "test_mrr": 0.3422428146004677,
         "count": 13
       },
@@ -1173,10 +1173,10 @@
         "count": 100
       },
       "107": {
-        "experiment": "best_combination",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.5322913825511932,
-        "test_mrr": 0.48602454364299774,
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.532348558306694,
+        "test_mrr": 0.48847346007823944,
         "count": 94
       },
       "108": {
@@ -1299,10 +1299,10 @@
         "count": 80
       },
       "125": {
-        "experiment": "best_combination",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.7735863626003265,
-        "test_mrr": 0.639131709933281,
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.7754371464252472,
+        "test_mrr": 0.6390641033649445,
         "count": 17
       },
       "126": {
@@ -1341,10 +1341,10 @@
         "count": 22
       },
       "131": {
-        "experiment": "best_combination",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.4064563810825348,
-        "test_mrr": 0.3332176208496094,
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.4071527123451233,
+        "test_mrr": 0.340132400393486,
         "count": 34
       },
       "132": {
@@ -1432,10 +1432,10 @@
         "count": 39
       },
       "145": {
-        "experiment": "sign_constraint_dependency",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3353879675269127,
-        "test_mrr": 0.32592205703258514,
+        "selected_valid_mrr": 0.3514435514807701,
+        "test_mrr": 0.3573548272252083,
         "count": 4
       },
       "146": {
@@ -1467,10 +1467,10 @@
         "count": 15
       },
       "150": {
-        "experiment": "redundancy",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.46345266699790955,
-        "test_mrr": 0.4604658931493759,
+        "selected_valid_mrr": 0.4680701494216919,
+        "test_mrr": 0.4530772417783737,
         "count": 38
       },
       "151": {
@@ -1656,10 +1656,10 @@
         "count": 16
       },
       "181": {
-        "experiment": "structural_r2d3",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.1435593832284212,
-        "test_mrr": 0.08748084306716919,
+        "selected_valid_mrr": 0.14689271710813046,
+        "test_mrr": 0.08605208247900009,
         "count": 13
       },
       "182": {
@@ -1726,10 +1726,10 @@
         "count": 2
       },
       "191": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.21617553383111954,
-        "test_mrr": 0.25977741554379463,
+        "selected_valid_mrr": 0.21618449874222279,
+        "test_mrr": 0.2598241027444601,
         "count": 18
       },
       "192": {
@@ -1803,10 +1803,10 @@
         "count": 9
       },
       "203": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.20025618374347687,
-        "test_mrr": 0.24778634123504162,
+        "selected_valid_mrr": 0.20091471076011658,
+        "test_mrr": 0.2516636550426483,
         "count": 20
       },
       "204": {
@@ -1880,10 +1880,10 @@
         "count": 21
       },
       "218": {
-        "experiment": "pos_auto_ratio",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.20236917585134506,
-        "test_mrr": 0.1876734308898449,
+        "selected_valid_mrr": 0.20532043278217316,
+        "test_mrr": 0.19106051698327065,
         "count": 13
       },
       "219": {
@@ -2018,10 +2018,10 @@
         "count": 396
       },
       "2": {
-        "experiment": "dep_scale_surprisal_init",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.29908644314855337,
-        "test_mrr": 0.3006170056760311,
+        "selected_valid_mrr": 0.2992446720600128,
+        "test_mrr": 0.3015378275886178,
         "count": 9426
       },
       "3": {
@@ -2137,10 +2137,10 @@
         "count": 390
       },
       "19": {
-        "experiment": "structural_rule_mask",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.23532323632389307,
-        "test_mrr": 0.2726248884573579,
+        "selected_valid_mrr": 0.23548141587525606,
+        "test_mrr": 0.27392542362213135,
         "count": 286
       },
       "20": {
@@ -2221,10 +2221,10 @@
         "count": 46
       },
       "31": {
-        "experiment": "synergy",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.40394624322652817,
-        "test_mrr": 0.449255533516407,
+        "selected_valid_mrr": 0.40473446249961853,
+        "test_mrr": 0.4526405334472656,
         "count": 197
       },
       "32": {
@@ -2464,17 +2464,17 @@
         "count": 1492
       },
       "2": {
-        "experiment": "synergy",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.7509377598762512,
-        "test_mrr": 0.7435855567455292,
+        "selected_valid_mrr": 0.7526000142097473,
+        "test_mrr": 0.7456498742103577,
         "count": 1673
       },
       "3": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_score_clip_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.29546523187309504,
-        "test_mrr": 0.19795948266983032,
+        "selected_valid_mrr": 0.29580267518758774,
+        "test_mrr": 0.19292762596160173,
         "count": 49
       },
       "4": {
@@ -2492,16 +2492,16 @@
         "count": 42
       },
       "6": {
-        "experiment": "structural_r3d6",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.20267991721630096,
-        "test_mrr": 0.19930312409996986,
+        "selected_valid_mrr": 0.20477177761495113,
+        "test_mrr": 0.20282661356031895,
         "count": 210
       },
       "7": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.48605452850461006,
+        "selected_valid_mrr": 0.48605935648083687,
         "test_mrr": 0.4990537082776427,
         "count": 297
       },
@@ -2569,24 +2569,24 @@
         "count": 15
       },
       "17": {
-        "experiment": "structural_rd",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3915717154741287,
-        "test_mrr": 0.31899048388004303,
+        "selected_valid_mrr": 0.39159004390239716,
+        "test_mrr": 0.3185443952679634,
         "count": 49
       },
       "18": {
-        "experiment": "pos_auto_ratio",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.5920116305351257,
-        "test_mrr": 0.2712045982480049,
+        "selected_valid_mrr": 0.6015307307243347,
+        "test_mrr": 0.2717864513397217,
         "count": 22
       },
       "19": {
-        "experiment": "redundancy",
+        "experiment": "best_combination_static_per_rule_dep_norm_dep_fix_topk8_0412",
         "selected_stage": "dependency",
         "selected_valid_mrr": 0.48108716309070587,
-        "test_mrr": 0.3864884525537491,
+        "test_mrr": 0.39503324031829834,
         "count": 30
       },
       "20": {
@@ -2618,10 +2618,10 @@
         "count": 2
       },
       "25": {
-        "experiment": "structural_r3d6",
+        "experiment": "best_combination_global_preselected_dep_topk_per_kind_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.4497704152017832,
-        "test_mrr": 0.36711690574884415,
+        "selected_valid_mrr": 0.45045172329992056,
+        "test_mrr": 0.3655710518360138,
         "count": 15
       },
       "26": {
@@ -2700,10 +2700,10 @@
         "count": 10464
       },
       "1": {
-        "experiment": "best_combination",
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
         "selected_stage": "dependency",
-        "selected_valid_mrr": 0.3536533797159791,
-        "test_mrr": 0.36297525838017464,
+        "selected_valid_mrr": 0.3585194507613778,
+        "test_mrr": 0.36636144667863846,
         "count": 53477
       },
       "2": {
@@ -2721,10 +2721,10 @@
         "count": 1068
       },
       "4": {
-        "experiment": "best_combination",
-        "selected_stage": "rule_only",
-        "selected_valid_mrr": 0.2549411654472351,
-        "test_mrr": 0.25515908002853394,
+        "experiment": "best_combination_dep_l1_regularization_dep_fix_topk8_0412",
+        "selected_stage": "dependency",
+        "selected_valid_mrr": 0.2575933486223221,
+        "test_mrr": 0.2589797303080559,
         "count": 13524
       },
       "5": {

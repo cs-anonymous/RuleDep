@@ -159,6 +159,8 @@ def train(dataloader, model, loss_fn, optimizer, reg=False, num_unseen=0):
         with step_timer("epoch_train.batch_forward_backward"):
             pred = model(rules_)
             loss = loss_fn(pred.reshape(-1, 1), y_)
+            if loss.requires_grad and getattr(args, "dep_l1_lambda", 0.0) > 0 and hasattr(model, "dependency_l1_penalty"):
+                loss = loss + float(args.dep_l1_lambda) * model.dependency_l1_penalty()
 
             train_loss += loss.item()
             n_loss += 1
@@ -905,8 +907,41 @@ class LinearAggregator(nn.Module):
         if dependency_mask is not None:
             dependency_mask_active = dependency_mask[active_pair_idx].to(device=target_device, dtype=target_dtype)
             dependency_w_active = dependency_w_active.to(device=target_device, dtype=target_dtype) * dependency_mask_active
-            return dependency_w_active
-        return dependency_w_active.to(device=target_device, dtype=target_dtype)
+        else:
+            dependency_w_active = dependency_w_active.to(device=target_device, dtype=target_dtype)
+        static_scale = getattr(self, "dependency_pair_static_scale", None)
+        if static_scale is not None and active_pair_idx.numel() > 0:
+            dependency_w_active = dependency_w_active * static_scale[active_pair_idx].to(
+                device=target_device,
+                dtype=target_dtype,
+            )
+        return dependency_w_active
+
+    def dependency_l1_penalty(self):
+        if not hasattr(self, "dependencies") or self.num_relation_dependencies <= 0:
+            return torch.zeros((), device=self.rules.weight.device, dtype=self.rules.weight.dtype)
+        dep_w = self.dependencies.weight[: self.num_relation_dependencies, 0]
+        if self.dependency_sign_constraint:
+            dep_w = (dep_w**2) * self.dependency_pair_sign.to(device=dep_w.device, dtype=dep_w.dtype)
+        static_scale = getattr(self, "dependency_pair_static_scale", None)
+        if static_scale is not None:
+            dep_w = dep_w * static_scale.to(device=dep_w.device, dtype=dep_w.dtype)
+        if self.num_relation_dependency_types > 0:
+            active_dep_type_local = self.dependency_local_to_type_local[: self.num_relation_dependencies]
+            valid_dep_local = active_dep_type_local != self.pad_dependency_type_tok
+            if bool(valid_dep_local.any().item()):
+                type_w = torch.ones_like(dep_w)
+                type_w[valid_dep_local] = self.dependency_types.weight[
+                    active_dep_type_local[valid_dep_local], 0
+                ].to(dep_w.dtype)
+                dep_w = dep_w * type_w
+        if self.use_global_score_scales:
+            dep_w = dep_w * self._effective_positive_scale(
+                self.dependency_component_scale_raw,
+                dep_w.dtype,
+                dep_w.device,
+            ).reshape(())
+        return dep_w.abs().sum()
 
     def _aggregate_rule_contribution(self, local_rule_values, local_rule_ids):
         if self.num_relation_rule_types <= 0:
@@ -993,6 +1028,7 @@ class LinearAggregator(nn.Module):
         self.sign_constraint = sign_constraint
         self.dependency_sign_constraint = dependency_sign_constraint
         self.dependency_scale_mode = str(getattr(args, "dependency_scale_mode", "none")).lower()
+        self.dependency_static_norm = str(getattr(args, "dependency_static_norm", "none")).lower()
         self.use_global_score_scales = bool(getattr(args, "use_global_score_scales", False))
 
         relation_rule_ids = sorted(rule_map.get(relation, []))
@@ -1063,10 +1099,28 @@ class LinearAggregator(nn.Module):
             pair_b = torch.empty((0,), dtype=torch.long)
             dependency_sign_t = torch.empty((0,), dtype=torch.float32)
             dependency_init_t = torch.empty((0,), dtype=torch.float32)
+        if self.dependency_static_norm == "none" or len(local_pairs) == 0:
+            dependency_static_scale_t = torch.ones((len(local_pairs),), dtype=torch.float32)
+        elif self.dependency_static_norm == "per_rule_degree":
+            degree = torch.zeros((self.num_relation_rules,), dtype=torch.float32)
+            if len(local_pairs) > 0:
+                pair_a_for_degree = torch.tensor([p[0] for p in local_pairs], dtype=torch.long)
+                pair_b_for_degree = torch.tensor([p[1] for p in local_pairs], dtype=torch.long)
+                degree.scatter_add_(0, pair_a_for_degree, torch.ones_like(pair_a_for_degree, dtype=torch.float32))
+                degree.scatter_add_(0, pair_b_for_degree, torch.ones_like(pair_b_for_degree, dtype=torch.float32))
+                dependency_static_scale_t = 1.0 / torch.sqrt(
+                    torch.clamp(degree[pair_a_for_degree], min=1.0)
+                    * torch.clamp(degree[pair_b_for_degree], min=1.0)
+                )
+            else:
+                dependency_static_scale_t = torch.empty((0,), dtype=torch.float32)
+        else:
+            raise ValueError(f"Unknown dependency_static_norm: {self.dependency_static_norm}")
         self.register_buffer("synergy_pair_a_local", pair_a)
         self.register_buffer("synergy_pair_b_local", pair_b)
         self.register_buffer("dependency_pair_sign", dependency_sign_t)
         self.register_buffer("dependency_init_values", dependency_init_t)
+        self.register_buffer("dependency_pair_static_scale", dependency_static_scale_t)
 
         if dependency_type_candidates is None:
             dependency_type_candidates = []
@@ -1172,6 +1226,9 @@ class LinearAggregator(nn.Module):
                         dependency_score.dtype,
                         dependency_score.device,
                     )
+                if getattr(args, "dep_score_clip_gamma", 0.0) > 0:
+                    clip_limit = float(args.dep_score_clip_gamma) * torch.clamp(logits.detach().abs(), min=1.0e-6)
+                    dependency_score = torch.clamp(dependency_score, -clip_limit, clip_limit)
                 logits = logits + dependency_score
 
         logits = logits + self.bias
@@ -1542,6 +1599,48 @@ def get_parser():
         help="Normalize dependency score by the number of active dependencies per query.",
     )
     parser.add_argument(
+        "--dependency_static_norm",
+        action="store",
+        default="none",
+        choices=["none", "per_rule_degree"],
+        help="Apply a static normalization to each dependency pair before scoring.",
+    )
+    parser.add_argument(
+        "--dep_l1_lambda",
+        action="store",
+        default=0.0,
+        type=float,
+        help="L1 regularization strength for effective dependency weights.",
+    )
+    parser.add_argument(
+        "--dep_score_clip_gamma",
+        action="store",
+        default=0.0,
+        type=float,
+        help="Clamp dependency score to +/- gamma * abs(rule score) before adding it to the logits. Disabled at 0.",
+    )
+    parser.add_argument(
+        "--dependency_topk_per_rule",
+        action="store",
+        default=0,
+        type=int,
+        help="Keep only the top-k incident dependency pairs per rule before model construction. Disabled at 0.",
+    )
+    parser.add_argument(
+        "--dependency_topk_per_kind",
+        action="store",
+        default=0,
+        type=int,
+        help="Keep the top-k incident dependency pairs per rule and dependency kind before model construction. Disabled at 0.",
+    )
+    parser.add_argument(
+        "--dependency_topk_score",
+        action="store",
+        default="abs_lift",
+        choices=["abs_lift"],
+        help="Static score used by dependency_topk_per_rule.",
+    )
+    parser.add_argument(
         "--dependency_mask_low_rule_weight",
         action="store_true",
         default=False,
@@ -1790,6 +1889,67 @@ def filter_relation_dependencies_by_rule_strength(relation, relation_dependencie
         "enabled": True,
         "threshold_ratio": float(ratio),
         "threshold_value": float(threshold_value),
+        "before": int(len(original_dependencies)),
+        "after": int(len(filtered_dependencies)),
+        "removed": int(len(original_dependencies) - len(filtered_dependencies)),
+    }
+
+
+def filter_relation_dependencies_topk_per_rule(relation_dependencies, topk, score_mode="abs_lift", per_kind_topk=0):
+    original_dependencies = list(relation_dependencies or [])
+    topk = int(topk)
+    per_kind_topk = int(per_kind_topk)
+    if topk <= 0 and per_kind_topk <= 0:
+        return original_dependencies, {
+            "enabled": False,
+            "topk": None,
+            "per_kind_topk": None,
+            "score_mode": str(score_mode),
+            "before": int(len(original_dependencies)),
+            "after": int(len(original_dependencies)),
+            "removed": 0,
+        }
+    if str(score_mode) != "abs_lift":
+        raise ValueError(f"Unknown dependency_topk_score: {score_mode}")
+    if len(original_dependencies) == 0:
+        return original_dependencies, {
+            "enabled": True,
+            "topk": None if topk <= 0 else int(topk),
+            "per_kind_topk": None if per_kind_topk <= 0 else int(per_kind_topk),
+            "score_mode": str(score_mode),
+            "before": 0,
+            "after": 0,
+            "removed": 0,
+        }
+
+    incident = defaultdict(list)
+    for idx, dep in enumerate(original_dependencies):
+        if len(dep) < 2:
+            continue
+        a, b = int(dep[0]), int(dep[1])
+        kind = str(dep[2]) if len(dep) >= 3 else "unknown"
+        lift = float(dep[3]) if len(dep) >= 4 else 0.0
+        score = abs(lift)
+        item = (-score, idx)
+        if per_kind_topk > 0:
+            incident[(a, kind)].append(item)
+            incident[(b, kind)].append(item)
+        else:
+            incident[a].append(item)
+            incident[b].append(item)
+
+    kept = set()
+    for items in incident.values():
+        limit = per_kind_topk if per_kind_topk > 0 else topk
+        for _neg_score, idx in sorted(items)[:limit]:
+            kept.add(int(idx))
+
+    filtered_dependencies = [dep for idx, dep in enumerate(original_dependencies) if idx in kept]
+    return filtered_dependencies, {
+        "enabled": True,
+        "topk": None if topk <= 0 else int(topk),
+        "per_kind_topk": None if per_kind_topk <= 0 else int(per_kind_topk),
+        "score_mode": str(score_mode),
         "before": int(len(original_dependencies)),
         "after": int(len(filtered_dependencies)),
         "removed": int(len(original_dependencies) - len(filtered_dependencies)),
@@ -2460,6 +2620,15 @@ def aggregate_single(relation):
         "after": int(len(dependency_map.get(relation, []))),
         "removed": 0,
     }
+    dependency_topk_info = {
+        "enabled": False,
+        "topk": None,
+        "per_kind_topk": None,
+        "score_mode": str(getattr(args, "dependency_topk_score", "abs_lift")),
+        "before": int(len(dependency_map.get(relation, []))),
+        "after": int(len(dependency_map.get(relation, []))),
+        "removed": 0,
+    }
     test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
 
@@ -2469,6 +2638,12 @@ def aggregate_single(relation):
             relation,
             dependency_map.get(relation, []),
             selected_stage1_state_dict,
+        )
+        relation_dependencies_for_stage2, dependency_topk_info = filter_relation_dependencies_topk_per_rule(
+            relation_dependencies_for_stage2,
+            getattr(args, "dependency_topk_per_rule", 0),
+            getattr(args, "dependency_topk_score", "abs_lift"),
+            getattr(args, "dependency_topk_per_kind", 0),
         )
         dependency_model_builder = partial(build_model_for_relation, relation_dependencies=relation_dependencies_for_stage2)
         dependency_model = dependency_model_builder(relation)
@@ -2692,6 +2867,7 @@ def aggregate_single(relation):
                 initial_dependency_global_scale,
             ),
             "dependency_rule_mask": dependency_mask_info,
+            "dependency_topk_per_rule": dependency_topk_info,
             "rule_type_weights": learned_rule_type_weights,
             "dependency_type_weights_trial": learned_dependency_type_weights_trial,
             "dependency_type_weights_final": learned_dependency_type_weights_final,
@@ -3024,7 +3200,9 @@ if "EXPERIMENT_DIR" not in os.environ:
         f"{int(args.synergy)}_{int(args.redundancy)}_{int(args.init_dep_with_lift)}_"
         f"tg_{args.type_grouping}_"
         f"ri_{args.rule_init_mode}_ds_{args.dependency_scale_mode}_"
-        f"dm_{int(args.dependency_mask_low_rule_weight)}_{args.dependency_mask_rule_weight_threshold_ratio}"
+        f"dm_{int(args.dependency_mask_low_rule_weight)}_{args.dependency_mask_rule_weight_threshold_ratio}_"
+        f"dn_{args.dependency_static_norm}_dl1_{args.dep_l1_lambda}_"
+        f"dc_{args.dep_score_clip_gamma}_dtk_{args.dependency_topk_per_rule}_dtpk_{args.dependency_topk_per_kind}"
     )
     os.environ["EXPERIMENT_DIR"] = f"./{dataset_dir}/aggregation/{exp_name}"
 args.experiment = os.environ["EXPERIMENT_DIR"]

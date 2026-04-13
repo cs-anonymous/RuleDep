@@ -147,8 +147,20 @@ def load_final_directional_states(mod, relation, experiment_dir):
         head_mrr, tail_mrr = pickle.load(f)
     relation_dependencies = mod.dependency_map.get(relation, [])
     dependency_model_builder = lambda rel: mod.build_model_for_relation(rel, relation_dependencies=relation_dependencies)
-    final_tail_model = mod.build_model_from_state_dict(relation, dependency_model_builder, tail_mrr.nnm)
-    final_head_model = mod.build_model_from_state_dict(relation, dependency_model_builder, head_mrr.nnm)
+    rule_only_model_builder = mod.build_rule_only_model_for_relation
+
+    def _load_with_fallback(state_dict):
+        try:
+            return mod.build_model_from_state_dict(relation, dependency_model_builder, state_dict)
+        except RuntimeError as exc:
+            # Some relations are selected from stage1/rule-only checkpoints without dependency tensors.
+            msg = str(exc)
+            if "dependencies.weight" not in msg and "size mismatch for synergy_pair_a_local" not in msg:
+                raise
+            return mod.build_model_from_state_dict(relation, rule_only_model_builder, state_dict)
+
+    final_tail_model = _load_with_fallback(tail_mrr.nnm)
+    final_head_model = _load_with_fallback(head_mrr.nnm)
     return final_head_model, final_tail_model
 
 

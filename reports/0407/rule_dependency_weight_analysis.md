@@ -32,23 +32,23 @@
 
 | Dataset | Config | Rule near-zero | Dep trial near-zero | Dep final near-zero | Rule max abs | Dep trial max abs | Dep final max abs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| KG20C | init_dep_with_lift | 12.48466 | 68.11455 | 68.11455 | 1.90228 | 1.15098 | 1.15098 |
-| codex-m | structural_r3d6 | 11.38827 | 97.62060 | 46.79882 | 2.99124 | 0.58873 | 0.58873 |
-| WN18RR | structural_rd | 10.75427 | 89.07812 | 57.69792 | 4.24963 | 0.30246 | 0.30246 |
-| FB15k-237 | best_combination | 15.32056 | 88.76755 | 63.75586 | 5.06752 | 0.61162 | 0.61162 |
-| codex-l | structural_dep_scale | 30.90225 | 54.59183 | 12.21255 | 4.29032 | 6.76793 | 6.76793 |
-| YAGO3-10 | structural_dep_scale | 44.85790 | 68.05019 | 14.59044 | 4.20227 | 3.25249 | 3.25249 |
-| hetionet | structural_r2d3 | 20.78810 | 98.94872 | 88.67859 | 4.99785 | 0.18869 | 0.18869 |
+| KG20C | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 15.81498 | 99.89603 | 61.95652 | 3.06073 | 0.03305 | 0.03305 |
+| codex-m | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 11.37283 | 98.36131 | 96.44370 | 2.99124 | 0.83764 | 0.83764 |
+| WN18RR | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 10.68406 | 97.12718 | 83.93285 | 4.24963 | 0.47246 | 0.47246 |
+| FB15k-237 | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 15.90109 | 90.85123 | 75.55495 | 5.06752 | 0.56410 | 0.56410 |
+| codex-l | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 31.99267 | 94.29173 | 83.09374 | 4.32778 | 2.94214 | 2.94214 |
+| YAGO3-10 | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 43.77469 | 98.88571 | 98.86781 | 5.43007 | 1.53437 | 1.53437 |
+| hetionet | best_combination_dep_l1_regularization_dep_fix_topk8_0412 | 34.11212 | 98.34087 | 97.23578 | 5.62772 | 0.32629 | 0.32629 |
 
 ## Dependency Sign vs Type
 
-在 trial 阶段，`synergy` 的平均正权重比例为 `25.95713%`，`redundancy` 为 `7.49356%`。
-经过最终选择后，`synergy` 的平均正权重比例上升到 `52.93769%`，`redundancy` 也上升到 `34.68040%`。
+在 trial 阶段，`synergy` 的平均正权重比例为 `18.23198%`，`redundancy` 为 `16.25816%`。
+经过最终选择后，`synergy` 的平均正权重比例上升到 `48.03646%`，`redundancy` 也上升到 `35.16616%`。
 
 ## Global View
 
-rule 权重的平均绝对变化为 `0.26658`，dependency 在 trial 与 final 阶段分别为 `0.02285` 和 `0.05638`。
-近零比例方面，rule 权重均值为 `20.92800%`，dependency 在 trial 阶段为 `80.73880%`，final 阶段为 `50.26410%`。
+rule 权重的平均绝对变化为 `0.31900`，dependency 在 trial 与 final 阶段分别为 `0.00157` 和 `0.00588`。
+近零比例方面，rule 权重均值为 `23.37892%`，dependency 在 trial 阶段为 `96.82201%`，final 阶段为 `85.29791%`。
 
 ## Interpretation
 

@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--root", default=None, help="Repository root. Defaults to the script parent directory.")
     parser.add_argument("--data-root", default=None, help="Data root. Defaults to <root>/data.")
     parser.add_argument("--report-dir", default=None, help="Report output directory. Defaults to <root>/reports/0407.")
+    parser.add_argument(
+        "--forced-best-config",
+        default="",
+        help="Force this aggregation name as best_config when that run exists for a dataset.",
+    )
     return parser.parse_args()
 
 
@@ -388,7 +393,7 @@ def overall_rows_to_csv_rows(rows: List[Dict[str, object]]) -> List[Dict[str, ob
     return csv_rows
 
 
-def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str]) -> List[Dict[str, object]]:
+def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str], forced_best_config: str = "") -> List[Dict[str, object]]:
     by_dataset: Dict[str, Dict[str, Dict[str, object]]] = defaultdict(dict)
     for row in rows:
         by_dataset[row["dataset"]][row["aggregation"]] = row
@@ -403,6 +408,10 @@ def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str]) -
             and not name.endswith("__stage1")
         ]
         best_row = max(candidates, key=lambda row: float(row["MRR"])) if candidates else None
+        if forced_best_config:
+            forced = mapping.get(forced_best_config)
+            if forced is not None:
+                best_row = forced
         row = {
             "dataset": dataset,
             "best_config": best_row["aggregation"] if best_row else "",
@@ -487,7 +496,7 @@ def estimate_ruledep_stage_times(data_root: Path, best_config_rows: List[Dict[st
     return out
 
 
-def overall_best_config_map(rows: List[Dict[str, object]]) -> Dict[str, str]:
+def overall_best_config_map(rows: List[Dict[str, object]], forced_best_config: str = "") -> Dict[str, str]:
     mapping: Dict[str, str] = {}
     grouped: Dict[str, List[Dict[str, object]]] = defaultdict(list)
     for row in rows:
@@ -496,8 +505,14 @@ def overall_best_config_map(rows: List[Dict[str, object]]) -> Dict[str, str]:
             continue
         grouped[row["dataset"]].append(row)
     for dataset, subset in grouped.items():
-        if subset:
-            mapping[dataset] = max(subset, key=lambda row: float(row["MRR"]))["aggregation"]
+        if not subset:
+            continue
+        if forced_best_config:
+            forced_row = next((row for row in subset if str(row["aggregation"]) == forced_best_config), None)
+            if forced_row is not None:
+                mapping[dataset] = forced_row["aggregation"]
+                continue
+        mapping[dataset] = max(subset, key=lambda row: float(row["MRR"]))["aggregation"]
     return mapping
 
 
@@ -1566,7 +1581,8 @@ def main() -> None:
     with (report_dir / "all_results_ensemble_debug.json").open("w", encoding="utf-8") as handle:
         json.dump(ensemble_debug, handle, indent=2, ensure_ascii=False)
 
-    best_config_rows = build_best_config_rows(overall_rows, datasets)
+    forced_best_config = str(args.forced_best_config or "").strip()
+    best_config_rows = build_best_config_rows(overall_rows, datasets, forced_best_config=forced_best_config)
     write_csv(
         report_dir / "best_config_by_dataset.csv",
         best_config_rows,
@@ -1584,7 +1600,7 @@ def main() -> None:
             "eval-noisyor",
         ],
     )
-    best_config_map = overall_best_config_map(overall_rows)
+    best_config_map = overall_best_config_map(overall_rows, forced_best_config=forced_best_config)
     time_comparison_rows = estimate_ruledep_stage_times(data_root, best_config_rows, overall_rows)
     write_csv(
         report_dir / "overall_time_comparison.csv",

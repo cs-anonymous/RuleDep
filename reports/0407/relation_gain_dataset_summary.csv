@@ -1,8 +1,8 @@
 dataset,aggregation,num_relations,positive_relations,neutral_relations,negative_relations,avg_rel_gain_pct,avg_baseline_stage1_mrr,avg_dep_per_rule,avg_B_ratio,avg_Uc_ratio,avg_Ud_ratio
-KG20C,init_dep_with_lift,5,1,3,1,2.183156,0.283676,0.443923,0.000706,0.810811,0.187600
-codex-m,structural_r3d6,46,4,30,12,0.558215,0.353003,0.733678,0.210508,0.536109,0.252360
-WN18RR,structural_rd,11,1,8,2,0.906627,0.527038,0.438867,0.184904,0.588720,0.225401
-FB15k-237,best_combination,237,62,92,83,1.662405,0.356929,1.800291,0.233074,0.525008,0.241421
-codex-l,structural_dep_scale,65,4,48,13,0.572009,0.376796,0.572263,0.165861,0.529504,0.302812
-YAGO3-10,structural_dep_scale,37,4,28,5,1.413379,0.353165,0.861942,0.131769,0.536435,0.330455
-hetionet,dep_scale_surprisal_init,24,1,16,7,0.986262,0.311631,0.546642,0.007899,0.808300,0.182976
+KG20C,best_combination_dep_l1_regularization_dep_fix_topk8_0412,5,3,1,1,3.137824,0.283676,0.443923,0.000706,0.810811,0.187600
+codex-m,best_combination_dep_l1_regularization_dep_fix_topk8_0412,46,5,31,10,0.890669,0.353003,0.733678,0.210508,0.536109,0.252360
+WN18RR,best_combination_dep_l1_regularization_dep_fix_topk8_0412,11,1,7,3,0.789706,0.527038,0.398976,0.184904,0.588720,0.225401
+FB15k-237,best_combination_dep_l1_regularization_dep_fix_topk8_0412,237,63,92,82,1.631085,0.356929,1.800291,0.233074,0.525008,0.241421
+codex-l,best_combination_dep_l1_regularization_dep_fix_topk8_0412,65,4,56,5,0.609185,0.376796,0.441958,0.165861,0.529504,0.302812
+YAGO3-10,best_combination_dep_l1_regularization_dep_fix_topk8_0412,37,5,24,8,0.457202,0.353165,0.645791,0.131769,0.536435,0.330455
+hetionet,best_combination_dep_l1_regularization_dep_fix_topk8_0412,24,7,7,10,2.983530,0.311631,0.435750,0.007899,0.808300,0.182976
