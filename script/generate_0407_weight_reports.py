@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import math
+import pickle
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -98,6 +99,15 @@ def fmt_float(value: Optional[float]) -> str:
 
 def fmt_float_short(value: Optional[float]) -> str:
     return "" if value is None else f"{float(value):.5f}"
+
+
+def to_float(value: object) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def image_block(src: str, alt: str, caption: str, width_pct: int = 60) -> List[str]:
@@ -693,16 +703,253 @@ def parse_simple_csv(path: Path) -> Iterable[List[str]]:
             yield line.split(",")
 
 
+def relation_id_from_filename(path: Path, prefix: str) -> Optional[int]:
+    name = path.stem
+    if not name.startswith(prefix):
+        return None
+    tail = name[len(prefix):]
+    try:
+        return int(tail)
+    except ValueError:
+        return None
+
+
+def load_label_to_id_map(path: Path) -> Dict[str, int]:
+    mapping: Dict[str, int] = {}
+    if not path.exists():
+        return mapping
+    with path.open("r", encoding="utf-8", errors="ignore") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) < 2:
+                parts = line.split()
+            if len(parts) < 2:
+                continue
+            try:
+                idx = int(parts[0])
+            except ValueError:
+                continue
+            mapping[str(parts[1])] = idx
+    return mapping
+
+
+def token_to_id(token: str, mapping: Dict[str, int]) -> Optional[int]:
+    if token in mapping:
+        return int(mapping[token])
+    try:
+        return int(token)
+    except ValueError:
+        return None
+
+
+def load_test_gold_maps(dataset_dir: Path) -> Tuple[Dict[Tuple[int, int], set], Dict[Tuple[int, int], set]]:
+    # sp query key: (subject, relation) -> gold objects
+    # po query key: (relation, object) -> gold subjects
+    sp_gold: Dict[Tuple[int, int], set] = defaultdict(set)
+    po_gold: Dict[Tuple[int, int], set] = defaultdict(set)
+    test_path = dataset_dir / "test.txt"
+    entity_map = load_label_to_id_map(dataset_dir / "entity_ids.del")
+    relation_map = load_label_to_id_map(dataset_dir / "relation_ids.del")
+    if not test_path.exists():
+        return {}, {}
+    with test_path.open("r", encoding="utf-8", errors="ignore") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+            s = token_to_id(str(parts[0]), entity_map)
+            r = token_to_id(str(parts[1]), relation_map)
+            o = token_to_id(str(parts[2]), entity_map)
+            if s is None or r is None or o is None:
+                continue
+            sp_gold[(s, r)].add(o)
+            po_gold[(r, o)].add(s)
+    return sp_gold, po_gold
+
+
+def compute_gold_qc_effective_metrics(exp_dir: Path, dataset_dir: Path, delta: float = 0.01) -> Dict[str, Optional[float]]:
+    application_dir = dataset_dir / "application"
+    sp_path = application_dir / "processed_sp_test.pkl"
+    po_path = application_dir / "processed_po_test.pkl"
+    if not sp_path.exists() or not po_path.exists():
+        return {
+            "gold_avg_effective_rule_count": None,
+            "gold_avg_effective_dep_count": None,
+            "gold_top3_rule_share": None,
+            "gold_top3_dep_share": None,
+            "gold_qc_count": None,
+        }
+
+    # relation -> rule_id -> trained weight
+    rule_weight_by_rel: Dict[int, Dict[int, float]] = {}
+    for path in sorted(exp_dir.glob("weight-*.csv")):
+        rel = relation_id_from_filename(path, "weight-")
+        if rel is None:
+            continue
+        rel_map: Dict[int, float] = {}
+        for parts in parse_simple_csv(path):
+            if len(parts) < 3:
+                continue
+            try:
+                rid = int(parts[0])
+                trained = float(parts[2])
+            except ValueError:
+                continue
+            rel_map[rid] = trained
+        rule_weight_by_rel[rel] = rel_map
+
+    # relation -> adjacency over dep edges with effective_trained > delta
+    dep_adj_by_rel: Dict[int, Dict[int, List[Tuple[int, float]]]] = {}
+    for path in sorted(exp_dir.glob("dependency-final-*.csv")):
+        rel = relation_id_from_filename(path, "dependency-final-")
+        if rel is None:
+            continue
+        adj: Dict[int, List[Tuple[int, float]]] = defaultdict(list)
+        for parts in parse_simple_csv(path):
+            if len(parts) < 7:
+                continue
+            try:
+                u = int(parts[0])
+                v = int(parts[1])
+                w = float(parts[6])
+            except ValueError:
+                continue
+            if w <= delta:
+                continue
+            adj[u].append((v, w))
+            adj[v].append((u, w))
+        dep_adj_by_rel[rel] = dict(adj)
+
+    sp_gold, po_gold = load_test_gold_maps(dataset_dir)
+
+    processed_sp = pickle.load(open(sp_path, "rb"))
+    processed_po = pickle.load(open(po_path, "rb"))
+
+    gold_qc_count = 0
+    sum_rule_cnt = 0.0
+    sum_dep_cnt = 0.0
+    sum_rule_top1_share = 0.0
+    sum_rule_top3_share = 0.0
+    sum_dep_top1_share = 0.0
+    sum_dep_top3_share = 0.0
+    n_rule_share = 0
+    n_dep_share = 0
+
+    def consume(processed: Dict[Tuple[int, int], Dict[str, object]], gold_map: Dict[Tuple[int, int], set], relation_from_key) -> None:
+        nonlocal gold_qc_count, sum_rule_cnt, sum_dep_cnt, sum_rule_top1_share, sum_rule_top3_share, sum_dep_top1_share, sum_dep_top3_share, n_rule_share, n_dep_share
+        for key, entry in processed.items():
+            gold_set = gold_map.get((int(key[0]), int(key[1])))
+            if not gold_set:
+                continue
+            relation = relation_from_key(key)
+            rule_weight_map = rule_weight_by_rel.get(relation, {})
+            dep_adj = dep_adj_by_rel.get(relation, {})
+            candidates = entry.get("candidates") or []
+            rules_by_cand = entry.get("rules") or []
+            if not isinstance(candidates, list) or not isinstance(rules_by_cand, list):
+                continue
+            for idx, cand in enumerate(candidates):
+                try:
+                    cand_int = int(cand)
+                except (TypeError, ValueError):
+                    continue
+                if cand_int not in gold_set:
+                    continue
+                if idx >= len(rules_by_cand):
+                    continue
+                rule_ids = rules_by_cand[idx]
+                if not isinstance(rule_ids, list):
+                    continue
+
+                effective_rule_weights: List[float] = []
+                active_rules_set = set()
+                for rid in rule_ids:
+                    try:
+                        rid_int = int(rid)
+                    except (TypeError, ValueError):
+                        continue
+                    w = float(rule_weight_map.get(rid_int, 0.0))
+                    if w > delta:
+                        effective_rule_weights.append(w)
+                        active_rules_set.add(rid_int)
+
+                rule_cnt = len(effective_rule_weights)
+                sum_rule_cnt += float(rule_cnt)
+
+                if effective_rule_weights:
+                    total_rule = sum(effective_rule_weights)
+                    if total_rule > 0.0:
+                        top1_rule = max(effective_rule_weights)
+                        top3_rule = sum(sorted(effective_rule_weights, reverse=True)[:3])
+                        sum_rule_top1_share += top1_rule / total_rule
+                        sum_rule_top3_share += top3_rule / total_rule
+                        n_rule_share += 1
+
+                dep_weights: List[float] = []
+                if len(active_rules_set) >= 2 and dep_adj:
+                    # undirected unique pairs
+                    for u in active_rules_set:
+                        for v, w in dep_adj.get(u, []):
+                            if v in active_rules_set and u < v:
+                                dep_weights.append(w)
+
+                dep_cnt = len(dep_weights)
+                sum_dep_cnt += float(dep_cnt)
+
+                if dep_weights:
+                    total_dep = sum(dep_weights)
+                    if total_dep > 0.0:
+                        top1_dep = max(dep_weights)
+                        top3_dep = sum(sorted(dep_weights, reverse=True)[:3])
+                        sum_dep_top1_share += top1_dep / total_dep
+                        sum_dep_top3_share += top3_dep / total_dep
+                        n_dep_share += 1
+
+                gold_qc_count += 1
+
+    consume(processed_sp, sp_gold, lambda key: int(key[1]))
+    consume(processed_po, po_gold, lambda key: int(key[0]))
+
+    if gold_qc_count <= 0:
+        return {
+            "gold_avg_effective_rule_count": None,
+            "gold_avg_effective_dep_count": None,
+            "gold_top1_rule_share": None,
+            "gold_top1_dep_share": None,
+            "gold_top3_rule_share": None,
+            "gold_top3_dep_share": None,
+            "gold_qc_count": 0.0,
+        }
+
+    return {
+        "gold_avg_effective_rule_count": sum_rule_cnt / float(gold_qc_count),
+        "gold_avg_effective_dep_count": sum_dep_cnt / float(gold_qc_count),
+        "gold_top1_rule_share": None if n_rule_share <= 0 else sum_rule_top1_share / float(n_rule_share),
+        "gold_top1_dep_share": None if n_dep_share <= 0 else sum_dep_top1_share / float(n_dep_share),
+        "gold_top3_rule_share": None if n_rule_share <= 0 else sum_rule_top3_share / float(n_rule_share),
+        "gold_top3_dep_share": None if n_dep_share <= 0 else sum_dep_top3_share / float(n_dep_share),
+        "gold_qc_count": float(gold_qc_count),
+    }
+
+
 def build_weight_analysis(data_root: Path, best_configs: Dict[str, str]) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
     summary_rows: List[Dict[str, object]] = []
     dep_type_rows: List[Dict[str, object]] = []
 
     for dataset, aggregation in sorted(best_configs.items(), key=lambda item: dataset_sort_key(item[0])):
         exp_dir = data_root / dataset / "aggregation" / aggregation
+        dataset_dir = data_root / dataset
         rule_stats = RunningStats()
         dep_trial_stats = RunningStats()
         dep_final_stats = RunningStats()
         dep_type_stats: Dict[Tuple[str, str], RunningStats] = defaultdict(RunningStats)
+        gold_delta = 0.01
 
         for path in sorted(exp_dir.glob("weight-*.csv")):
             for parts in parse_simple_csv(path):
@@ -732,12 +979,28 @@ def build_weight_analysis(data_root: Path, best_configs: Dict[str, str]) -> Tupl
                     stage_stats.add(effective_original, effective_trained)
                     dep_type_stats[(stage_name, dep_type)].add(effective_original, effective_trained)
 
+        gold_qc = compute_gold_qc_effective_metrics(exp_dir, dataset_dir, delta=gold_delta)
+
         for component, stats in [
             ("rule", rule_stats),
             ("dependency_trial", dep_trial_stats),
             ("dependency_final", dep_final_stats),
         ]:
-            summary_rows.append(stats.as_row(dataset, aggregation, component))
+            row = stats.as_row(dataset, aggregation, component)
+            row["gold_delta"] = gold_delta
+            row["gold_avg_effective_count"] = None
+            row["gold_top1_share"] = None
+            row["gold_top3_share"] = None
+            row["gold_qc_count"] = gold_qc.get("gold_qc_count")
+            if component == "rule":
+                row["gold_avg_effective_count"] = gold_qc.get("gold_avg_effective_rule_count")
+                row["gold_top1_share"] = gold_qc.get("gold_top1_rule_share")
+                row["gold_top3_share"] = gold_qc.get("gold_top3_rule_share")
+            elif component == "dependency_final":
+                row["gold_avg_effective_count"] = gold_qc.get("gold_avg_effective_dep_count")
+                row["gold_top1_share"] = gold_qc.get("gold_top1_dep_share")
+                row["gold_top3_share"] = gold_qc.get("gold_top3_dep_share")
+            summary_rows.append(row)
 
         for (stage_name, dep_type), stats in sorted(dep_type_stats.items()):
             row = stats.as_row(dataset, aggregation, stage_name)
@@ -948,7 +1211,7 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     lines: List[str] = []
     lines.append("# 0407 Rule / Dependency Weight Analysis")
     lines.append("")
-    lines.append("本节沿用第 2 部分的 best config，考察 rule 与 dependency 的参数在训练前后如何变化，以及模型最终是否会把大量 dependency 权重压回到接近零的区域。")
+    lines.append("本节沿用第 2 部分的 best config，仅使用 `dependency_final`，考察 rule 与 dependency 的参数变化，以及最终被保留的 dependency 权重分布。")
     lines.append("")
     lines.append("相关表格：")
     lines.append("")
@@ -957,71 +1220,109 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     lines.append("")
     lines.extend(image_block("plot_weight_near_zero_ratio.png", "Weight Near-zero Ratio", "Figure 1: near-zero ratio of learned rule and dependency weights."))
     lines.extend(image_block("plot_weight_max_abs.png", "Weight Max Abs", "Figure 2: maximum absolute value of learned rule and dependency weights."))
-    lines.extend(image_block("plot_dependency_sign_by_type.png", "Dependency Sign by Type", "Figure 3: positive-weight ratio of synergy and redundancy dependencies before and after selection."))
-    lines.append("## Definition of `dependency_trial` and `dependency_final`")
+    lines.extend(image_block("plot_dependency_sign_by_type.png", "Dependency Sign by Type", "Figure 3: positive-weight ratio of synergy and redundancy dependencies in dependency_final."))
+    lines.append("## Definitions (gold-effective metrics)")
     lines.append("")
-    lines.append("为避免歧义，这里明确第 5 部分的两个 dependency 统计对象：")
+    lines.append("下面新增 4 个统计，统一基于 `dependency_final` 与阈值 `delta=0.01`，并且都在 gold `(q,c)` 粒度上计算：")
     lines.append("")
-    lines.append("- `dependency_trial`：来自 `dependency-trial-<relation>.csv`。它表示 relation 上一旦实际训练了 dependency stage，就把该 stage 学到的 dependency 权重记下来，不要求这个 stage 最终被接受。换句话说，`trial` 反映的是“候选 dependency stage 训练后会学成什么样”。")
-    lines.append("- `dependency_final`：来自 `dependency-final-<relation>.csv`。它只在 dependency stage 的 best valid 表现超过 rule-only stage、并且最终被模型选择时才会出现。也就是说，`final` 反映的是“真正进入最终测试输出的 dependency 权重”。")
-    lines.append("")
-    lines.append("因此，`trial` 和 `final` 的差别不只是训练前后两个时间点，而是“尝试过的 dependency 模型”与“最终被接受的 dependency 模型”的区别。通常 `final` 会比 `trial` 更稀疏，因为它已经经过了一次 relation-level model selection。")
+    lines.append("- gold 平均有效 Rule 数量：对每个 gold `(q,c)`，统计该候选上 `rule_weight > delta` 的规则条目数，再对所有 gold `(q,c)` 求平均。")
+    lines.append("- gold 平均有效 Dep 数量：对每个 gold `(q,c)`，统计由激活规则诱导、且 `dep_weight > delta` 的 dependency 边数，再对所有 gold `(q,c)` 求平均。")
+    lines.append("- gold top3 Rule 占比：对每个 gold `(q,c)`，`sum(top3(rule_weight>delta)) / sum(rule_weight>delta)`，再求平均。")
+    lines.append("- gold top3 Dep 占比：对每个 gold `(q,c)`，`sum(top3(dep_weight>delta)) / sum(dep_weight>delta)`，再求平均。")
     lines.append("")
     lines.append("## Dataset Summary")
     lines.append("")
-    lines.append("| Dataset | Config | Rule near-zero | Dep trial near-zero | Dep final near-zero | Rule max abs | Dep trial max abs | Dep final max abs |")
-    lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+    lines.append("| Dataset | Config | Rule near-zero | Dep final near-zero | Rule max abs | Dep final max abs | Gold avg eff Rule per (q,c) | Gold avg eff Dep per (q,c) | Gold top1 Rule share | Gold top1 Dep share | Gold top3 Rule share | Gold top3 Dep share |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
     grouped = {(row["dataset"], row["component"]): row for row in summary_rows}
+    dataset_vals: List[Dict[str, Optional[float]]] = []
     for dataset in sorted({row["dataset"] for row in summary_rows}, key=dataset_sort_key):
         rule = grouped.get((dataset, "rule"), {})
-        dep_trial = grouped.get((dataset, "dependency_trial"), {})
         dep_final = grouped.get((dataset, "dependency_final"), {})
         lines.append(
             f"| {dataset} | {rule.get('aggregation','')} | "
             f"{fmt_float_short(100.0 * float(rule.get('near_zero_ratio_0.01') or 0.0))} | "
-            f"{fmt_float_short(100.0 * float(dep_trial.get('near_zero_ratio_0.01') or 0.0))} | "
             f"{fmt_float_short(100.0 * float(dep_final.get('near_zero_ratio_0.01') or 0.0))} | "
             f"{fmt_float_short(rule.get('max_abs_trained'))} | "
-            f"{fmt_float_short(dep_trial.get('max_abs_trained'))} | "
-            f"{fmt_float_short(dep_final.get('max_abs_trained'))} |"
+            f"{fmt_float_short(dep_final.get('max_abs_trained'))} | "
+            f"{fmt_float_short(rule.get('gold_avg_effective_count'))} | "
+            f"{fmt_float_short(dep_final.get('gold_avg_effective_count'))} | "
+            f"{fmt_float_short(100.0 * float(rule.get('gold_top1_share') or 0.0))}% | "
+            f"{fmt_float_short(100.0 * float(dep_final.get('gold_top1_share') or 0.0))}% | "
+            f"{fmt_float_short(100.0 * float(rule.get('gold_top3_share') or 0.0))}% | "
+            f"{fmt_float_short(100.0 * float(dep_final.get('gold_top3_share') or 0.0))}% |"
         )
+        dataset_vals.append(
+            {
+                "rule_near_zero": to_float(rule.get("near_zero_ratio_0.01")),
+                "dep_near_zero": to_float(dep_final.get("near_zero_ratio_0.01")),
+                "rule_max_abs": to_float(rule.get("max_abs_trained")),
+                "dep_max_abs": to_float(dep_final.get("max_abs_trained")),
+                "rule_eff": to_float(rule.get("gold_avg_effective_count")),
+                "dep_eff": to_float(dep_final.get("gold_avg_effective_count")),
+                "rule_top1": to_float(rule.get("gold_top1_share")),
+                "dep_top1": to_float(dep_final.get("gold_top1_share")),
+                "rule_top3": to_float(rule.get("gold_top3_share")),
+                "dep_top3": to_float(dep_final.get("gold_top3_share")),
+            }
+        )
+    lines.append(
+        "| Average | - | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['rule_near_zero'] for r in dataset_vals) or 0.0))} | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['dep_near_zero'] for r in dataset_vals) or 0.0))} | "
+        f"{fmt_float_short(mean_or_none(r['rule_max_abs'] for r in dataset_vals))} | "
+        f"{fmt_float_short(mean_or_none(r['dep_max_abs'] for r in dataset_vals))} | "
+        f"{fmt_float_short(mean_or_none(r['rule_eff'] for r in dataset_vals))} | "
+        f"{fmt_float_short(mean_or_none(r['dep_eff'] for r in dataset_vals))} | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['rule_top1'] for r in dataset_vals) or 0.0))}% | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['dep_top1'] for r in dataset_vals) or 0.0))}% | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['rule_top3'] for r in dataset_vals) or 0.0))}% | "
+        f"{fmt_float_short(100.0 * float(mean_or_none(r['dep_top3'] for r in dataset_vals) or 0.0))}% |"
+    )
     lines.append("")
 
-    trial_synergy = [row for row in dep_type_rows if row["component"] == "dependency_trial" and row["dep_type"] == "synergy"]
-    trial_redundancy = [row for row in dep_type_rows if row["component"] == "dependency_trial" and row["dep_type"] == "redundancy"]
     final_synergy = [row for row in dep_type_rows if row["component"] == "dependency_final" and row["dep_type"] == "synergy"]
     final_redundancy = [row for row in dep_type_rows if row["component"] == "dependency_final" and row["dep_type"] == "redundancy"]
 
     lines.append("## Dependency Sign vs Type")
     lines.append("")
     lines.append(
-        f"在 trial 阶段，`synergy` 的平均正权重比例为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in trial_synergy) or 0.0))}%`，"
-        f"`redundancy` 为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in trial_redundancy) or 0.0))}%`。"
-    )
-    lines.append(
-        f"经过最终选择后，`synergy` 的平均正权重比例上升到 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_synergy) or 0.0))}%`，"
-        f"`redundancy` 也上升到 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_redundancy) or 0.0))}%`。"
+        f"在 `dependency_final` 中，`synergy` 的平均正权重比例为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_synergy) or 0.0))}%`，"
+        f"`redundancy` 为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_redundancy) or 0.0))}%`。"
     )
     lines.append("")
 
     rule_rows = [row for row in summary_rows if row["component"] == "rule"]
-    dep_trial_rows = [row for row in summary_rows if row["component"] == "dependency_trial"]
     dep_final_rows = [row for row in summary_rows if row["component"] == "dependency_final"]
     lines.append("## Global View")
     lines.append("")
-    lines.append(f"rule 权重的平均绝对变化为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in rule_rows))}`，dependency 在 trial 与 final 阶段分别为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in dep_trial_rows))}` 和 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in dep_final_rows))}`。")
+    lines.append(f"rule 权重的平均绝对变化为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in rule_rows))}`，dependency(final) 为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in dep_final_rows))}`。")
     lines.append(
         f"近零比例方面，rule 权重均值为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in rule_rows) or 0.0))}%`，"
-        f"dependency 在 trial 阶段为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in dep_trial_rows) or 0.0))}%`，"
-        f"final 阶段为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in dep_final_rows) or 0.0))}%`。"
+        f"dependency(final) 为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in dep_final_rows) or 0.0))}%`。"
+    )
+    lines.append(
+        f"gold 口径下，平均有效 Rule 数量为 `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in rule_rows))}`，"
+        f"平均有效 Dep 数量为 `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in dep_final_rows))}`。"
+    )
+    lines.append(
+        f"用于统计的 gold `(q,c)` 数量均值为 `{fmt_float_short(mean_or_none(row['gold_qc_count'] for row in rule_rows))}`。"
+    )
+    lines.append(
+        f"gold top1 占比方面，Rule 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in rule_rows) or 0.0))}%`，"
+        f"Dep 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in dep_final_rows) or 0.0))}%`。"
+    )
+    lines.append(
+        f"gold top3 占比方面，Rule 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in rule_rows) or 0.0))}%`，"
+        f"Dep 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in dep_final_rows) or 0.0))}%`。"
     )
     lines.append("")
 
     lines.append("## Interpretation")
     lines.append("")
-    lines.append("这些结果共同说明，模型确实会主动稀疏化大量 dependency 边，尤其是在 trial 阶段，许多候选边最终被压回到零附近。与此同时，少数被保留下来的 dependency 仍可能具有较大的绝对权重，因此它们更像是稀疏但强烈的修正项，而不是均匀分布在所有规则对上的微弱偏置。")
+    lines.append("这些结果共同说明，模型确实会主动稀疏化大量 dependency 边；在最终被保留的 `dependency_final` 中，依然只有少数边具有显著权重，因此它们更像是稀疏但强烈的修正项，而不是均匀分布在所有规则对上的微弱偏置。")
     lines.append("")
-    lines.append("从符号分布看，`synergy` 更容易获得正权重，而 `redundancy` 通常更保守，这与依赖类型本身的语义方向基本一致，但并不是绝对的一一对应关系。最终被选择进入 final 阶段的 dependency，往往是那些既能在 valid 上稳定受益、又没有明显过拟合迹象的边。")
+    lines.append("从符号分布看，`synergy` 更容易获得正权重，而 `redundancy` 通常更保守，这与依赖类型本身的语义方向基本一致，但并不是绝对的一一对应关系。")
     lines.append("")
     return "\n".join(lines)
 

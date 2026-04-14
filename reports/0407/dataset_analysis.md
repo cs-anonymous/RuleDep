@@ -17,7 +17,6 @@
 | codex-l | 77951 | 69 | 551193 | 30622 | 30622 | 273472 | 455330 | 1.66500 |
 | YAGO3-10 | 123182 | 37 | 1079040 | 5000 | 5000 | 990481 | 1707159 | 1.72357 |
 | hetionet | 45158 | 24 | 1800157 | 225020 | 225020 | 6103910 | 7154604 | 1.17213 |
-| wikidata5m | 4818679 | 828 | 21343681 | 5357 | 5321 | 1395755 | 0 | 0.00000 |
 
 ## Highlights
 
@@ -31,4 +30,3 @@
 - `FB15k-237 / codex-m / codex-l / YAGO3-10` 这类数据集更像大规模 relation-wise rule aggregation 场景。
 - `KG20C / WN18RR` 关系数较少，但 rule 和 dependency 结构更紧凑，适合做受控比较。
 - `hetionet` 的 graph 规模和语义复杂度都高，通常更依赖更强的 structural bias。
-- `wikidata5m` 当前只有 rule application 结果，dependency / aggregation 统计仍为空，这一点在表格里会直接体现。

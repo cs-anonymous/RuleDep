@@ -2861,9 +2861,5 @@
         "count": 64
       }
     }
-  },
-  "wikidata5m": {
-    "dataset": "wikidata5m",
-    "selected_relations": {}
   }
 }
