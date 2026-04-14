@@ -1,5 +1,47 @@
 # Case Study Notes
 
+## Summary Table
+
+Below is a consolidated comparison table of all three cases. Each row shows how the dependency mechanism corrects the ranking of the gold answer and its main distractor(s).
+
+| | **Case 1: Iraq Language** | **Case 2: South Governorate Location** | **Case 3: Jasper County Location** |
+|---|---|---|---|
+| **Dataset** | FB15k-237 | YAGO3-10 | YAGO3-10 |
+| **Query** | `? --countries_spoken_in--> Iraq` | `? --isLocatedIn--> South_Governorate` | `Jasper_County,_Missouri --isLocatedIn--> ?` |
+| **Gold Answer** | Persian_Language | Tyre | Missouri |
+| **Main Distractor(s)** | English_Language | Lebanon | Joplin / Webb City / Carthage, MO |
+| **Demonstrated Effect** | Redundancy correction | Redundancy correction | Synergy promotion |
+| **Gold rank (before→after)** | 2 → **1** | 2 → **1** | 4 → **1** |
+| **Distractor rank (before→after)** | 1 → 2 | 1 → **19** | 2 → 3 (tied, all three) |
+| **Gold score (before→after)** | 0.2898 → 0.3018 | 0.0167 → 0.0259 | 0.0103 → 0.0689 |
+| **Distractor score (before→after)** | 0.3022 → 0.2581 | 0.1119 → 0.0022 | 0.0877 → 0.0655 (all three) |
+| **Gold rule_total** | 3.072 | 2.202 | 2.886 |
+| **Gold dep_total** | **+0.409** | **+0.126** | **+0.616** |
+| **Distractor rule_total** | 3.001 | 7.246 | 3.664 (all three) |
+| **Distractor dep_total** | **−0.904** | **−7.372** | **0.0** (all three) |
+| **Key Dependency** | D202 (B_B neg), many small neg terms | D3821 (redundancy, −5.77 raw) | D3815 (synergy, +0.62 raw) |
+| **Interpretation** | English has strong rule support but its rule combination is generic/redundant; distributed negative corrections suppress it | Lebanon is semantically related but at wrong granularity (`South_Gov → Lebanon` exists, but query asks for `? → South_Gov`); massive redundancy penalty | Nearby cities are locally plausible but lack pairwise synergy; Missouri gets a single strong synergy boost absent from distractors |
+
+### Case Mechanism Breakdown
+
+| Metric | Case 1 Gold (Persian) | Case 1 Distractor (English) | Case 2 Gold (Tyre) | Case 2 Distractor (Lebanon) | Case 3 Gold (Missouri) | Case 3 Distractors (Cities) |
+|---|---|---|---|---|---|---|
+| stage2 rule_total | 3.072 | 3.001 | 2.202 | 7.246 | 2.886 | 3.664 |
+| dep B_B | +0.242 | −0.314 | — | — | — | — |
+| dep U_U | +0.167 | −0.590 | — | — | — | — |
+| dep redundancy | — | — | — | −6.477 | — | — |
+| dep synergy | — | — | +0.126 | −0.895 | +0.616 | 0.0 |
+| **dep_total** | **+0.409** | **−0.904** | **+0.126** | **−7.372** | **+0.616** | **0.0** |
+| **final score** | **0.3018** | **0.2581** | **0.0259** | **0.0022** | **0.0689** | **0.0655** |
+
+### Key Observations
+
+1. **Case 1 (Redundancy — distributed)**: English_Language 的规则打分 (3.001) 与 Persian_Language (3.072) 接近，但依赖项发现 English 的规则组合在此查询上下文中冗余（高频通用语言），分布式地施加了 −0.904 的负修正，多个小的 B_B 和 U_U 负依赖项累加。Persian 获得 +0.409 的正修正。
+2. **Case 2 (Redundancy — concentrated)**: Lebanon 的 rule_total (7.246) 远高于 Tyre (2.202)，但依赖项施加了 −7.372 的巨大负修正。最大的贡献来自 D3821（原始权重 −5.77），多个 redundancy 依赖项共同惩罚了 Lebanon。KG 中存在 `South_Governorate → Lebanon` 的边，但查询方向是 `? → South_Governorate`，Lebanon 不是正确粒度的答案。
+3. **Case 3 (Synergy — clean)**: Missouri 的 rule_total (2.886) 低于三个城市级干扰项 (3.664)，但 D3815 给予 Missouri 唯一的 +0.616 synergy 正修正。三个城市级候选没有任何活跃依赖项 (dep_total = 0)，最终被超越。这是最干净的 synergy 案例。
+
+---
+
 This folder keeps three final case-study examples for the paper. Each case has two files:
 
 - `*.yml`: the full per-example explanation generated from the trained aggregation model.
