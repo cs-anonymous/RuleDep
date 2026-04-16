@@ -18,7 +18,7 @@ default_filter_target_split() {
 }
 
 dataset="$1"
-worker_threads="${2:-$(nproc)}"
+worker_threads="${20:-$(nproc)}"
 filter_target_split="${TARGET_SPLIT:-$(default_filter_target_split "${dataset}")}"
 filter_min_supp="${FILTER_MIN_SUPP:-$(default_dep_min_supp "${dataset}")}"
 dependency_dir="${DEPENDENCY_DIR:-data/${dataset}/rules}"

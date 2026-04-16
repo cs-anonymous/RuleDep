@@ -1,0 +1,3 @@
+dataset,head_type,num_heads,mean_rules_per_head
+FB15k-237,unary,21635,76.365565
+FB15k-237,binary,237,359.531646

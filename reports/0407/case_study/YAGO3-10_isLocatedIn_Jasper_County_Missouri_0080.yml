@@ -27,7 +27,7 @@ type_weights:
 rules:
 - rule_id: R3724
   rule_type: Ud
-  rule_text: playsFor(Henrik_Smedegaard,Y) <= playsFor(A,Y)
+  rule_text: isLocatedIn(X,Tennessee) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.319165
@@ -41,7 +41,7 @@ rules:
       rule_type: Ud
 - rule_id: R26865
   rule_type: B
-  rule_text: isConnectedTo(X,Treviso_Airport) <= isConnectedTo(X,Munich_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -55,7 +55,7 @@ rules:
       rule_type: B
 - rule_id: R27150
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,P.S.V._Eindhoven) <= isAffiliatedTo(X,Fulham_F.C.)
+  rule_text: isLocatedIn(X,Japan) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -69,7 +69,7 @@ rules:
       rule_type: Ud
 - rule_id: R56607
   rule_type: B
-  rule_text: influences(H._P._Lovecraft,Y) <= influences(Y,A)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), dealsWith(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -83,7 +83,7 @@ rules:
       rule_type: B
 - rule_id: R59766
   rule_type: Ud
-  rule_text: isConnectedTo(X,Logan_International_Airport) <= isConnectedTo(Louis_Armstrong_New_Orleans_International_Airport,X)
+  rule_text: isLocatedIn(X,Michigan) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.322865
@@ -97,7 +97,7 @@ rules:
       rule_type: Ud
 - rule_id: R72285
   rule_type: Ud
-  rule_text: isConnectedTo(X,Huai'an_Lianshui_Airport) <= isConnectedTo(Xining_Caojiabao_Airport,X)
+  rule_text: isLocatedIn(X,New_York_City) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -111,7 +111,7 @@ rules:
       rule_type: Ud
 - rule_id: R85186
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Birmingham_City_F.C.) <= isAffiliatedTo(X,Wigan_Athletic_F.C.)
+  rule_text: isLocatedIn(X,San_Francisco_Bay_Area) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.358348
@@ -125,7 +125,7 @@ rules:
       rule_type: Ud
 - rule_id: R86469
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Atlético_Madrid_B) <= isAffiliatedTo(X,Spain_national_under-20_football_team)
+  rule_text: isLocatedIn(X,Massachusetts) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -139,7 +139,7 @@ rules:
       rule_type: Ud
 - rule_id: R88839
   rule_type: Ud
-  rule_text: isAffiliatedTo(Juan_Esnáider,Y) <= isAffiliatedTo(Roberto_Bonano,Y)
+  rule_text: isLocatedIn(X,Maryland) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.347546
@@ -153,7 +153,7 @@ rules:
       rule_type: Ud
 - rule_id: R93284
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,R.C._Celta_de_Vigo) <= isAffiliatedTo(X,Boca_Juniors)
+  rule_text: isLocatedIn(X,California) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -167,7 +167,7 @@ rules:
       rule_type: Ud
 - rule_id: R124457
   rule_type: B
-  rule_text: 'isAffiliatedTo(X,Leicester_City_F.C.) <= '
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -181,7 +181,7 @@ rules:
       rule_type: B
 - rule_id: R193987
   rule_type: Ud
-  rule_text: isAffiliatedTo(Giovanni_Bia,Y) <= playsFor(Giovanni_Bia,Y)
+  rule_text: isLocatedIn(X,Minnesota) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 3.261762
@@ -195,7 +195,7 @@ rules:
       rule_type: Ud
 - rule_id: R224738
   rule_type: Ud
-  rule_text: playsFor(X,Ascoli_Calcio_1898) <= playsFor(X,S.S._Chieti_Calcio)
+  rule_text: isLocatedIn(X,Washington_(state)) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.600065
@@ -209,7 +209,7 @@ rules:
       rule_type: Ud
 - rule_id: R229767
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Panteras_de_Miranda) <= isAffiliatedTo(X,Liga_Profesional_de_Baloncesto)
+  rule_text: isLocatedIn(X,Western_United_States) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -223,7 +223,7 @@ rules:
       rule_type: Ud
 - rule_id: R338840
   rule_type: Ud
-  rule_text: isConnectedTo(X,Bari_Karol_Wojtyła_Airport) <= isConnectedTo(X,Sabiha_Gökçen_International_Airport)
+  rule_text: isLocatedIn(X,Virginia) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.18478
@@ -237,7 +237,7 @@ rules:
       rule_type: Ud
 - rule_id: R430715
   rule_type: Ud
-  rule_text: isConnectedTo(Rhodes_International_Airport,Y) <= isConnectedTo(Y,Riga_International_Airport)
+  rule_text: isLocatedIn(X,Alabama) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.839187
@@ -251,7 +251,7 @@ rules:
       rule_type: Ud
 - rule_id: R448490
   rule_type: Ud
-  rule_text: isConnectedTo(Frankfurt_Airport,Y) <= isConnectedTo(Y,Monastir_Habib_Bourguiba_International_Airport)
+  rule_text: isLocatedIn(X,Indiana) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.992397
@@ -265,7 +265,7 @@ rules:
       rule_type: Ud
 - rule_id: R449809
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Cruzeiro_Esporte_Clube) <= isAffiliatedTo(X,América_Futebol_Clube_(MG))
+  rule_text: isLocatedIn(X,Texas) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.502527
@@ -279,7 +279,7 @@ rules:
       rule_type: Ud
 - rule_id: R460555
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Juventus_F.C.) <= isAffiliatedTo(X,Italy_national_under-20_football_team)
+  rule_text: isLocatedIn(X,Utah) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.563372
@@ -293,7 +293,7 @@ rules:
       rule_type: Ud
 - rule_id: R494231
   rule_type: B
-  rule_text: isAffiliatedTo(Leandro_Alves_da_Cunha,Y) <= playsFor(Leandro_Alves_da_Cunha,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), hasCapital(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -307,7 +307,7 @@ rules:
       rule_type: B
 - rule_id: R503336
   rule_type: B
-  rule_text: isAffiliatedTo(X,Associação_Desportiva_Cabofriense) <= isAffiliatedTo(X,Marília_Atlético_Clube)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), hasNeighbor(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -321,7 +321,7 @@ rules:
       rule_type: B
 - rule_id: R510510
   rule_type: Ud
-  rule_text: hasChild(Gratian,Y) <= hasChild(Y,Gratian)
+  rule_text: isLocatedIn(X,Pennsylvania) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.490297
@@ -335,7 +335,7 @@ rules:
       rule_type: Ud
 - rule_id: R517242
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Italy_national_football_team) <= playsFor(X,Genoa_C.F.C.)
+  rule_text: isLocatedIn(X,Oceania) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -349,7 +349,7 @@ rules:
       rule_type: Ud
 - rule_id: R538213
   rule_type: B
-  rule_text: isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.128821
@@ -363,7 +363,7 @@ rules:
       rule_type: B
 - rule_id: R553731
   rule_type: B
-  rule_text: playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(Y,X)
   weight:
     stage1:
       base_weight: 4.342746
@@ -377,7 +377,7 @@ rules:
       rule_type: B
 - rule_id: R555905
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Iceland_national_under-21_football_team) <= playsFor(X,Fimleikafélag_Hafnarfjarðar)
+  rule_text: isLocatedIn(X,Illinois) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.025505
@@ -391,7 +391,7 @@ rules:
       rule_type: Ud
 - rule_id: R618572
   rule_type: Ud
-  rule_text: playsFor(Amir_Lowery,Y) <= playsFor(A,Y)
+  rule_text: isLocatedIn(X,North_Carolina) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.198376
@@ -405,7 +405,7 @@ rules:
       rule_type: Ud
 - rule_id: R628132
   rule_type: B
-  rule_text: isAffiliatedTo(X,Wycombe_Wanderers_F.C.) <= playsFor(X,Grays_Athletic_F.C.)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), dealsWith(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -419,7 +419,7 @@ rules:
       rule_type: B
 - rule_id: R644624
   rule_type: Ud
-  rule_text: isConnectedTo(X,Friedrichshafen_Airport) <= isConnectedTo(Cologne_Bonn_Airport,X)
+  rule_text: isLocatedIn(X,Florida) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.439978
@@ -433,7 +433,7 @@ rules:
       rule_type: Ud
 - rule_id: R649589
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Wycombe_Wanderers_F.C.) <= isAffiliatedTo(X,Millwall_F.C.)
+  rule_text: isLocatedIn(X,Missouri) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.447398
@@ -447,7 +447,7 @@ rules:
       rule_type: Ud
 - rule_id: R657897
   rule_type: Ud
-  rule_text: isAffiliatedTo(Goce_Sedloski,Y) <= playsFor(A,Y)
+  rule_text: isLocatedIn(X,Iowa) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.297897
@@ -461,7 +461,7 @@ rules:
       rule_type: Ud
 - rule_id: R671371
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Bologna_F.C._1909) <= playsFor(X,A.C._Siena)
+  rule_text: isLocatedIn(X,Canada) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -475,7 +475,7 @@ rules:
       rule_type: Ud
 - rule_id: R674298
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Boston_Celtics) <= isAffiliatedTo(X,Golden_State_Warriors)
+  rule_text: isLocatedIn(X,North_America) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -489,7 +489,7 @@ rules:
       rule_type: Ud
 - rule_id: R695849
   rule_type: B
-  rule_text: isConnectedTo(X,Copenhagen_Airport) <= isConnectedTo(X,Donetsk_International_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -503,7 +503,7 @@ rules:
       rule_type: B
 - rule_id: R699949
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Greenock_Morton_F.C.) <= playsFor(X,Airdrieonians_F.C._(1878))
+  rule_text: isLocatedIn(X,Kentucky) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.828597
@@ -517,7 +517,7 @@ rules:
       rule_type: Ud
 - rule_id: R700829
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Feyenoord) <= hasGender(X,male)
+  rule_text: isLocatedIn(X,Confederate_States_of_America) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -531,7 +531,7 @@ rules:
       rule_type: Ud
 - rule_id: R718404
   rule_type: Ud
-  rule_text: hasGender(X,male) <= isAffiliatedTo(X,South_China_Athletic_Association)
+  rule_text: isLocatedIn(X,China) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -545,7 +545,7 @@ rules:
       rule_type: Ud
 - rule_id: R728219
   rule_type: Ud
-  rule_text: isConnectedTo(Venice_Marco_Polo_Airport,Y) <= isConnectedTo(Y,Brussels_Airport)
+  rule_text: isLocatedIn(X,United_States) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -559,7 +559,7 @@ rules:
       rule_type: Ud
 - rule_id: R731159
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,A.C._Prato) <= playsFor(X,A.C._Prato)
+  rule_text: isLocatedIn(X,Germany) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -573,7 +573,7 @@ rules:
       rule_type: Ud
 - rule_id: R743717
   rule_type: Ud
-  rule_text: playsFor(Peter_Lassen_(footballer),Y) <= isAffiliatedTo(Peter_Lassen_(footballer),Y)
+  rule_text: isLocatedIn(X,Oklahoma) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 3.091962
@@ -587,7 +587,7 @@ rules:
       rule_type: Ud
 - rule_id: R748060
   rule_type: Ud
-  rule_text: playsFor(Santiago_Ezquerro,Y) <= playsFor(A,Y)
+  rule_text: isLocatedIn(X,West_Virginia) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.532407
@@ -601,7 +601,7 @@ rules:
       rule_type: Ud
 - rule_id: R783369
   rule_type: Ud
-  rule_text: playsFor(Simon_Grayson,Y) <= playsFor(A,Y)
+  rule_text: isLocatedIn(X,Europe) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -615,7 +615,7 @@ rules:
       rule_type: Ud
 - rule_id: R798111
   rule_type: B
-  rule_text: playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -629,7 +629,7 @@ rules:
       rule_type: B
 - rule_id: R805462
   rule_type: Ud
-  rule_text: isConnectedTo(Malpensa_Airport,Y) <= isConnectedTo(Koltsovo_Airport,Y)
+  rule_text: isLocatedIn(X,New_Jersey) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.894032
@@ -643,7 +643,7 @@ rules:
       rule_type: Ud
 - rule_id: R880855
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Chester_City_F.C.) <= isAffiliatedTo(X,Brighton_&_Hove_Albion_F.C.)
+  rule_text: isLocatedIn(X,Wisconsin) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 1.879009
@@ -657,7 +657,7 @@ rules:
       rule_type: Ud
 - rule_id: R905299
   rule_type: Ud
-  rule_text: playsFor(X,Hannover_96) <= isAffiliatedTo(X,FC_Bayern_Munich)
+  rule_text: isLocatedIn(X,South_Carolina) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.684521
@@ -671,7 +671,7 @@ rules:
       rule_type: Ud
 - rule_id: R921840
   rule_type: B
-  rule_text: playsFor(X,Paysandu_Sport_Club) <= playsFor(X,Associação_Atlética_Ponte_Preta)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), hasNeighbor(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -685,7 +685,7 @@ rules:
       rule_type: B
 - rule_id: R986939
   rule_type: Ud
-  rule_text: isAffiliatedTo(Damon_Jones,Y) <= isAffiliatedTo(Mikki_Moore,Y)
+  rule_text: isLocatedIn(X,Connecticut) <= isLocatedIn(A,X)
   weight:
     stage1:
       base_weight: 0.0
@@ -726,7 +726,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -758,7 +759,9 @@ candidates:
   rank_score:
     before_dep: 7.4e-05
     after_dep: 9.4e-05
-  active_rules: [R695849, R229767]
+  active_rules:
+  - R695849
+  - R229767
   active_dependencies: []
   score:
     before_dep:
@@ -792,7 +795,9 @@ candidates:
   rank_score:
     before_dep: 0.000284
     after_dep: 0.000275
-  active_rules: [R695849, R880855]
+  active_rules:
+  - R695849
+  - R880855
   active_dependencies: []
   score:
     before_dep:
@@ -826,7 +831,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -858,7 +865,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -890,7 +899,9 @@ candidates:
   rank_score:
     before_dep: 0.000182
     after_dep: 0.000218
-  active_rules: [R695849, R59766]
+  active_rules:
+  - R695849
+  - R59766
   active_dependencies: []
   score:
     before_dep:
@@ -924,7 +935,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -956,7 +968,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -988,7 +1002,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1020,7 +1036,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1052,7 +1070,9 @@ candidates:
   rank_score:
     before_dep: 0.000153
     after_dep: 0.000193
-  active_rules: [R494231, R695849]
+  active_rules:
+  - R494231
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1084,7 +1104,10 @@ candidates:
   rank_score:
     before_dep: 5.4e-05
     after_dep: 6.8e-05
-  active_rules: [R628132, R56607, R718404]
+  active_rules:
+  - R628132
+  - R56607
+  - R718404
   active_dependencies: []
   score:
     before_dep:
@@ -1118,7 +1141,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1150,7 +1175,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1182,7 +1208,9 @@ candidates:
   rank_score:
     before_dep: 0.000153
     after_dep: 0.000193
-  active_rules: [R494231, R695849]
+  active_rules:
+  - R494231
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1214,7 +1242,10 @@ candidates:
   rank_score:
     before_dep: 0.087715
     after_dep: 0.065496
-  active_rules: [R798111, R553731, R695849]
+  active_rules:
+  - R798111
+  - R553731
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1246,7 +1277,9 @@ candidates:
   rank_score:
     before_dep: 0.000267
     after_dep: 0.000309
-  active_rules: [R695849, R510510]
+  active_rules:
+  - R695849
+  - R510510
   active_dependencies: []
   score:
     before_dep:
@@ -1280,7 +1313,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1312,7 +1347,9 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849, R56607]
+  active_rules:
+  - R695849
+  - R56607
   active_dependencies: []
   score:
     before_dep:
@@ -1344,7 +1381,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1376,7 +1415,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1408,7 +1448,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1440,7 +1481,9 @@ candidates:
   rank_score:
     before_dep: 0.001242
     after_dep: 0.001748
-  active_rules: [R124457, R695849]
+  active_rules:
+  - R124457
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1472,8 +1515,12 @@ candidates:
   rank_score:
     before_dep: 0.002494
     after_dep: 0.017479
-  active_rules: [R538213, R124457, R728219]
-  active_dependencies: [D3815]
+  active_rules:
+  - R538213
+  - R124457
+  - R728219
+  active_dependencies:
+  - D3815
   score:
     before_dep:
       total_linear: -4.65779
@@ -1508,7 +1555,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1540,7 +1589,10 @@ candidates:
   rank_score:
     before_dep: 5.0e-05
     after_dep: 6.3e-05
-  active_rules: [R921840, R56607, R503336]
+  active_rules:
+  - R921840
+  - R56607
+  - R503336
   active_dependencies: []
   score:
     before_dep:
@@ -1572,7 +1624,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1604,7 +1657,10 @@ candidates:
   rank_score:
     before_dep: 9.1e-05
     after_dep: 0.000115
-  active_rules: [R628132, R56607, R27150]
+  active_rules:
+  - R628132
+  - R56607
+  - R27150
   active_dependencies: []
   score:
     before_dep:
@@ -1638,7 +1694,9 @@ candidates:
   rank_score:
     before_dep: 0.000851
     after_dep: 0.000616
-  active_rules: [R695849, R743717]
+  active_rules:
+  - R695849
+  - R743717
   active_dependencies: []
   score:
     before_dep:
@@ -1672,7 +1730,9 @@ candidates:
   rank_score:
     before_dep: 6.4e-05
     after_dep: 9.2e-05
-  active_rules: [R695849, R88839]
+  active_rules:
+  - R695849
+  - R88839
   active_dependencies: []
   score:
     before_dep:
@@ -1706,7 +1766,8 @@ candidates:
   rank_score:
     before_dep: 0.000169
     after_dep: 0.000214
-  active_rules: [R26865]
+  active_rules:
+  - R26865
   active_dependencies: []
   score:
     before_dep:
@@ -1738,7 +1799,10 @@ candidates:
   rank_score:
     before_dep: 0.087715
     after_dep: 0.065496
-  active_rules: [R798111, R553731, R695849]
+  active_rules:
+  - R798111
+  - R553731
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1770,7 +1834,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -1802,7 +1867,8 @@ candidates:
   rank_score:
     before_dep: 5.4e-05
     after_dep: 6.8e-05
-  active_rules: [R628132]
+  active_rules:
+  - R628132
   active_dependencies: []
   score:
     before_dep:
@@ -1834,7 +1900,8 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111]
+  active_rules:
+  - R798111
   active_dependencies: []
   score:
     before_dep:
@@ -1866,7 +1933,12 @@ candidates:
   rank_score:
     before_dep: 0.000149
     after_dep: 0.000189
-  active_rules: [R628132, R921840, R56607, R503336, R671371]
+  active_rules:
+  - R628132
+  - R921840
+  - R56607
+  - R503336
+  - R671371
   active_dependencies: []
   score:
     before_dep:
@@ -1900,7 +1972,9 @@ candidates:
   rank_score:
     before_dep: 5.0e-05
     after_dep: 6.3e-05
-  active_rules: [R695849, R986939]
+  active_rules:
+  - R695849
+  - R986939
   active_dependencies: []
   score:
     before_dep:
@@ -1934,7 +2008,9 @@ candidates:
   rank_score:
     before_dep: 0.000146
     after_dep: 0.000164
-  active_rules: [R695849, R338840]
+  active_rules:
+  - R695849
+  - R338840
   active_dependencies: []
   score:
     before_dep:
@@ -1968,7 +2044,9 @@ candidates:
   rank_score:
     before_dep: 5.0e-05
     after_dep: 6.3e-05
-  active_rules: [R695849, R86469]
+  active_rules:
+  - R695849
+  - R86469
   active_dependencies: []
   score:
     before_dep:
@@ -2002,7 +2080,10 @@ candidates:
   rank_score:
     before_dep: 0.087715
     after_dep: 0.065496
-  active_rules: [R798111, R553731, R695849]
+  active_rules:
+  - R798111
+  - R553731
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2034,7 +2115,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2066,8 +2148,13 @@ candidates:
   rank_score:
     before_dep: 0.010289
     after_dep: 0.068869
-  active_rules: [R538213, R124457, R695849, R649589]
-  active_dependencies: [D3815]
+  active_rules:
+  - R538213
+  - R124457
+  - R695849
+  - R649589
+  active_dependencies:
+  - D3815
   score:
     before_dep:
       total_linear: -3.210392
@@ -2102,7 +2189,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2134,7 +2222,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2166,7 +2255,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2198,7 +2289,9 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849, R56607]
+  active_rules:
+  - R695849
+  - R56607
   active_dependencies: []
   score:
     before_dep:
@@ -2230,7 +2323,9 @@ candidates:
   rank_score:
     before_dep: 0.000981
     after_dep: 0.000831
-  active_rules: [R695849, R193987]
+  active_rules:
+  - R695849
+  - R193987
   active_dependencies: []
   score:
     before_dep:
@@ -2264,7 +2359,9 @@ candidates:
   rank_score:
     before_dep: 0.000201
     after_dep: 0.0002
-  active_rules: [R695849, R618572]
+  active_rules:
+  - R695849
+  - R618572
   active_dependencies: []
   score:
     before_dep:
@@ -2298,7 +2395,8 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111]
+  active_rules:
+  - R798111
   active_dependencies: []
   score:
     before_dep:
@@ -2330,7 +2428,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2362,7 +2462,9 @@ candidates:
   rank_score:
     before_dep: 7.0e-05
     after_dep: 9.6e-05
-  active_rules: [R695849, R644624]
+  active_rules:
+  - R695849
+  - R644624
   active_dependencies: []
   score:
     before_dep:
@@ -2396,7 +2498,9 @@ candidates:
   rank_score:
     before_dep: 0.000172
     after_dep: 0.000208
-  active_rules: [R695849, R85186]
+  active_rules:
+  - R695849
+  - R85186
   active_dependencies: []
   score:
     before_dep:
@@ -2430,7 +2534,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2462,7 +2567,9 @@ candidates:
   rank_score:
     before_dep: 0.000166
     after_dep: 0.00018
-  active_rules: [R695849, R3724]
+  active_rules:
+  - R695849
+  - R3724
   active_dependencies: []
   score:
     before_dep:
@@ -2496,7 +2603,8 @@ candidates:
   rank_score:
     before_dep: 0.000169
     after_dep: 0.000214
-  active_rules: [R26865]
+  active_rules:
+  - R26865
   active_dependencies: []
   score:
     before_dep:
@@ -2528,7 +2636,9 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849, R72285]
+  active_rules:
+  - R695849
+  - R72285
   active_dependencies: []
   score:
     before_dep:
@@ -2562,7 +2672,9 @@ candidates:
   rank_score:
     before_dep: 0.000104
     after_dep: 0.000141
-  active_rules: [R695849, R430715]
+  active_rules:
+  - R695849
+  - R430715
   active_dependencies: []
   score:
     before_dep:
@@ -2596,7 +2708,9 @@ candidates:
   rank_score:
     before_dep: 0.000153
     after_dep: 0.000193
-  active_rules: [R494231, R695849]
+  active_rules:
+  - R494231
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2628,7 +2742,9 @@ candidates:
   rank_score:
     before_dep: 0.000393
     after_dep: 0.000348
-  active_rules: [R695849, R805462]
+  active_rules:
+  - R695849
+  - R805462
   active_dependencies: []
   score:
     before_dep:
@@ -2662,7 +2778,8 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111]
+  active_rules:
+  - R798111
   active_dependencies: []
   score:
     before_dep:
@@ -2694,7 +2811,9 @@ candidates:
   rank_score:
     before_dep: 0.000103
     after_dep: 0.000142
-  active_rules: [R695849, R699949]
+  active_rules:
+  - R695849
+  - R699949
   active_dependencies: []
   score:
     before_dep:
@@ -2728,7 +2847,9 @@ candidates:
   rank_score:
     before_dep: 7.9e-05
     after_dep: 8.4e-05
-  active_rules: [R695849, R460555]
+  active_rules:
+  - R695849
+  - R460555
   active_dependencies: []
   score:
     before_dep:
@@ -2762,7 +2883,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2794,7 +2916,9 @@ candidates:
   rank_score:
     before_dep: 0.000204
     after_dep: 0.000268
-  active_rules: [R695849, R748060]
+  active_rules:
+  - R695849
+  - R748060
   active_dependencies: []
   score:
     before_dep:
@@ -2828,7 +2952,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2860,7 +2985,9 @@ candidates:
   rank_score:
     before_dep: 0.001242
     after_dep: 0.001748
-  active_rules: [R124457, R517242]
+  active_rules:
+  - R124457
+  - R517242
   active_dependencies: []
   score:
     before_dep:
@@ -2894,7 +3021,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2926,7 +3054,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2958,7 +3088,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -2990,7 +3121,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3022,7 +3155,10 @@ candidates:
   rank_score:
     before_dep: 0.000128
     after_dep: 0.000162
-  active_rules: [R628132, R56607, R731159]
+  active_rules:
+  - R628132
+  - R56607
+  - R731159
   active_dependencies: []
   score:
     before_dep:
@@ -3056,7 +3192,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3088,7 +3225,9 @@ candidates:
   rank_score:
     before_dep: 0.000153
     after_dep: 0.000193
-  active_rules: [R494231, R695849]
+  active_rules:
+  - R494231
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3120,7 +3259,8 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111]
+  active_rules:
+  - R798111
   active_dependencies: []
   score:
     before_dep:
@@ -3152,7 +3292,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3184,7 +3325,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3216,7 +3358,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3248,7 +3391,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3280,7 +3424,9 @@ candidates:
   rank_score:
     before_dep: 8.9e-05
     after_dep: 9.7e-05
-  active_rules: [R695849, R905299]
+  active_rules:
+  - R695849
+  - R905299
   active_dependencies: []
   score:
     before_dep:
@@ -3314,7 +3460,9 @@ candidates:
   rank_score:
     before_dep: 8.1e-05
     after_dep: 0.000118
-  active_rules: [R695849, R449809]
+  active_rules:
+  - R695849
+  - R449809
   active_dependencies: []
   score:
     before_dep:
@@ -3348,7 +3496,9 @@ candidates:
   rank_score:
     before_dep: 0.000202
     after_dep: 0.000256
-  active_rules: [R695849, R93284]
+  active_rules:
+  - R695849
+  - R93284
   active_dependencies: []
   score:
     before_dep:
@@ -3382,7 +3532,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3414,7 +3565,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3446,7 +3598,9 @@ candidates:
   rank_score:
     before_dep: 0.000193
     after_dep: 0.000246
-  active_rules: [R695849, R555905]
+  active_rules:
+  - R695849
+  - R555905
   active_dependencies: []
   score:
     before_dep:
@@ -3480,7 +3634,9 @@ candidates:
   rank_score:
     before_dep: 0.002494
     after_dep: 0.008756
-  active_rules: [R538213, R695849]
+  active_rules:
+  - R538213
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3512,7 +3668,9 @@ candidates:
   rank_score:
     before_dep: 0.001242
     after_dep: 0.001748
-  active_rules: [R124457, R674298]
+  active_rules:
+  - R124457
+  - R674298
   active_dependencies: []
   score:
     before_dep:
@@ -3546,7 +3704,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3578,7 +3737,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3610,7 +3770,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3642,7 +3804,9 @@ candidates:
   rank_score:
     before_dep: 0.000163
     after_dep: 0.000244
-  active_rules: [R695849, R657897]
+  active_rules:
+  - R695849
+  - R657897
   active_dependencies: []
   score:
     before_dep:
@@ -3676,7 +3840,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3708,7 +3874,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3740,7 +3907,8 @@ candidates:
   rank_score:
     before_dep: 0.000491
     after_dep: 0.00062
-  active_rules: [R783369]
+  active_rules:
+  - R783369
   active_dependencies: []
   score:
     before_dep:
@@ -3772,7 +3940,9 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849, R700829]
+  active_rules:
+  - R695849
+  - R700829
   active_dependencies: []
   score:
     before_dep:
@@ -3806,7 +3976,9 @@ candidates:
   rank_score:
     before_dep: 0.000218
     after_dep: 0.000208
-  active_rules: [R695849, R224738]
+  active_rules:
+  - R695849
+  - R224738
   active_dependencies: []
   score:
     before_dep:
@@ -3840,7 +4012,9 @@ candidates:
   rank_score:
     before_dep: 0.000132
     after_dep: 0.000218
-  active_rules: [R695849, R448490]
+  active_rules:
+  - R695849
+  - R448490
   active_dependencies: []
   score:
     before_dep:
@@ -3874,7 +4048,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3906,7 +4081,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3938,7 +4115,9 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002346
-  active_rules: [R798111, R695849]
+  active_rules:
+  - R798111
+  - R695849
   active_dependencies: []
   score:
     before_dep:
@@ -3970,7 +4149,8 @@ candidates:
   rank_score:
     before_dep: 4.5e-05
     after_dep: 5.7e-05
-  active_rules: [R695849]
+  active_rules:
+  - R695849
   active_dependencies: []
   score:
     before_dep:

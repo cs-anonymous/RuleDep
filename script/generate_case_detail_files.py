@@ -174,7 +174,9 @@ def load_rule_texts(rule_file):
     texts = {}
     confs = {}
     with open(rule_file, encoding="utf-8") as f:
-        for rid, line in enumerate(f):
+        # Rule IDs are 1-based (line_no) across training/aggregation artifacts.
+        # Keep the same base here to avoid off-by-one text lookup in case reports.
+        for rid, line in enumerate(f, start=1):
             parts = line.rstrip("\n").split("\t")
             texts[rid] = parts[3] if len(parts) >= 4 else line.strip()
             try:

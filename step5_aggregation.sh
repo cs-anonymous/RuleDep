@@ -113,29 +113,17 @@ run_batched_configs() {
     return 0
 }
 
-batch1=(
-    "structural_none::--synergy --redundancy --type_grouping none"
-    "structural_rd::--synergy --redundancy --type_grouping rd"
-    "structural_r2d3::--synergy --redundancy --type_grouping r2d3"
-    "structural_r3d6::--synergy --redundancy --type_grouping r3d6"
+fixed_name="fixed_structural_rd_dep_scale_surprisal_pos_auto_ratio_synergy_redundancy_dep_l1"
+fixed_args=(
+    --synergy
+    --redundancy
+    --type_grouping rd
+    --dependency_scale_mode sqrt_active
+    --rule_init_mode surprisal
+    --pos auto_ratio
+    --dep_l1_lambda 1e-5
 )
 
-batch2=(
-    "synergy::--synergy"
-    "redundancy::--redundancy"
-    "sign_constraint_dependency::--synergy --redundancy --sign_constraint_dependency"
-    "init_dep_with_lift::--synergy --redundancy --init_dep_with_lift"
-)
-
-batch3=(
-    "pos_auto_ratio::--synergy --redundancy --pos auto_ratio"
-    "structural_surprisal_init::--synergy --redundancy --rule_init_mode surprisal"
-    "structural_dep_scale::--synergy --redundancy --dependency_scale_mode sqrt_active"
-    "structural_rule_mask::--synergy --redundancy --dependency_mask_low_rule_weight"
-)
-
-run_batched_configs "${max_parallel_configs}" "${batch1[@]}"
-run_batched_configs "${max_parallel_configs}" "${batch2[@]}"
-run_batched_configs "${max_parallel_configs}" "${batch3[@]}"
+run_config 0 "${fixed_name}" "${fixed_args[@]}"
 
 echo "Step 5 finished for ${dataset}"

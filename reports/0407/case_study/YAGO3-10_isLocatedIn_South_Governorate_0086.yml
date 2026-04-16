@@ -27,7 +27,7 @@ type_weights:
 rules:
 - rule_id: R2790
   rule_type: B
-  rule_text: isAffiliatedTo(X,Hertha_BSC) <= isAffiliatedTo(X,TSG_1899_Hoffenheim)
+  rule_text: isLocatedIn(X,Y) <= diedIn(A,X), isPoliticianOf(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -41,7 +41,7 @@ rules:
       rule_type: B
 - rule_id: R10936
   rule_type: B
-  rule_text: isAffiliatedTo(X,C.F._Mérida) <= isAffiliatedTo(X,Mexico_national_football_team)
+  rule_text: isLocatedIn(X,Y) <= hasNeighbor(A,X), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -55,7 +55,7 @@ rules:
       rule_type: B
 - rule_id: R15913
   rule_type: B
-  rule_text: isConnectedTo(Adnan_Menderes_Airport,Y) <= isConnectedTo(Y,Toronto_Pearson_International_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), participatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -69,7 +69,7 @@ rules:
       rule_type: B
 - rule_id: R21167
   rule_type: B
-  rule_text: playsFor(X,Olympique_de_Marseille) <= playsFor(X,FC_Istres)
+  rule_text: isLocatedIn(X,Y) <= participatedIn(A,X), hasCapital(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -83,7 +83,7 @@ rules:
       rule_type: B
 - rule_id: R26865
   rule_type: B
-  rule_text: isConnectedTo(X,Treviso_Airport) <= isConnectedTo(X,Munich_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -97,7 +97,7 @@ rules:
       rule_type: B
 - rule_id: R35268
   rule_type: Ud
-  rule_text: isConnectedTo(Yemelyanovo_International_Airport,Y) <= isConnectedTo(Y,Hurghada_International_Airport)
+  rule_text: isLocatedIn(Mount_Hermon,Y) <= isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 1.376003
@@ -111,7 +111,7 @@ rules:
       rule_type: Ud
 - rule_id: R35617
   rule_type: B
-  rule_text: isAffiliatedTo(X,Iserlohn_Roosters) <= isAffiliatedTo(X,Adler_Mannheim)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), isLocatedIn(B,A), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -125,7 +125,7 @@ rules:
       rule_type: B
 - rule_id: R42093
   rule_type: B
-  rule_text: 'isAffiliatedTo(X,IFK_Göteborg) <= '
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), happenedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -139,7 +139,7 @@ rules:
       rule_type: B
 - rule_id: R86223
   rule_type: B
-  rule_text: isConnectedTo(X,Madeira_Airport) <= isConnectedTo(Venice_Marco_Polo_Airport,X)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), hasCapital(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -153,7 +153,7 @@ rules:
       rule_type: B
 - rule_id: R106153
   rule_type: B
-  rule_text: isConnectedTo(X,Noi_Bai_International_Airport) <= isConnectedTo(X,Fuzhou_Changle_International_Airport)
+  rule_text: isLocatedIn(X,Y) <= diedIn(A,X), wasBornIn(A,B), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -167,7 +167,7 @@ rules:
       rule_type: B
 - rule_id: R109118
   rule_type: Ud
-  rule_text: isAffiliatedTo(X,Olympique_de_Marseille) <= isAffiliatedTo(X,Al_Rayyan_SC)
+  rule_text: isLocatedIn(Jordan_River,Y) <= isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -181,7 +181,7 @@ rules:
       rule_type: Ud
 - rule_id: R124457
   rule_type: B
-  rule_text: 'isAffiliatedTo(X,Leicester_City_F.C.) <= '
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -195,7 +195,7 @@ rules:
       rule_type: B
 - rule_id: R162592
   rule_type: B
-  rule_text: playsFor(X,Yokohama_FC) <= isAffiliatedTo(X,Tokyo_Verdy)
+  rule_text: isLocatedIn(X,Y) <= isAffiliatedTo(A,X), wasBornIn(A,B), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -209,7 +209,7 @@ rules:
       rule_type: B
 - rule_id: R167429
   rule_type: B
-  rule_text: playsFor(X,Montevideo_Wanderers_F.C.) <= playsFor(X,Central_Español)
+  rule_text: isLocatedIn(X,Y) <= happenedIn(X,A), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -223,7 +223,7 @@ rules:
       rule_type: B
 - rule_id: R184340
   rule_type: B
-  rule_text: isAffiliatedTo(X,Newport_County_A.F.C.) <= isAffiliatedTo(X,Chelsea_F.C.)
+  rule_text: isLocatedIn(X,Y) <= diedIn(A,X), wasBornIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -237,7 +237,7 @@ rules:
       rule_type: B
 - rule_id: R199513
   rule_type: B
-  rule_text: isConnectedTo(X,Suvarnabhumi_Airport) <= isConnectedTo(Tbilisi_International_Airport,X)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -251,7 +251,7 @@ rules:
       rule_type: B
 - rule_id: R228379
   rule_type: B
-  rule_text: isConnectedTo(Incheon_International_Airport,Y) <= isConnectedTo(Y,Cairo_International_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), isLocatedIn(B,A), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -265,7 +265,7 @@ rules:
       rule_type: B
 - rule_id: R262130
   rule_type: B
-  rule_text: playsFor(X,Recreativo_de_Huelva) <= isAffiliatedTo(X,Atlético_Madrid)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), hasCapital(A,B), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -279,7 +279,7 @@ rules:
       rule_type: B
 - rule_id: R300254
   rule_type: B
-  rule_text: isAffiliatedTo(X,Red_Star_Belgrade) <= isAffiliatedTo(X,Beijing_Guoan_F.C.)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -293,7 +293,7 @@ rules:
       rule_type: B
 - rule_id: R305789
   rule_type: B
-  rule_text: isConnectedTo(X,Ufa_International_Airport) <= isConnectedTo(X,Tolmachevo_Airport)
+  rule_text: isLocatedIn(X,Y) <= created(A,X), wasBornIn(A,B), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.49014
@@ -307,7 +307,7 @@ rules:
       rule_type: B
 - rule_id: R352564
   rule_type: B
-  rule_text: isAffiliatedTo(X,FK_Ekranas) <= playsFor(X,FK_Ekranas)
+  rule_text: isLocatedIn(X,Y) <= hasNeighbor(X,A), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -321,7 +321,7 @@ rules:
       rule_type: B
 - rule_id: R355121
   rule_type: B
-  rule_text: isConnectedTo(X,Heydar_Aliyev_International_Airport) <= isConnectedTo(X,Petropavlovsk-Kamchatsky_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -335,7 +335,7 @@ rules:
       rule_type: B
 - rule_id: R359014
   rule_type: B
-  rule_text: isAffiliatedTo(X,S.C._Campomaiorense) <= isAffiliatedTo(X,FC_Felgueiras)
+  rule_text: isLocatedIn(X,Y) <= wasBornIn(A,X), isPoliticianOf(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -349,7 +349,7 @@ rules:
       rule_type: B
 - rule_id: R360507
   rule_type: B
-  rule_text: playsFor(Jalaleddin_Alimohammadi,Y) <= isAffiliatedTo(Jalaleddin_Alimohammadi,Y)
+  rule_text: isLocatedIn(X,Y) <= participatedIn(A,X), isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -363,7 +363,7 @@ rules:
       rule_type: B
 - rule_id: R364114
   rule_type: B
-  rule_text: isConnectedTo(X,Madrid–Barajas_Airport) <= isConnectedTo(Weeze_Airport,X)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), isLocatedIn(B,A), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -377,7 +377,7 @@ rules:
       rule_type: B
 - rule_id: R378020
   rule_type: B
-  rule_text: isAffiliatedTo(X,Millwall_F.C.) <= playsFor(X,Newport_County_A.F.C.)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(B,A), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -391,7 +391,7 @@ rules:
       rule_type: B
 - rule_id: R380595
   rule_type: B
-  rule_text: isConnectedTo(Chelyabinsk_Airport,Y) <= isConnectedTo(Pulkovo_Airport,Y)
+  rule_text: isLocatedIn(X,Y) <= isAffiliatedTo(A,X), wasBornIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -405,7 +405,7 @@ rules:
       rule_type: B
 - rule_id: R403497
   rule_type: B
-  rule_text: wasBornIn(X,Munich) <= isAffiliatedTo(X,SpVgg_Greuther_Fürth)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), hasCapital(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -419,7 +419,7 @@ rules:
       rule_type: B
 - rule_id: R405501
   rule_type: B
-  rule_text: isAffiliatedTo(Willian_Xavier_Barbosa,Y) <= playsFor(Willian_Xavier_Barbosa,Y)
+  rule_text: isLocatedIn(X,Y) <= happenedIn(A,X), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -433,7 +433,7 @@ rules:
       rule_type: B
 - rule_id: R416520
   rule_type: B
-  rule_text: isAffiliatedTo(X,Anaheim_Ducks) <= isAffiliatedTo(X,Dallas_Stars)
+  rule_text: isLocatedIn(X,Y) <= isPoliticianOf(A,X), wasBornIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -447,7 +447,7 @@ rules:
       rule_type: B
 - rule_id: R425571
   rule_type: B
-  rule_text: playsFor(Kevin_Bond_(footballer),Y) <= isAffiliatedTo(A,Y)
+  rule_text: isLocatedIn(X,Y) <= graduatedFrom(A,X), isPoliticianOf(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.011419
@@ -461,7 +461,7 @@ rules:
       rule_type: B
 - rule_id: R455584
   rule_type: B
-  rule_text: isConnectedTo(X,Aeroparque_Jorge_Newbery) <= isConnectedTo(Tocumen_International_Airport,X)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -475,7 +475,7 @@ rules:
       rule_type: B
 - rule_id: R459516
   rule_type: B
-  rule_text: isAffiliatedTo(Gilberto_Carlos_Nascimento,Y) <= isAffiliatedTo(A,Y)
+  rule_text: isLocatedIn(X,Y) <= happenedIn(X,A), hasCapital(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -489,7 +489,7 @@ rules:
       rule_type: B
 - rule_id: R471222
   rule_type: B
-  rule_text: isAffiliatedTo(X,Georgia_national_football_team) <= playsFor(X,Anorthosis_Famagusta_FC)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), hasCapital(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -503,7 +503,7 @@ rules:
       rule_type: B
 - rule_id: R478784
   rule_type: Ud
-  rule_text: isConnectedTo(X,Il_Caravaggio_International_Airport) <= isConnectedTo(Henri_Coandă_International_Airport,X)
+  rule_text: isLocatedIn(Arab_Open_University,Y) <= hasCapital(Y,A)
   weight:
     stage1:
       base_weight: 0.014397
@@ -517,7 +517,7 @@ rules:
       rule_type: Ud
 - rule_id: R496954
   rule_type: B
-  rule_text: playsFor(X,Israel_national_football_team) <= playsFor(X,Shimshon_Tel_Aviv_F.C.)
+  rule_text: isLocatedIn(X,Y) <= participatedIn(A,X), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -531,7 +531,7 @@ rules:
       rule_type: B
 - rule_id: R530447
   rule_type: Ud
-  rule_text: playsFor(Benjamin_A._Enloe,Y) <= isAffiliatedTo(A,Y)
+  rule_text: isLocatedIn(Search_for_Common_Ground,Y) <= hasCapital(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -545,7 +545,7 @@ rules:
       rule_type: Ud
 - rule_id: R538213
   rule_type: B
-  rule_text: isAffiliatedTo(X,FC_SKVO_Rostov-on-Don) <= isAffiliatedTo(X,A)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.128821
@@ -559,7 +559,7 @@ rules:
       rule_type: B
 - rule_id: R540809
   rule_type: Ud
-  rule_text: participatedIn(X,Normandy_landings) <= owns(X,A)
+  rule_text: isLocatedIn(Arab_Open_University,Y) <= isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -573,7 +573,7 @@ rules:
       rule_type: Ud
 - rule_id: R553731
   rule_type: B
-  rule_text: playsFor(Samir_Muratović,Y) <= isAffiliatedTo(Samir_Muratović,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(Y,X)
   weight:
     stage1:
       base_weight: 4.342746
@@ -587,7 +587,7 @@ rules:
       rule_type: B
 - rule_id: R568261
   rule_type: B
-  rule_text: participatedIn(X,Invasion_of_Normandy) <= participatedIn(X,American_Theater_(World_War_II))
+  rule_text: isLocatedIn(X,Y) <= created(A,X), wasBornIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.000153
@@ -601,7 +601,7 @@ rules:
       rule_type: B
 - rule_id: R581113
   rule_type: Ud
-  rule_text: isAffiliatedTo(Ray_Tolbert,Y) <= isAffiliatedTo(Chucky_Brown,Y)
+  rule_text: isLocatedIn(Kurdistan_Workers'_Party,Y) <= hasCapital(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -615,7 +615,7 @@ rules:
       rule_type: Ud
 - rule_id: R605887
   rule_type: B
-  rule_text: playsFor(Grant_Smith_(footballer),Y) <= isAffiliatedTo(A,Y)
+  rule_text: isLocatedIn(X,Y) <= dealsWith(X,A), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -629,7 +629,7 @@ rules:
       rule_type: B
 - rule_id: R658157
   rule_type: B
-  rule_text: isAffiliatedTo(X,IF_Brommapojkarna) <= isAffiliatedTo(X,IK_Sirius_Fotboll)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), hasCapital(B,A), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -643,7 +643,7 @@ rules:
       rule_type: B
 - rule_id: R695849
   rule_type: B
-  rule_text: isConnectedTo(X,Copenhagen_Airport) <= isConnectedTo(X,Donetsk_International_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -657,7 +657,7 @@ rules:
       rule_type: B
 - rule_id: R710499
   rule_type: B
-  rule_text: isAffiliatedTo(Danny_Potter,Y) <= isAffiliatedTo(Kezie_Ibe,Y)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), isLocatedIn(Y,A)
   weight:
     stage1:
       base_weight: 0.0
@@ -671,7 +671,7 @@ rules:
       rule_type: B
 - rule_id: R756194
   rule_type: B
-  rule_text: isConnectedTo(Eugene_Airport,Y) <= isConnectedTo(Colorado_Springs_Airport,Y)
+  rule_text: isLocatedIn(X,Y) <= diedIn(A,X), wasBornIn(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.064131
@@ -685,7 +685,7 @@ rules:
       rule_type: B
 - rule_id: R798111
   rule_type: B
-  rule_text: playsFor(X,CR_Vasco_da_Gama) <= isAffiliatedTo(X,Treze_Futebol_Clube)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -699,7 +699,7 @@ rules:
       rule_type: B
 - rule_id: R801479
   rule_type: B
-  rule_text: isAffiliatedTo(X,FC_Schalke_04) <= isAffiliatedTo(X,Fortuna_Düsseldorf)
+  rule_text: isLocatedIn(X,Y) <= participatedIn(X,A), participatedIn(B,A), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 0.174195
@@ -713,7 +713,7 @@ rules:
       rule_type: B
 - rule_id: R816397
   rule_type: B
-  rule_text: isConnectedTo(Munich_Airport,Y) <= isConnectedTo(Aristides_Pereira_International_Airport,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), isLocatedIn(Y,A)
   weight:
     stage1:
       base_weight: 0.239071
@@ -727,7 +727,7 @@ rules:
       rule_type: B
 - rule_id: R820685
   rule_type: Ud
-  rule_text: isConnectedTo(Jinan_Yaoqiang_International_Airport,Y) <= isConnectedTo(Nanyang_Jiangying_Airport,Y)
+  rule_text: isLocatedIn(Search_for_Common_Ground,Y) <= isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -741,7 +741,7 @@ rules:
       rule_type: Ud
 - rule_id: R846065
   rule_type: B
-  rule_text: diedIn(X,Paris) <= influences(René_Descartes,X)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(X,A), isLocatedIn(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -755,7 +755,7 @@ rules:
       rule_type: B
 - rule_id: R874189
   rule_type: B
-  rule_text: isAffiliatedTo(Ricardo_Villar_(Brazilian_footballer),Y) <= playsFor(Ricardo_Villar_(Brazilian_footballer),Y)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), isLocatedIn(B,A), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -769,7 +769,7 @@ rules:
       rule_type: B
 - rule_id: R898282
   rule_type: B
-  rule_text: playsFor(Ivor_Broadis,Y) <= isAffiliatedTo(A,Y)
+  rule_text: isLocatedIn(X,Y) <= created(A,X), isPoliticianOf(A,B), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -783,7 +783,7 @@ rules:
       rule_type: B
 - rule_id: R903078
   rule_type: B
-  rule_text: isConnectedTo(Münster_Osnabrück_International_Airport,Y) <= isConnectedTo(Y,Valencia_Airport)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(A,X), hasCapital(A,B), isLocatedIn(B,Y)
   weight:
     stage1:
       base_weight: 1.744226
@@ -797,7 +797,7 @@ rules:
       rule_type: B
 - rule_id: R911330
   rule_type: B
-  rule_text: isConnectedTo(X,Suvarnabhumi_Airport) <= isConnectedTo(X,Frankfurt_Airport)
+  rule_text: isLocatedIn(X,Y) <= happenedIn(X,A), isLocatedIn(B,A), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -811,7 +811,7 @@ rules:
       rule_type: B
 - rule_id: R913444
   rule_type: B
-  rule_text: isAffiliatedTo(Cartier_Martin,Y) <= isAffiliatedTo(Cedric_Simmons,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(A,B), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -825,7 +825,7 @@ rules:
       rule_type: B
 - rule_id: R933857
   rule_type: B
-  rule_text: isConnectedTo(Linate_Airport,Y) <= isConnectedTo(Y,Billund_Airport)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(X,A), hasCapital(B,A), isLocatedIn(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -839,7 +839,7 @@ rules:
       rule_type: B
 - rule_id: R939670
   rule_type: B
-  rule_text: playsFor(Ondřej_Herzán,Y) <= isAffiliatedTo(Ondřej_Herzán,Y)
+  rule_text: isLocatedIn(X,Y) <= isLocatedIn(A,X), isLocatedIn(B,A), hasCapital(Y,B)
   weight:
     stage1:
       base_weight: 0.0
@@ -853,7 +853,7 @@ rules:
       rule_type: B
 - rule_id: R961675
   rule_type: B
-  rule_text: isConnectedTo(X,San_Francisco_International_Airport) <= isConnectedTo(Haneda_Airport,X)
+  rule_text: isLocatedIn(X,Y) <= hasCapital(X,A), isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.541803
@@ -867,7 +867,7 @@ rules:
       rule_type: B
 - rule_id: R977455
   rule_type: Ud
-  rule_text: isConnectedTo(X,Logan_International_Airport) <= isConnectedTo(Baltimore–Washington_International_Airport,X)
+  rule_text: isLocatedIn(Rome,Y) <= isLocatedIn(A,Y)
   weight:
     stage1:
       base_weight: 0.0
@@ -1468,7 +1468,11 @@ candidates:
   rank_score:
     before_dep: 0.015725
     after_dep: 0.024036
-  active_rules: [R903078, R801479, R695849, R35617]
+  active_rules:
+  - R903078
+  - R801479
+  - R695849
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1500,8 +1504,14 @@ candidates:
   rank_score:
     before_dep: 0.016719
     after_dep: 0.025903
-  active_rules: [R903078, R455584, R228379, R816397, R35617]
-  active_dependencies: [D11674]
+  active_rules:
+  - R903078
+  - R455584
+  - R228379
+  - R816397
+  - R35617
+  active_dependencies:
+  - D11674
   score:
     before_dep:
       total_linear: -2.803314
@@ -1534,8 +1544,51 @@ candidates:
   rank_score:
     before_dep: 0.111941
     after_dep: 0.002197
-  active_rules: [R538213, R798111, R913444, R403497, R471222, R553731, R124457, R86223, R416520, R15913, R939670, R10936, R262130, R352564, R26865, R605887, R378020, R695849]
-  active_dependencies: [D2423, D2444, D2447, D2459, D2463, D2486, D3770, D3815, D3821, D3896, D3943, D10006, D10015, D10019, D10044, D10352, D10359, D10379, D10389, D12020, D12042, D13153, D13206, D13479, D16125]
+  active_rules:
+  - R538213
+  - R798111
+  - R913444
+  - R403497
+  - R471222
+  - R553731
+  - R124457
+  - R86223
+  - R416520
+  - R15913
+  - R939670
+  - R10936
+  - R262130
+  - R352564
+  - R26865
+  - R605887
+  - R378020
+  - R695849
+  active_dependencies:
+  - D2423
+  - D2444
+  - D2447
+  - D2459
+  - D2463
+  - D2486
+  - D3770
+  - D3815
+  - D3821
+  - D3896
+  - D3943
+  - D10006
+  - D10015
+  - D10019
+  - D10044
+  - D10352
+  - D10359
+  - D10379
+  - D10389
+  - D12020
+  - D12042
+  - D13153
+  - D13206
+  - D13479
+  - D16125
   score:
     before_dep:
       total_linear: -0.315044
@@ -1570,7 +1623,10 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479, R35617, R846065]
+  active_rules:
+  - R801479
+  - R35617
+  - R846065
   active_dependencies: []
   score:
     before_dep:
@@ -1602,7 +1658,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -1634,7 +1696,9 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479, R35617]
+  active_rules:
+  - R801479
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1666,7 +1730,8 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479]
+  active_rules:
+  - R801479
   active_dependencies: []
   score:
     before_dep:
@@ -1698,7 +1763,8 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479]
+  active_rules:
+  - R801479
   active_dependencies: []
   score:
     before_dep:
@@ -1730,7 +1796,8 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479]
+  active_rules:
+  - R801479
   active_dependencies: []
   score:
     before_dep:
@@ -1762,7 +1829,9 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479, R35617]
+  active_rules:
+  - R801479
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1794,7 +1863,11 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1826,7 +1899,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R695849, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1858,7 +1937,8 @@ candidates:
   rank_score:
     before_dep: 0.013326
     after_dep: 0.016724
-  active_rules: [R903078]
+  active_rules:
+  - R903078
   active_dependencies: []
   score:
     before_dep:
@@ -1890,7 +1970,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -1922,7 +2008,8 @@ candidates:
   rank_score:
     before_dep: 0.001807
     after_dep: 0.002535
-  active_rules: [R801479]
+  active_rules:
+  - R801479
   active_dependencies: []
   score:
     before_dep:
@@ -1954,7 +2041,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -1986,7 +2078,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2018,7 +2115,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R695849, R35617, R846065]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R35617
+  - R846065
   active_dependencies: []
   score:
     before_dep:
@@ -2050,7 +2154,11 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2082,8 +2190,20 @@ candidates:
   rank_score:
     before_dep: 0.002442
     after_dep: 0.000802
-  active_rules: [R455584, R568261, R228379, R305789, R380595, R162592, R816397, R355121, R898282, R35617, R933857]
-  active_dependencies: [D11079]
+  active_rules:
+  - R455584
+  - R568261
+  - R228379
+  - R305789
+  - R380595
+  - R162592
+  - R816397
+  - R355121
+  - R898282
+  - R35617
+  - R933857
+  active_dependencies:
+  - D11079
   score:
     before_dep:
       total_linear: -4.057247
@@ -2116,8 +2236,17 @@ candidates:
   rank_score:
     before_dep: 0.003159
     after_dep: 0.010509
-  active_rules: [R538213, R455584, R228379, R816397, R355121, R695849, R35617, R846065]
-  active_dependencies: [D11032]
+  active_rules:
+  - R538213
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R35617
+  - R846065
+  active_dependencies:
+  - D11032
   score:
     before_dep:
       total_linear: -4.418719
@@ -2150,7 +2279,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2182,7 +2316,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R695849, R199513, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R199513
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2214,7 +2355,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2246,7 +2388,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R167429, R816397, R911330, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R167429
+  - R816397
+  - R911330
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2278,7 +2426,9 @@ candidates:
   rank_score:
     before_dep: 0.001462
     after_dep: 0.001696
-  active_rules: [R403497, R35617]
+  active_rules:
+  - R403497
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2310,7 +2460,9 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584, R167429]
+  active_rules:
+  - R455584
+  - R167429
   active_dependencies: []
   score:
     before_dep:
@@ -2342,7 +2494,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2374,7 +2531,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2406,8 +2564,13 @@ candidates:
   rank_score:
     before_dep: 0.005361
     after_dep: 0.01852
-  active_rules: [R961675, R801479, R405501, R846065]
-  active_dependencies: [D16190]
+  active_rules:
+  - R961675
+  - R801479
+  - R405501
+  - R846065
+  active_dependencies:
+  - D16190
   score:
     before_dep:
       total_linear: -4.070614
@@ -2440,7 +2603,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2472,7 +2636,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2504,7 +2669,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2536,7 +2702,11 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2568,7 +2738,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R695849, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R695849
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2600,7 +2775,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -2632,7 +2813,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -2664,7 +2851,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -2696,7 +2889,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2728,7 +2922,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2760,7 +2955,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2792,7 +2992,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R405501, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R405501
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2824,7 +3029,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R695849, R199513, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R199513
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2856,8 +3068,15 @@ candidates:
   rank_score:
     before_dep: 0.003159
     after_dep: 0.010509
-  active_rules: [R538213, R455584, R228379, R816397, R695849, R35617]
-  active_dependencies: [D11032]
+  active_rules:
+  - R538213
+  - R455584
+  - R228379
+  - R816397
+  - R695849
+  - R35617
+  active_dependencies:
+  - D11032
   score:
     before_dep:
       total_linear: -4.418719
@@ -2890,7 +3109,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -2922,7 +3142,15 @@ candidates:
   rank_score:
     before_dep: 0.001527
     after_dep: 0.001897
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857, R478784, R540809]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
+  - R478784
+  - R540809
   active_dependencies: []
   score:
     before_dep:
@@ -2956,7 +3184,9 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584, R35617]
+  active_rules:
+  - R455584
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -2988,7 +3218,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R898282, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R898282
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -3020,7 +3257,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R167429, R816397, R911330, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R167429
+  - R816397
+  - R911330
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3052,7 +3295,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3084,7 +3328,11 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3116,7 +3364,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3148,7 +3401,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3180,7 +3434,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3212,7 +3467,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3244,7 +3504,9 @@ candidates:
   rank_score:
     before_dep: 0.015725
     after_dep: 0.024036
-  active_rules: [R903078, R801479]
+  active_rules:
+  - R903078
+  - R801479
   active_dependencies: []
   score:
     before_dep:
@@ -3276,7 +3538,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3308,7 +3575,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3340,7 +3608,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R695849, R35617, R846065]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R35617
+  - R846065
   active_dependencies: []
   score:
     before_dep:
@@ -3372,7 +3647,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R167429, R816397, R911330, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R167429
+  - R816397
+  - R911330
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3404,7 +3685,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3436,7 +3722,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R167429, R816397, R911330, R496954, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R167429
+  - R816397
+  - R911330
+  - R496954
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3468,7 +3761,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3500,7 +3794,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617, R820685, R530447]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
+  - R820685
+  - R530447
   active_dependencies: []
   score:
     before_dep:
@@ -3534,7 +3834,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -3566,7 +3872,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3598,8 +3905,20 @@ candidates:
   rank_score:
     before_dep: 0.002729
     after_dep: 0.006304
-  active_rules: [R300254, R798111, R455584, R228379, R816397, R355121, R695849, R199513, R35617]
-  active_dependencies: [D7674, D7715, D11461]
+  active_rules:
+  - R300254
+  - R798111
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R695849
+  - R199513
+  - R35617
+  active_dependencies:
+  - D7674
+  - D7715
+  - D11461
   score:
     before_dep:
       total_linear: -4.54754
@@ -3632,7 +3951,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -3664,7 +3989,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R21167, R360507, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R21167
+  - R360507
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3696,7 +4027,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3728,8 +4060,29 @@ candidates:
   rank_score:
     before_dep: 0.003454
     after_dep: 0.002153
-  active_rules: [R300254, R801479, R756194, R455584, R106153, R228379, R710499, R364114, R816397, R184340, R695849, R2790, R359014, R405501, R874189, R35617]
-  active_dependencies: [D7674, D7709, D7716, D11384, D15733]
+  active_rules:
+  - R300254
+  - R801479
+  - R756194
+  - R455584
+  - R106153
+  - R228379
+  - R710499
+  - R364114
+  - R816397
+  - R184340
+  - R695849
+  - R2790
+  - R359014
+  - R405501
+  - R874189
+  - R35617
+  active_dependencies:
+  - D7674
+  - D7709
+  - D7716
+  - D11384
+  - D15733
   score:
     before_dep:
       total_linear: -4.309215
@@ -3762,7 +4115,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R459516, R21167, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R459516
+  - R21167
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3794,8 +4153,13 @@ candidates:
   rank_score:
     before_dep: 0.002154
     after_dep: 0.002024
-  active_rules: [R300254, R455584, R695849, R35617]
-  active_dependencies: [D7674]
+  active_rules:
+  - R300254
+  - R455584
+  - R695849
+  - R35617
+  active_dependencies:
+  - D7674
   score:
     before_dep:
       total_linear: -4.786611
@@ -3828,7 +4192,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3860,7 +4225,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617, R109118]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
+  - R109118
   active_dependencies: []
   score:
     before_dep:
@@ -3894,7 +4264,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -3926,8 +4301,15 @@ candidates:
   rank_score:
     before_dep: 0.003159
     after_dep: 0.010509
-  active_rules: [R538213, R455584, R228379, R816397, R695849, R35617]
-  active_dependencies: [D11032]
+  active_rules:
+  - R538213
+  - R455584
+  - R228379
+  - R816397
+  - R695849
+  - R35617
+  active_dependencies:
+  - D11032
   score:
     before_dep:
       total_linear: -4.418719
@@ -3960,7 +4342,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -3992,7 +4375,13 @@ candidates:
   rank_score:
     before_dep: 0.005782
     after_dep: 0.008462
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R35268]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R35268
   active_dependencies: []
   score:
     before_dep:
@@ -4026,7 +4415,9 @@ candidates:
   rank_score:
     before_dep: 0.001503
     after_dep: 0.001925
-  active_rules: [R756194, R977455]
+  active_rules:
+  - R756194
+  - R977455
   active_dependencies: []
   score:
     before_dep:
@@ -4060,7 +4451,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -4092,7 +4488,14 @@ candidates:
   rank_score:
     before_dep: 0.001523
     after_dep: 0.002114
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R425571, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R425571
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -4124,7 +4527,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -4156,7 +4565,13 @@ candidates:
   rank_score:
     before_dep: 0.001856
     after_dep: 0.002106
-  active_rules: [R798111, R939670, R26865, R378020, R695849, R658157]
+  active_rules:
+  - R798111
+  - R939670
+  - R26865
+  - R378020
+  - R695849
+  - R658157
   active_dependencies: []
   score:
     before_dep:
@@ -4188,7 +4603,14 @@ candidates:
   rank_score:
     before_dep: 0.001523
     after_dep: 0.002114
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R425571, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R425571
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -4220,7 +4642,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4252,7 +4675,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4284,7 +4708,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4316,7 +4741,11 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -4348,7 +4777,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4380,7 +4810,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.002185
-  active_rules: [R455584, R228379, R816397, R35617, R581113]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R35617
+  - R581113
   active_dependencies: []
   score:
     before_dep:
@@ -4414,7 +4849,13 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617, R933857]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
+  - R933857
   active_dependencies: []
   score:
     before_dep:
@@ -4446,7 +4887,14 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R167429, R816397, R911330, R496954, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R167429
+  - R816397
+  - R911330
+  - R496954
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -4478,7 +4926,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4510,7 +4959,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4542,7 +4992,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -4574,7 +5029,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:
@@ -4606,7 +5062,14 @@ candidates:
   rank_score:
     before_dep: 0.002494
     after_dep: 0.016103
-  active_rules: [R538213, R10936, R352564, R695849, R405501, R35617, R42093]
+  active_rules:
+  - R538213
+  - R10936
+  - R352564
+  - R695849
+  - R405501
+  - R35617
+  - R42093
   active_dependencies: []
   score:
     before_dep:
@@ -4638,7 +5101,12 @@ candidates:
   rank_score:
     before_dep: 0.001506
     after_dep: 0.001896
-  active_rules: [R455584, R228379, R816397, R355121, R35617]
+  active_rules:
+  - R455584
+  - R228379
+  - R816397
+  - R355121
+  - R35617
   active_dependencies: []
   score:
     before_dep:
@@ -4670,7 +5138,8 @@ candidates:
   rank_score:
     before_dep: 0.001188
     after_dep: 0.001348
-  active_rules: [R455584]
+  active_rules:
+  - R455584
   active_dependencies: []
   score:
     before_dep:

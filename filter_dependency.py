@@ -449,7 +449,7 @@ def filter_dependency_file(
     variant_specs,
     jobs=1,
     progress_every=10,
-    chunk_candidates=50000,
+    chunk_candidates=10000,
 ):
     pairs_by_relation = parse_raw_dependency_file(input_path, rule_relation_by_id)
 
@@ -526,7 +526,6 @@ def filter_dependency_file(
     del pairs_by_relation
     release_process_memory()
 
-
 def main():
     parser = argparse.ArgumentParser(description="Filter dependency files by split support.")
     parser.add_argument("-d", "--dataset", default="codex-m")
@@ -551,7 +550,7 @@ def main():
     parser.add_argument(
         "--chunk_candidates",
         type=int,
-        default=50000,
+        default=10000,
         help="Split very large relations into chunks of this many candidate pairs before dispatching work.",
     )
     args = parser.parse_args()
@@ -578,6 +577,8 @@ def main():
             processed_sp_split,
             processed_po_split,
         )
+    if args.dataset in ["hetionet", "YAGO3-10"]:
+        args.jobs = min(args.jobs, 18)  # Avoid OOM
 
     variant_specs = parse_variant_specs(args)
 

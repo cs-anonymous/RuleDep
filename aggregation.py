@@ -19,6 +19,7 @@ import warnings
 from datetime import datetime
 from functools import partial
 from os.path import exists
+from pathlib import Path
 from pprint import pformat
 from time import perf_counter
 
@@ -161,6 +162,8 @@ def train(dataloader, model, loss_fn, optimizer, reg=False, num_unseen=0):
             loss = loss_fn(pred.reshape(-1, 1), y_)
             if loss.requires_grad and getattr(args, "dep_l1_lambda", 0.0) > 0 and hasattr(model, "dependency_l1_penalty"):
                 loss = loss + float(args.dep_l1_lambda) * model.dependency_l1_penalty()
+            if loss.requires_grad and getattr(args, "dep_l2_lambda", 0.0) > 0 and hasattr(model, "dependency_l2_penalty"):
+                loss = loss + float(args.dep_l2_lambda) * model.dependency_l2_penalty()
 
             train_loss += loss.item()
             n_loss += 1
@@ -943,6 +946,32 @@ class LinearAggregator(nn.Module):
             ).reshape(())
         return dep_w.abs().sum()
 
+    def dependency_l2_penalty(self):
+        if not hasattr(self, "dependencies") or self.num_relation_dependencies <= 0:
+            return torch.zeros((), device=self.rules.weight.device, dtype=self.rules.weight.dtype)
+        dep_w = self.dependencies.weight[: self.num_relation_dependencies, 0]
+        if self.dependency_sign_constraint:
+            dep_w = (dep_w**2) * self.dependency_pair_sign.to(device=dep_w.device, dtype=dep_w.dtype)
+        static_scale = getattr(self, "dependency_pair_static_scale", None)
+        if static_scale is not None:
+            dep_w = dep_w * static_scale.to(device=dep_w.device, dtype=dep_w.dtype)
+        if self.num_relation_dependency_types > 0:
+            active_dep_type_local = self.dependency_local_to_type_local[: self.num_relation_dependencies]
+            valid_dep_local = active_dep_type_local != self.pad_dependency_type_tok
+            if bool(valid_dep_local.any().item()):
+                type_w = torch.ones_like(dep_w)
+                type_w[valid_dep_local] = self.dependency_types.weight[
+                    active_dep_type_local[valid_dep_local], 0
+                ].to(dep_w.dtype)
+                dep_w = dep_w * type_w
+        if self.use_global_score_scales:
+            dep_w = dep_w * self._effective_positive_scale(
+                self.dependency_component_scale_raw,
+                dep_w.dtype,
+                dep_w.device,
+            ).reshape(())
+        return (dep_w**2).sum()
+
     def _aggregate_rule_contribution(self, local_rule_values, local_rule_ids):
         if self.num_relation_rule_types <= 0:
             return local_rule_values.sum(dim=1, keepdim=True)
@@ -1613,6 +1642,13 @@ def get_parser():
         help="L1 regularization strength for effective dependency weights.",
     )
     parser.add_argument(
+        "--dep_l2_lambda",
+        action="store",
+        default=0.0,
+        type=float,
+        help="L2 regularization strength for effective dependency weights.",
+    )
+    parser.add_argument(
         "--dep_score_clip_gamma",
         action="store",
         default=0.0,
@@ -1648,7 +1684,33 @@ def get_parser():
     )
     parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
+    parser.add_argument("--gpus", action="store", help="Number of GPUs to use for all-relation sweep. 0 disables GPU-pool dispatch.", default=0, type=int)
+    parser.add_argument("--n_proc", action="store", help="Number of worker processes per GPU when --gpus is enabled.", default=1, type=int)
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
+    parser.add_argument(
+        "--stage1_only",
+        action="store_true",
+        default=False,
+        help="Run only stage1 (rule-only) and skip dependency stage even if synergy/redundancy is enabled.",
+    )
+    parser.add_argument(
+        "--save_stage1_state_dir",
+        action="store",
+        default="",
+        help="Directory to save per-relation stage1 selected checkpoints (stage1-state-<relation>.pt).",
+    )
+    parser.add_argument(
+        "--load_stage1_state_dir",
+        action="store",
+        default="",
+        help="Directory to load per-relation stage1 selected checkpoints (stage1-state-<relation>.pt) and skip stage1 training when available.",
+    )
+    parser.add_argument(
+        "--dependency_init_only",
+        action="store_true",
+        default=False,
+        help="Build dependency model and evaluate directly from initialized dependency weights without dependency-stage training.",
+    )
     parser.add_argument(
         "--resume_relation_sweep",
         action="store_true",
@@ -2570,19 +2632,74 @@ def aggregate_single(relation):
         initial_bias_value = float(rule_model.bias.detach().reshape(-1)[0].cpu().item()) if hasattr(rule_model, "bias") else None
     test_stage_1 = evaluate_model_on_test(relation, rule_model.to(args.device), rule_model_builder)
 
-    stage1_result = run_training_stage(
-        relation=relation,
-        model=rule_model,
-        model_builder=rule_model_builder,
-        dataloader=train_dataloader,
-        loss_fn=loss_fn,
-        pos=pos,
-        lr_values=lr_values,
-        eval_every_values=eval_every_values,
-        max_epoch=max_epoch,
-        stage_name="rule",
-        checkpoint_selection="combined",
-    )
+    stage1_result = None
+    loaded_stage1_path = None
+    if getattr(args, "load_stage1_state_dir", ""):
+        candidate = Path(args.load_stage1_state_dir) / f"stage1-state-{int(relation)}.pt"
+        if candidate.exists():
+            loaded_stage1_path = candidate
+
+    if loaded_stage1_path is not None:
+        loaded_stage1 = torch.load(loaded_stage1_path, map_location="cpu")
+        selected_state_dict = loaded_stage1.get("selected_state_dict")
+        if selected_state_dict is None:
+            raise RuntimeError(f"Invalid stage1 checkpoint without selected_state_dict: {loaded_stage1_path}")
+        loaded_model = build_model_from_state_dict(relation, rule_model_builder, selected_state_dict)
+        stage1_eval = evaluate_current_stage_result(
+            relation,
+            loaded_model,
+            rule_model_builder,
+            evaluate_every=int(loaded_stage1.get("stage1_metrics", {}).get("evaluate_every", 0) or 0),
+        )
+        best_valid_stage1_ckpt = loaded_stage1.get("best_valid_stage1")
+        best_valid_stage1_raw_ckpt = loaded_stage1.get("best_valid_stage1_raw")
+        stage1_metrics_ckpt = loaded_stage1.get("stage1_metrics", {})
+        stage1_result = {
+            "model": stage1_eval["model"],
+            "optimizer": None,
+            "tail_mrr": stage1_eval["tail_mrr"],
+            "head_mrr": stage1_eval["head_mrr"],
+            "selected_valid": stage1_eval.get("valid"),
+            "selected_valid_raw": stage1_eval.get("valid") if best_valid_stage1_raw_ckpt is None else stage1_eval.get("valid"),
+            "test_initial": stage1_eval.get("test_initial"),
+            "test": stage1_eval.get("test"),
+            "selected_state_dict": {k: v.detach().cpu().clone() for k, v in selected_state_dict.items()},
+            "selected_test": stage1_eval.get("test"),
+            "selected_state_dict_raw": {k: v.detach().cpu().clone() for k, v in selected_state_dict.items()},
+            "selected_test_raw": stage1_eval.get("test"),
+            "epochs_trained": int(stage1_metrics_ckpt.get("epochs_trained", 0)),
+            "train_seconds": 0.0,
+            "eval_seconds": float(stage1_eval.get("eval_seconds", 0.0)),
+            "evaluate_every": int(stage1_metrics_ckpt.get("evaluate_every", 0) or 0),
+            "best_valid_epoch": int(stage1_metrics_ckpt.get("best_valid_epoch", 0) or 0),
+            "best_valid_epoch_raw": int(stage1_metrics_ckpt.get("best_valid_epoch_raw", 0) or 0),
+            "best_valid_combined": float(
+                (best_valid_stage1_ckpt or {}).get(
+                    "combined",
+                    (stage1_eval.get("valid") or {}).get("mrr", 0.0),
+                )
+            ),
+            "best_valid_combined_raw": float(
+                (best_valid_stage1_raw_ckpt or {}).get(
+                    "combined_raw",
+                    (stage1_eval.get("valid") or {}).get("mrr_raw", 0.0),
+                )
+            ),
+        }
+    else:
+        stage1_result = run_training_stage(
+            relation=relation,
+            model=rule_model,
+            model_builder=rule_model_builder,
+            dataloader=train_dataloader,
+            loss_fn=loss_fn,
+            pos=pos,
+            lr_values=lr_values,
+            eval_every_values=eval_every_values,
+            max_epoch=max_epoch,
+            stage_name="rule",
+            checkpoint_selection="combined",
+        )
     best_valid_stage1 = build_best_valid_metrics(stage1_result)
     best_valid_stage1_raw = build_best_valid_metrics(
         stage1_result,
@@ -2590,6 +2707,26 @@ def aggregate_single(relation):
         combined_key="best_valid_combined_raw",
         epoch_key="best_valid_epoch_raw",
     )
+
+    if getattr(args, "save_stage1_state_dir", ""):
+        stage1_dir = Path(args.save_stage1_state_dir)
+        stage1_dir.mkdir(parents=True, exist_ok=True)
+        stage1_state_path = stage1_dir / f"stage1-state-{int(relation)}.pt"
+        torch.save(
+            {
+                "relation": int(relation),
+                "selected_state_dict": stage1_result.get("selected_state_dict"),
+                "best_valid_stage1": best_valid_stage1,
+                "best_valid_stage1_raw": best_valid_stage1_raw,
+                "stage1_metrics": {
+                    "epochs_trained": int(stage1_result.get("epochs_trained", 0)),
+                    "evaluate_every": int(stage1_result.get("evaluate_every", 0)),
+                    "best_valid_epoch": int(stage1_result.get("best_valid_epoch", 0)),
+                    "best_valid_epoch_raw": int(stage1_result.get("best_valid_epoch_raw", 0)),
+                },
+            },
+            stage1_state_path,
+        )
 
     final_result = stage1_result
     dependency_stage_result = None
@@ -2632,7 +2769,7 @@ def aggregate_single(relation):
     test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
 
-    if (args.synergy or args.redundancy):
+    if (args.synergy or args.redundancy) and (not getattr(args, "stage1_only", False)):
         selected_stage1_state_dict = stage1_result.get("selected_state_dict")
         relation_dependencies_for_stage2, dependency_mask_info = filter_relation_dependencies_by_rule_strength(
             relation,
@@ -2680,19 +2817,42 @@ def aggregate_single(relation):
                     )
             test_stage_3 = evaluate_model_on_test(relation, dependency_model, dependency_model_builder)
 
-            dependency_stage_result = run_dependency_stage(
-                relation=relation,
-                model=dependency_model,
-                model_builder=dependency_model_builder,
-                dataloader=train_dataloader,
-                loss_fn=loss_fn,
-                pos=pos,
-                lr_values=dependency_lr_values,
-                eval_every_values=dependency_eval_every_values,
-                max_epoch=dependency_max_epoch,
-                early_stopping_patience=dependency_early_stopping_patience,
-                min_epochs_before_stop=dependency_min_epochs_before_stop,
-            )
+            if getattr(args, "dependency_init_only", False):
+                dependency_stage_result = evaluate_current_stage_result(
+                    relation,
+                    dependency_model,
+                    dependency_model_builder,
+                    evaluate_every=0,
+                )
+                init_state = {k: v.detach().cpu().clone() for k, v in dependency_model.state_dict().items()}
+                dependency_stage_result["selected_state_dict"] = init_state
+                dependency_stage_result["selected_state_dict_raw"] = {k: v.detach().cpu().clone() for k, v in init_state.items()}
+                dependency_stage_result["selected_test"] = dependency_stage_result.get("test")
+                dependency_stage_result["selected_test_raw"] = dependency_stage_result.get("test")
+                dependency_stage_result["selected_valid"] = dependency_stage_result.get("valid")
+                dependency_stage_result["selected_valid_raw"] = dependency_stage_result.get("valid")
+                dependency_stage_result["best_valid_epoch"] = 0
+                dependency_stage_result["best_valid_epoch_raw"] = 0
+                dependency_stage_result["best_valid_combined"] = float(
+                    (dependency_stage_result.get("valid") or {}).get("mrr", 0.0)
+                )
+                dependency_stage_result["best_valid_combined_raw"] = float(
+                    (dependency_stage_result.get("valid") or {}).get("mrr_raw", 0.0)
+                )
+            else:
+                dependency_stage_result = run_dependency_stage(
+                    relation=relation,
+                    model=dependency_model,
+                    model_builder=dependency_model_builder,
+                    dataloader=train_dataloader,
+                    loss_fn=loss_fn,
+                    pos=pos,
+                    lr_values=dependency_lr_values,
+                    eval_every_values=dependency_eval_every_values,
+                    max_epoch=dependency_max_epoch,
+                    early_stopping_patience=dependency_early_stopping_patience,
+                    min_epochs_before_stop=dependency_min_epochs_before_stop,
+                )
             best_valid_stage2 = build_best_valid_metrics(dependency_stage_result)
             stage2_metrics = {
                 "pos_weight": float(pos),
@@ -2706,17 +2866,23 @@ def aggregate_single(relation):
                 "min_epochs_before_stop": int(dependency_min_epochs_before_stop),
                 "best_valid_epoch": int(dependency_stage_result["best_valid_epoch"]),
                 "best_valid_combined_raw": float(dependency_stage_result["best_valid_combined_raw"]),
+                "dependency_init_only": bool(getattr(args, "dependency_init_only", False)),
             }
 
-            rule_best_valid_mrr = float(best_valid_stage1["mrr"])
-            dependency_best_valid_mrr = float(best_valid_stage2["mrr"])
-            dependency_stage_accepted = dependency_best_valid_mrr > rule_best_valid_mrr
-            if dependency_stage_accepted:
+            if getattr(args, "dependency_init_only", False):
+                dependency_stage_accepted = True
                 final_result = dependency_stage_result
-                selection_reason = "accepted dependency stage because its best valid mrr exceeded the rule-only stage"
+                selection_reason = "selected dependency init-only evaluation (no stage2 training)"
             else:
-                final_result = stage1_result
-                selection_reason = "rejected dependency stage because its best valid mrr did not exceed the rule-only stage"
+                rule_best_valid_mrr = float(best_valid_stage1["mrr"])
+                dependency_best_valid_mrr = float(best_valid_stage2["mrr"])
+                dependency_stage_accepted = dependency_best_valid_mrr > rule_best_valid_mrr
+                if dependency_stage_accepted:
+                    final_result = dependency_stage_result
+                    selection_reason = "accepted dependency stage because its best valid mrr exceeded the rule-only stage"
+                else:
+                    final_result = stage1_result
+                    selection_reason = "rejected dependency stage because its best valid mrr did not exceed the rule-only stage"
         else:
             final_result = stage1_result
             dependency_stage_accepted = False
@@ -2955,6 +3121,28 @@ def _aggregate_single_and_cleanup(relation):
             torch.cuda.empty_cache()
 
 
+def _init_relation_worker(gpu_ids, n_proc_per_gpu):
+    global args, EVAL_DEVICE, RULE_CONF_TABLE
+
+    if not gpu_ids:
+        return
+    if not torch.cuda.is_available():
+        raise RuntimeError("GPU pool requested via --gpus, but CUDA is not available")
+
+    proc = mp.current_process()
+    proc_identity = int(proc._identity[0]) if proc._identity else 1
+    per_gpu = max(int(n_proc_per_gpu), 1)
+    total_slots = len(gpu_ids) * per_gpu
+    slot_idx = (proc_identity - 1) % total_slots
+    gpu_id = int(gpu_ids[slot_idx // per_gpu])
+
+    args.device = f"cuda:{gpu_id}"
+    EVAL_DEVICE = torch.device(args.device)
+    RULE_CONF_TABLE = RULE_CONF_TABLE_CPU.to(EVAL_DEVICE)
+    torch.cuda.set_device(gpu_id)
+    print(f"[worker {proc_identity}] bound to {args.device} (gpu_ids={gpu_ids}, n_proc={n_proc_per_gpu})")
+
+
 def _get_relation_test_counts():
     relation_ids = test_torch[:, 1].long().cpu()
     counts = torch.bincount(relation_ids, minlength=dataset.num_relations())
@@ -3139,29 +3327,50 @@ def aggregate_multiple():
 
     relations = _get_all_relations()
     relations, completed_relations = _relations_remaining_for_sweep(relations)
-    deferred_large_relations = [relation for relation in relations if is_large_relation(relation)]
-    pooled_relations = [relation for relation in relations if not is_large_relation(relation)]
     relation_test_counts = _get_relation_test_counts()
-    num_processes = min(max(int(args.multiprocess), 2), len(pooled_relations)) if pooled_relations else 0
+    use_gpu_pool = int(getattr(args, "gpus", 0)) > 0
 
-    print(
-        f"Start relation sweep, remaining relations: {len(relations)}, reused completed relations: {len(completed_relations)}, "
-        f"pooled relations: {len(pooled_relations)}, deferred large relations: {len(deferred_large_relations)}, "
-        f"processes: {num_processes}"
-    )
-    if deferred_large_relations:
+    if use_gpu_pool:
+        gpu_count = int(args.gpus)
+        n_proc_per_gpu = max(int(getattr(args, "n_proc", 1)), 1)
+        if gpu_count <= 0:
+            raise ValueError(f"--gpus must be > 0 when enabled, got {gpu_count}")
+        gpu_ids = list(range(gpu_count))
+        total_workers = gpu_count * n_proc_per_gpu
+        num_processes = min(total_workers, len(relations)) if relations else 0
+        pooled_relations = list(relations)
+        deferred_large_relations = []
         print(
-            "Deferred large relations (sequential after pooled run): "
-            + ", ".join(
-                f"{relation}[rules={get_relation_rule_count(relation)}]"
-                for relation in deferred_large_relations
-            )
+            f"Start relation sweep, remaining relations: {len(relations)}, reused completed relations: {len(completed_relations)}, "
+            f"gpu_ids={gpu_ids}, n_proc_per_gpu={n_proc_per_gpu}, workers={num_processes}"
         )
+    else:
+        deferred_large_relations = [relation for relation in relations if is_large_relation(relation)]
+        pooled_relations = [relation for relation in relations if not is_large_relation(relation)]
+        num_processes = min(max(int(args.multiprocess), 2), len(pooled_relations)) if pooled_relations else 0
+
+        print(
+            f"Start relation sweep, remaining relations: {len(relations)}, reused completed relations: {len(completed_relations)}, "
+            f"pooled relations: {len(pooled_relations)}, deferred large relations: {len(deferred_large_relations)}, "
+            f"processes: {num_processes}"
+        )
+        if deferred_large_relations:
+            print(
+                "Deferred large relations (sequential after pooled run): "
+                + ", ".join(
+                    f"{relation}[rules={get_relation_rule_count(relation)}]"
+                    for relation in deferred_large_relations
+                )
+            )
 
     failed_relations = {}
 
     if pooled_relations:
-        with mp.get_context("spawn").Pool(processes=num_processes) as pool:
+        pool_kwargs = {"processes": num_processes}
+        if use_gpu_pool:
+            pool_kwargs["initializer"] = _init_relation_worker
+            pool_kwargs["initargs"] = (gpu_ids, n_proc_per_gpu)
+        with mp.get_context("spawn").Pool(**pool_kwargs) as pool:
             results = [pool.apply_async(_run_one_relation, (relation,)) for relation in pooled_relations]
             for relation, result in zip(pooled_relations, results):
                 try:
@@ -3284,7 +3493,7 @@ relation_keys = {
 
 if __name__ == "__main__":
     if args.relation == -1:
-        if args.multiprocess > 1:
+        if int(getattr(args, "gpus", 0)) > 0 or int(getattr(args, "multiprocess", 0)) > 1:
             result = aggregate_multiple()
         else:
             result = aggregate_all_relations_sequential()

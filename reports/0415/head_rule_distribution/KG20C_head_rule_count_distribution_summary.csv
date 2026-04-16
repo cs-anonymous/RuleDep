@@ -1,0 +1,3 @@
+dataset,head_type,num_heads,mean_rules_per_head
+KG20C,unary,13614,11.365800
+KG20C,binary,5,11.200000

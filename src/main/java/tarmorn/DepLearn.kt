@@ -142,12 +142,12 @@ object DepLearn {
         return bodyMap.entries
             .mapNotNull { entry ->
                 val metric = ID2metric[entry.value] ?: return@mapNotNull null
-                if (metric.surprisal >= MIN_SURPRISAL_LIFT && metric.surprisal < Settings.MAX_SURPRISAL) {
+                if (metric.surprisal >= MIN_SURPRISAL_LIFT) {   // && metric.surprisal < Settings.MAX_SURPRISAL
                     Triple(entry.key, entry.value, metric)
                 } else null
             }
             .sortedByDescending { it.third.confidence }
-            .take(Settings.TOP_K_RULE_COMBO)
+            .take(Settings.TOP_K)
     }
 
     private fun precomputeBodyLists(
@@ -544,10 +544,6 @@ object DepLearn {
                 }
                 
                 val (B2, ruleId2, metric2) = bodyList[j]
-                if (metric1.surprisal + metric2.surprisal >= Settings.MAX_SURPRISAL) {
-                    continue
-                }
-                
                 pairCount++
                 
                 var S_12_size = 0
@@ -651,9 +647,6 @@ object DepLearn {
             }
 
             val (B2, ruleId2, metric2) = binaryBodyList[k]
-            if (metric1.surprisal + metric2.surprisal >= Settings.MAX_SURPRISAL) {
-                continue
-            }
 
             var S_H12_size = 0
             for (h in S_H1) {
@@ -690,11 +683,6 @@ object DepLearn {
             }
 
             val (B2, ruleId2, metric2) = bodyList[j]
-            if (metric1.surprisal + metric2.surprisal >= Settings.MAX_SURPRISAL) {
-                println("Skipping pair with high combined surprisal: ${metric1.surprisal} + ${metric2.surprisal}")
-                continue
-            }
-
             pairCount++
 
             val B2_instances = B2.getUnaryInstances()

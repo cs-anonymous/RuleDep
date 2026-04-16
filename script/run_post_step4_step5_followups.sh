@@ -59,7 +59,7 @@ run_step4_variant() {
             top500_rule_combo)
                 DEPENDENCY_DIR="data/${dataset}/dependency_variants/${variant}" \
                 RUN_DEPLEARN_LOG="data/${dataset}/dependency_variants/${variant}/run_deplearn.log" \
-                TOP_K_RULE_COMBO=500 \
+                    TOP_K=500 \
                 ./step4_dependency.sh "${dataset}" "${step4_threads}"
                 ;;
             unified_formula)

@@ -49,10 +49,6 @@ object Settings {
     // The number of worker threads which compute the scores of the constructed rules, should be one less then the number of available cores.
     @JvmField
     var WORKER_THREADS: Int = 20
-    // The top-k results that are after filtering kept in the results.
-    @JvmField
-    var TOP_K_OUTPUT: Int = 100
-
     // If set to true, which is the default value, the OI constraints are activated in cyclic rules.
     // This value is changed only for experimental reasons. Its default should not be changed.
     @JvmField
@@ -223,7 +219,7 @@ object Settings {
     var MIN_ABS_LIFT_DEPENDENCY: Double = 0.01
 
     @JvmField
-    var TOP_K_RULE_COMBO: Int = 300
+    var TOP_K: Int = 300
 
     @JvmField
     var DEPENDENCY_FORMULA_MODE: String = "legacy"
