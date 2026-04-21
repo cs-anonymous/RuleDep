@@ -72,6 +72,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--root", default=None, help="Repository root. Defaults to the script parent directory.")
     parser.add_argument("--data-root", default=None, help="Data root. Defaults to <root>/data.")
     parser.add_argument("--report-dir", default=None, help="Report output directory. Defaults to <root>/reports/0407.")
+    parser.add_argument(
+        "--type-source",
+        choices=["typed_best", "best_config"],
+        default="typed_best",
+        help="Data source for type_weight_analysis: best typed structural runs or best_config_by_dataset.",
+    )
     return parser.parse_args()
 
 
@@ -499,6 +505,105 @@ def build_relation_type_weight_rows(
                 "aggregation": best["best_typed_experiment"],
                 "type_grouping": best["best_typed_grouping"],
                 "typed_test_mrr": best["best_typed_mrr"],
+                "relation": relation,
+                "relation_name": relation_map.get(relation, ""),
+                "num_test_samples": int(obj.get("num_test_samples", 0)),
+                "selected_stage": str((obj.get("model_selection") or {}).get("selected_stage") or ""),
+                "dependency_weight_source": dep_source,
+                "dominant_rule_type": dom_rule["type"],
+                "dominant_rule_support": dom_rule["support"],
+                "dominant_rule_weight": dom_rule["trained"],
+                "dominant_rule_abs_delta": dom_rule["abs_delta"],
+                "dominant_rule_impact": dom_rule["impact"],
+                "dominant_dep_type": dom_dep["type"],
+                "dominant_dep_support": dom_dep["support"],
+                "dominant_dep_weight": dom_dep["trained"],
+                "dominant_dep_abs_delta": dom_dep["abs_delta"],
+                "dominant_dep_impact": dom_dep["impact"],
+            }
+
+            rule_lookup = {str(item["type"]): item for item in rule_items}
+            dep_lookup = {str(item["type"]): item for item in dep_items}
+            for key in RULE_WEIGHT_KEYS:
+                item = rule_lookup.get(key)
+                row[f"rule_weight_{key}"] = None if item is None else item["trained"]
+                row[f"rule_support_{key}"] = None if item is None else item["support"]
+                row[f"rule_abs_delta_{key}"] = None if item is None else item["abs_delta"]
+                row[f"rule_impact_{key}"] = None if item is None else item["impact"]
+            for key in DEP_WEIGHT_KEYS:
+                item = dep_lookup.get(key)
+                row[f"dep_weight_{key}"] = None if item is None else item["trained"]
+                row[f"dep_support_{key}"] = None if item is None else item["support"]
+                row[f"dep_abs_delta_{key}"] = None if item is None else item["abs_delta"]
+                row[f"dep_impact_{key}"] = None if item is None else item["impact"]
+
+            b = row.get("rule_weight_B")
+            uc = row.get("rule_weight_Uc")
+            ud = row.get("rule_weight_Ud")
+            row["rule_order_ud_lt_b_lt_uc"] = None if None in (b, uc, ud) else bool(float(ud) < float(b) < float(uc))
+            relation_rows.append(row)
+
+    relation_rows.sort(key=lambda row: (dataset_sort_key(str(row["dataset"])), str(row["dataset"]), int(row["relation"])))
+    return dataset_rows, relation_rows
+
+
+def build_relation_type_weight_rows_from_best_configs(
+    data_root: Path,
+    best_configs: Dict[str, str],
+) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
+    dataset_rows: List[Dict[str, object]] = []
+    relation_rows: List[Dict[str, object]] = []
+
+    for dataset in sorted(best_configs.keys(), key=dataset_sort_key):
+        aggregation = str(best_configs[dataset])
+        exp_dir = data_root / dataset / "aggregation" / aggregation
+        metrics_final = exp_dir / "metrics-final.json"
+        if not metrics_final.exists():
+            continue
+        payload = read_json(metrics_final)
+        summary = payload.get("summary") or {}
+        test_mrr = to_float((summary.get("test") or summary.get("test_after_stage2") or {}).get("mrr"))
+        if test_mrr is None:
+            continue
+
+        if "r2d3" in aggregation:
+            grouping = "r2d3"
+        elif "r3d6" in aggregation:
+            grouping = "r3d6"
+        elif "rd" in aggregation:
+            grouping = "rd"
+        elif "none" in aggregation:
+            grouping = "none"
+        else:
+            grouping = "mixed"
+
+        dataset_rows.append(
+            {
+                "dataset": dataset,
+                "best_typed_experiment": aggregation,
+                "best_typed_grouping": grouping,
+                "best_typed_mrr": float(test_mrr),
+            }
+        )
+
+        relation_map = load_relation_map(data_root / dataset)
+        for metric_path in sorted(exp_dir.glob("metric-*.json")):
+            obj = read_json(metric_path)
+            params = obj.get("params") or {}
+            relation = int(obj.get("relation", -1))
+            rule_items = parse_learned_type_rows(params.get("rule_type_weights") or [], normalize_key=False)
+            dep_trial_items = parse_learned_type_rows(params.get("dependency_type_weights_trial") or [], normalize_key=True)
+            dep_final_items = parse_learned_type_rows(params.get("dependency_type_weights_final") or [], normalize_key=True)
+            dep_source = "final" if dep_final_items else ("trial" if dep_trial_items else "none")
+            dep_items = dep_final_items if dep_final_items else dep_trial_items
+            dom_rule = dominant_type(rule_items)
+            dom_dep = dominant_type(dep_items)
+
+            row: Dict[str, object] = {
+                "dataset": dataset,
+                "aggregation": aggregation,
+                "type_grouping": grouping,
+                "typed_test_mrr": float(test_mrr),
                 "relation": relation,
                 "relation_name": relation_map.get(relation, ""),
                 "num_test_samples": int(obj.get("num_test_samples", 0)),
@@ -1350,7 +1455,10 @@ def main() -> None:
         type_global_summary_csv_rows = [{k: fmt_float(v) if isinstance(v, float) else v for k, v in row.items()} for row in type_global_summary_legacy]
         write_csv(report_dir / "type_grouping_global_summary.csv", type_global_summary_csv_rows, list(type_global_summary_legacy[0].keys()))
 
-    best_typed_rows, relation_type_rows = build_relation_type_weight_rows(data_root, datasets)
+    if args.type_source == "best_config":
+        best_typed_rows, relation_type_rows = build_relation_type_weight_rows_from_best_configs(data_root, best_configs)
+    else:
+        best_typed_rows, relation_type_rows = build_relation_type_weight_rows(data_root, datasets)
     dataset_type_summary = build_dataset_type_weight_summary(best_typed_rows, relation_type_rows)
     global_type_summary = build_global_type_weight_summary(best_typed_rows, relation_type_rows)
 

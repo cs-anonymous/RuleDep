@@ -56,6 +56,8 @@ ESTIMATED_CANONICAL_TIMES = {
     "codex-l": 33685.558747,
 }
 
+EXCLUDED_AGGREGATION_PREFIXES = ["best_combination"]
+
 METRIC_RE = re.compile(
     r"MRR\s+([0-9]*\.?[0-9]+).*?"
     r"hits@1\s+([0-9]*\.?[0-9]+).*?"
@@ -76,6 +78,17 @@ def parse_args() -> argparse.Namespace:
         "--forced-best-config",
         default="",
         help="Force this aggregation name as best_config when that run exists for a dataset.",
+    )
+    parser.add_argument(
+        "--forced-best-config-prefix",
+        default="",
+        help="If set, pick the best config only among aggregations with this prefix.",
+    )
+    parser.add_argument(
+        "--safe-ensemble-margin",
+        type=float,
+        default=0.0,
+        help="If >0, enable ensemble_safe_valid: use top-valid relation model only when (valid_top1 - valid_top2) >= margin; otherwise fallback to best single config.",
     )
     return parser.parse_args()
 
@@ -236,7 +249,11 @@ def list_aggregation_dirs(agg_root: Path) -> List[Path]:
     return sorted(path for path in agg_root.iterdir() if path.is_dir() and path.name != "canonical")
 
 
-def build_overall_rows(data_root: Path, datasets: List[str]) -> Tuple[List[Dict[str, object]], Dict[str, object]]:
+def is_excluded_aggregation(name: str) -> bool:
+    return any(str(name).startswith(prefix) for prefix in EXCLUDED_AGGREGATION_PREFIXES)
+
+
+def build_overall_rows(data_root: Path, datasets: List[str], safe_ensemble_margin: float = 0.0) -> Tuple[List[Dict[str, object]], Dict[str, object]]:
     rows: List[Dict[str, object]] = []
     ensemble_debug: Dict[str, object] = {}
 
@@ -261,6 +278,8 @@ def build_overall_rows(data_root: Path, datasets: List[str]) -> Tuple[List[Dict[
             )
 
         for exp_dir in list_aggregation_dirs(agg_dir):
+            if is_excluded_aggregation(exp_dir.name):
+                continue
             metrics_path = exp_dir / "metrics-final.json"
             if not metrics_path.exists():
                 continue
@@ -308,20 +327,34 @@ def build_overall_rows(data_root: Path, datasets: List[str]) -> Tuple[List[Dict[
                 }
             )
 
-        ensemble_row, debug_payload = build_ensemble_row(dataset, agg_dir)
+        ensemble_rows, debug_payload = build_ensemble_rows(dataset, agg_dir, safe_ensemble_margin=safe_ensemble_margin)
         ensemble_debug[dataset] = debug_payload
-        if ensemble_row is not None:
-            rows.append(ensemble_row)
+        rows.extend(ensemble_rows)
 
     rows.sort(key=lambda row: (PREFERRED_DATASET_ORDER.index(row["dataset"]) if row["dataset"] in PREFERRED_DATASET_ORDER else 999, row["dataset"], row["aggregation"]))
     return rows, ensemble_debug
 
 
-def build_ensemble_row(dataset: str, agg_dir: Path) -> Tuple[Optional[Dict[str, object]], Dict[str, object]]:
-    best_by_relation: Dict[int, Dict[str, object]] = {}
-    debug: Dict[str, object] = {"dataset": dataset, "selected_relations": {}}
+def build_ensemble_rows(dataset: str, agg_dir: Path, safe_ensemble_margin: float = 0.0) -> Tuple[List[Dict[str, object]], Dict[str, object]]:
+    best_valid_by_relation: Dict[int, Dict[str, object]] = {}
+    best_test_by_relation: Dict[int, Dict[str, object]] = {}
+    candidates_by_relation: Dict[int, List[Dict[str, object]]] = defaultdict(list)
+    debug: Dict[str, object] = {
+        "dataset": dataset,
+        "selected_relations_valid": {},
+        "selected_relations_test": {},
+        "selected_relations_safe_valid": {},
+        "safe_ensemble_margin": safe_ensemble_margin,
+        "safe_ensemble_fallback_config": "",
+    }
+
+    # used to identify fallback best single config over remaining candidates
+    per_exp_weighted_valid_sum: Dict[str, float] = defaultdict(float)
+    per_exp_weighted_cnt: Dict[str, int] = defaultdict(int)
 
     for exp_dir in list_aggregation_dirs(agg_dir):
+        if is_excluded_aggregation(exp_dir.name):
+            continue
         for metric_path in sorted(exp_dir.glob("metric-*.json")):
             metric = read_json(metric_path)
             relation = int(metric["relation"])
@@ -331,9 +364,9 @@ def build_ensemble_row(dataset: str, agg_dir: Path) -> Tuple[Optional[Dict[str, 
             time_total = to_float(((metric.get("time_seconds") or {}).get("total"))) or 0.0
             if valid_mrr is None or test_mrr is None or count <= 0:
                 continue
-            current = best_by_relation.get(relation)
-            if current is None or valid_mrr > float(current["valid_mrr"]):
-                best_by_relation[relation] = {
+            current_valid = best_valid_by_relation.get(relation)
+            if current_valid is None or valid_mrr > float(current_valid["valid_mrr"]):
+                best_valid_by_relation[relation] = {
                     "experiment": exp_dir.name,
                     "valid_mrr": valid_mrr,
                     "MRR": test_mrr,
@@ -344,37 +377,108 @@ def build_ensemble_row(dataset: str, agg_dir: Path) -> Tuple[Optional[Dict[str, 
                     "selected_stage": str((metric.get("model_selection") or {}).get("selected_stage") or ""),
                 }
 
-    if not best_by_relation:
-        return None, debug
+            current_test = best_test_by_relation.get(relation)
+            if current_test is None or test_mrr > float(current_test["MRR"]):
+                best_test_by_relation[relation] = {
+                    "experiment": exp_dir.name,
+                    "valid_mrr": valid_mrr,
+                    "MRR": test_mrr,
+                    "h@1": test_h1,
+                    "h@10": test_h10,
+                    "count": count,
+                    "time": time_total,
+                    "selected_stage": str((metric.get("model_selection") or {}).get("selected_stage") or ""),
+                }
 
-    total_weight = sum(int(row["count"]) for row in best_by_relation.values())
-    if total_weight <= 0:
-        return None, debug
+            row_obj = {
+                "experiment": exp_dir.name,
+                "valid_mrr": valid_mrr,
+                "MRR": test_mrr,
+                "h@1": test_h1,
+                "h@10": test_h10,
+                "count": count,
+                "time": time_total,
+                "selected_stage": str((metric.get("model_selection") or {}).get("selected_stage") or ""),
+            }
+            candidates_by_relation[relation].append(row_obj)
 
-    def weighted(metric_key: str) -> float:
-        return sum(float(row[metric_key]) * int(row["count"]) for row in best_by_relation.values()) / total_weight
+            per_exp_weighted_valid_sum[exp_dir.name] += float(valid_mrr) * count
+            per_exp_weighted_cnt[exp_dir.name] += count
 
-    total_time = sum(float(row["time"]) for row in best_by_relation.values())
-    for relation, row in sorted(best_by_relation.items()):
-        debug["selected_relations"][str(relation)] = {
-            "experiment": row["experiment"],
-            "selected_stage": row["selected_stage"],
-            "selected_valid_mrr": row["valid_mrr"],
-            "test_mrr": row["MRR"],
-            "count": row["count"],
-        }
+    def summarize_ensemble(best_by_relation: Dict[int, Dict[str, object]], aggregation_name: str, debug_key: str) -> Optional[Dict[str, object]]:
+        if not best_by_relation:
+            return None
 
-    return (
-        {
+        total_weight = sum(int(row["count"]) for row in best_by_relation.values())
+        if total_weight <= 0:
+            return None
+
+        def weighted(metric_key: str) -> float:
+            return sum(float(row[metric_key]) * int(row["count"]) for row in best_by_relation.values()) / total_weight
+
+        total_time = sum(float(row["time"]) for row in best_by_relation.values())
+        for relation, row in sorted(best_by_relation.items()):
+            debug[debug_key][str(relation)] = {
+                "experiment": row["experiment"],
+                "selected_stage": row["selected_stage"],
+                "selected_valid_mrr": row["valid_mrr"],
+                "test_mrr": row["MRR"],
+                "count": row["count"],
+            }
+        return {
             "dataset": dataset,
-            "aggregation": "ensemble_best_valid",
+            "aggregation": aggregation_name,
             "MRR": weighted("MRR"),
             "h@1": weighted("h@1"),
             "h@10": weighted("h@10"),
             "time": total_time,
-        },
-        debug,
-    )
+        }
+
+    ensemble_rows: List[Dict[str, object]] = []
+    valid_row = summarize_ensemble(best_valid_by_relation, "ensemble_best_valid", "selected_relations_valid")
+    test_row = summarize_ensemble(best_test_by_relation, "ensemble_best_test", "selected_relations_test")
+
+    safe_row: Optional[Dict[str, object]] = None
+    if safe_ensemble_margin > 0.0 and per_exp_weighted_cnt:
+        # fallback to best single remaining config (weighted valid MRR across relations)
+        fallback_exp = max(
+            per_exp_weighted_cnt.keys(),
+            key=lambda name: (per_exp_weighted_valid_sum[name] / per_exp_weighted_cnt[name]) if per_exp_weighted_cnt[name] > 0 else -1.0,
+        )
+        debug["safe_ensemble_fallback_config"] = fallback_exp
+
+        safe_by_relation: Dict[int, Dict[str, object]] = {}
+        for relation, arr in candidates_by_relation.items():
+            if not arr:
+                continue
+            sorted_by_valid = sorted(arr, key=lambda row: float(row["valid_mrr"]), reverse=True)
+            top1 = sorted_by_valid[0]
+            top2_valid = float(sorted_by_valid[1]["valid_mrr"]) if len(sorted_by_valid) >= 2 else float(top1["valid_mrr"])
+            margin = float(top1["valid_mrr"]) - top2_valid
+
+            fallback = next((row for row in arr if str(row["experiment"]) == fallback_exp), top1)
+            picked = top1 if margin >= safe_ensemble_margin else fallback
+
+            safe_by_relation[relation] = picked
+            debug["selected_relations_safe_valid"][str(relation)] = {
+                "experiment": picked["experiment"],
+                "selected_stage": picked["selected_stage"],
+                "selected_valid_mrr": picked["valid_mrr"],
+                "test_mrr": picked["MRR"],
+                "count": picked["count"],
+                "margin": margin,
+                "used_fallback": bool(margin < safe_ensemble_margin),
+            }
+
+        safe_row = summarize_ensemble(safe_by_relation, "ensemble_safe_valid", "selected_relations_safe_valid")
+
+    if valid_row is not None:
+        ensemble_rows.append(valid_row)
+    if test_row is not None:
+        ensemble_rows.append(test_row)
+    if safe_row is not None:
+        ensemble_rows.append(safe_row)
+    return ensemble_rows, debug
 
 
 def overall_rows_to_csv_rows(rows: List[Dict[str, object]]) -> List[Dict[str, object]]:
@@ -393,7 +497,32 @@ def overall_rows_to_csv_rows(rows: List[Dict[str, object]]) -> List[Dict[str, ob
     return csv_rows
 
 
-def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str], forced_best_config: str = "") -> List[Dict[str, object]]:
+def _pick_best_row(
+    candidates: List[Dict[str, object]],
+    mapping: Dict[str, Dict[str, object]],
+    forced_best_config: str = "",
+    forced_best_config_prefix: str = "",
+) -> Optional[Dict[str, object]]:
+    best_row = max(candidates, key=lambda row: float(row["MRR"])) if candidates else None
+    if forced_best_config:
+        forced = mapping.get(forced_best_config)
+        if forced is not None:
+            return forced
+    if forced_best_config_prefix:
+        prefix_candidates = [
+            row for row in candidates if str(row.get("aggregation", "")).startswith(forced_best_config_prefix)
+        ]
+        if prefix_candidates:
+            return max(prefix_candidates, key=lambda row: float(row["MRR"]))
+    return best_row
+
+
+def build_best_config_rows(
+    rows: List[Dict[str, object]],
+    datasets: List[str],
+    forced_best_config: str = "",
+    forced_best_config_prefix: str = "",
+) -> List[Dict[str, object]]:
     by_dataset: Dict[str, Dict[str, Dict[str, object]]] = defaultdict(dict)
     for row in rows:
         by_dataset[row["dataset"]][row["aggregation"]] = row
@@ -404,14 +533,16 @@ def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str], f
         candidates = [
             row
             for name, row in mapping.items()
-            if name not in {"eval-maxplus", "eval-noisyor", "canonical", "ensemble_best_valid"}
+            if name not in {"eval-maxplus", "eval-noisyor", "canonical", "ensemble_best_valid", "ensemble_best_test", "ensemble_safe_valid"}
+            and not is_excluded_aggregation(name)
             and not name.endswith("__stage1")
         ]
-        best_row = max(candidates, key=lambda row: float(row["MRR"])) if candidates else None
-        if forced_best_config:
-            forced = mapping.get(forced_best_config)
-            if forced is not None:
-                best_row = forced
+        best_row = _pick_best_row(
+            candidates,
+            mapping,
+            forced_best_config=forced_best_config,
+            forced_best_config_prefix=forced_best_config_prefix,
+        )
         row = {
             "dataset": dataset,
             "best_config": best_row["aggregation"] if best_row else "",
@@ -422,6 +553,8 @@ def build_best_config_rows(rows: List[Dict[str, object]], datasets: List[str], f
             "structural_r3d6": fmt_float((mapping.get("structural_r3d6") or {}).get("MRR")),
             "canonical": fmt_float((mapping.get("canonical") or {}).get("MRR")),
             "ensemble_best_valid": fmt_float((mapping.get("ensemble_best_valid") or {}).get("MRR")),
+            "ensemble_best_test": fmt_float((mapping.get("ensemble_best_test") or {}).get("MRR")),
+            "ensemble_safe_valid": fmt_float((mapping.get("ensemble_safe_valid") or {}).get("MRR")),
             "eval-maxplus": fmt_float((mapping.get("eval-maxplus") or {}).get("MRR")),
             "eval-noisyor": fmt_float((mapping.get("eval-noisyor") or {}).get("MRR")),
         }
@@ -496,23 +629,30 @@ def estimate_ruledep_stage_times(data_root: Path, best_config_rows: List[Dict[st
     return out
 
 
-def overall_best_config_map(rows: List[Dict[str, object]], forced_best_config: str = "") -> Dict[str, str]:
+def overall_best_config_map(
+    rows: List[Dict[str, object]],
+    forced_best_config: str = "",
+    forced_best_config_prefix: str = "",
+) -> Dict[str, str]:
     mapping: Dict[str, str] = {}
     grouped: Dict[str, List[Dict[str, object]]] = defaultdict(list)
     for row in rows:
         name = row["aggregation"]
-        if name in {"eval-maxplus", "eval-noisyor", "canonical", "ensemble_best_valid"} or name.endswith("__stage1"):
+        if name in {"eval-maxplus", "eval-noisyor", "canonical", "ensemble_best_valid", "ensemble_best_test", "ensemble_safe_valid"} or name.endswith("__stage1") or is_excluded_aggregation(name):
             continue
         grouped[row["dataset"]].append(row)
     for dataset, subset in grouped.items():
         if not subset:
             continue
-        if forced_best_config:
-            forced_row = next((row for row in subset if str(row["aggregation"]) == forced_best_config), None)
-            if forced_row is not None:
-                mapping[dataset] = forced_row["aggregation"]
-                continue
-        mapping[dataset] = max(subset, key=lambda row: float(row["MRR"]))["aggregation"]
+        per_dataset_map = {str(row["aggregation"]): row for row in subset}
+        best_row = _pick_best_row(
+            subset,
+            per_dataset_map,
+            forced_best_config=forced_best_config,
+            forced_best_config_prefix=forced_best_config_prefix,
+        )
+        if best_row is not None:
+            mapping[dataset] = str(best_row["aggregation"])
     return mapping
 
 
@@ -1286,20 +1426,25 @@ def build_overall_results_md(
     lines.append("")
     lines.append("- `eval-maxplus` / `eval-noisyor` 来自 application 日志。")
     lines.append("- `canonical` 按老格式目录解析：`head_mrr_*.p + tail_mrr_*.p + canonical.log 中的 Done`。")
-    lines.append("- `ensemble_best_valid` 是逐 relation 在所有非 canonical aggregation 中按 selected valid MRR 选模后的整体 test 汇总。")
+    lines.append("- `best_combination*` 配置已整体排除，不参与本报告。")
+    lines.append("- `ensemble_best_valid` 是逐 relation 在剩余配置中按 selected valid MRR 选模后的整体 test 汇总。")
+    lines.append("- `ensemble_best_test` 是逐 relation 在剩余配置中按 test MRR 选模后的整体 test 汇总（oracle 上界）。")
+    lines.append("- `ensemble_safe_valid` 是稳健版：优先 valid 选择，并在不稳定 relation 上回退到数据集级最佳单模型。")
     lines.append("- `structural_rd__stage1 / structural_r2d3__stage1 / structural_r3d6__stage1` 是同一实验里的 stage1 test。")
     lines.append("- 时间对比表中，RuleDep stage1/stage2 时间用 per-relation `epochs_trained` 比例估算，并按当前 `multiprocess=2` 除以 2；canonical 是串行老流程，不除以 2。")
     lines.append("")
     lines.append("## Best Non-canonical Config Per Dataset")
     lines.append("")
-    lines.append("| Dataset | Best config | Best MRR | Ensemble | Canonical | Best app |")
-    lines.append("| --- | --- | ---: | ---: | ---: | ---: |")
+    lines.append("| Dataset | Best config | Best MRR | Ensemble-valid | Ensemble-safe | Ensemble-test | Canonical | Best app |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
 
     for dataset in best_config_map:
         mapping = by_dataset.get(dataset, {})
         best_cfg = best_config_map.get(dataset, "")
         best_mrr = fmt_float((mapping.get(best_cfg) or {}).get("MRR"))
-        ensemble_mrr = fmt_float((mapping.get("ensemble_best_valid") or {}).get("MRR"))
+        ensemble_valid_mrr = fmt_float((mapping.get("ensemble_best_valid") or {}).get("MRR"))
+        ensemble_safe_mrr = fmt_float((mapping.get("ensemble_safe_valid") or {}).get("MRR"))
+        ensemble_test_mrr = fmt_float((mapping.get("ensemble_best_test") or {}).get("MRR"))
         canonical_mrr = fmt_float((mapping.get("canonical") or {}).get("MRR"))
         best_app = max(
             [
@@ -1308,7 +1453,7 @@ def build_overall_results_md(
             ],
             key=lambda value: -1.0 if value is None else float(value),
         )
-        lines.append(f"| {dataset} | {best_cfg or '-'} | {best_mrr or '-'} | {ensemble_mrr or '-'} | {canonical_mrr or '-'} | {fmt_float(best_app) or '-'} |")
+        lines.append(f"| {dataset} | {best_cfg or '-'} | {best_mrr or '-'} | {ensemble_valid_mrr or '-'} | {ensemble_safe_mrr or '-'} | {ensemble_test_mrr or '-'} | {canonical_mrr or '-'} | {fmt_float(best_app) or '-'} |")
 
     lines.append("")
     lines.append("## Estimated Runtime Breakdown")
@@ -1333,7 +1478,9 @@ def build_overall_results_md(
     lines.append("")
     lines.append(f"- 覆盖数据集数：`{len(best_config_rows)}`")
     lines.append(f"- 有已完成 canonical 的数据集：`{sum(1 for row in best_config_rows if row['canonical'])}`")
-    lines.append(f"- 有 ensemble 的数据集：`{sum(1 for row in best_config_rows if row['ensemble_best_valid'])}`")
+    lines.append(f"- 有 ensemble-valid 的数据集：`{sum(1 for row in best_config_rows if row['ensemble_best_valid'])}`")
+    lines.append(f"- 有 ensemble-safe 的数据集：`{sum(1 for row in best_config_rows if row.get('ensemble_safe_valid'))}`")
+    lines.append(f"- 有 ensemble-test 的数据集：`{sum(1 for row in best_config_rows if row.get('ensemble_best_test'))}`")
     lines.append("")
     return "\n".join(lines)
 
@@ -1571,7 +1718,7 @@ def main() -> None:
 
     datasets = discover_datasets(data_root)
 
-    overall_rows, ensemble_debug = build_overall_rows(data_root, datasets)
+    overall_rows, ensemble_debug = build_overall_rows(data_root, datasets, safe_ensemble_margin=float(args.safe_ensemble_margin or 0.0))
     overall_csv_rows = overall_rows_to_csv_rows(overall_rows)
     write_csv(
         report_dir / "all_results_summary.csv",
@@ -1582,7 +1729,13 @@ def main() -> None:
         json.dump(ensemble_debug, handle, indent=2, ensure_ascii=False)
 
     forced_best_config = str(args.forced_best_config or "").strip()
-    best_config_rows = build_best_config_rows(overall_rows, datasets, forced_best_config=forced_best_config)
+    forced_best_config_prefix = str(args.forced_best_config_prefix or "").strip()
+    best_config_rows = build_best_config_rows(
+        overall_rows,
+        datasets,
+        forced_best_config=forced_best_config,
+        forced_best_config_prefix=forced_best_config_prefix,
+    )
     write_csv(
         report_dir / "best_config_by_dataset.csv",
         best_config_rows,
@@ -1596,11 +1749,17 @@ def main() -> None:
             "structural_r3d6",
             "canonical",
             "ensemble_best_valid",
+            "ensemble_safe_valid",
+            "ensemble_best_test",
             "eval-maxplus",
             "eval-noisyor",
         ],
     )
-    best_config_map = overall_best_config_map(overall_rows, forced_best_config=forced_best_config)
+    best_config_map = overall_best_config_map(
+        overall_rows,
+        forced_best_config=forced_best_config,
+        forced_best_config_prefix=forced_best_config_prefix,
+    )
     time_comparison_rows = estimate_ruledep_stage_times(data_root, best_config_rows, overall_rows)
     write_csv(
         report_dir / "overall_time_comparison.csv",
