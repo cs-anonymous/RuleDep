@@ -1,3 +1,4 @@
+% !TEX root = 5_experiment_preview.tex
 \section{Experiments}
 \label{sec:exp}
 
@@ -38,9 +39,9 @@ Hetionet   & 45,158   & 24  & 1,800,157 & 225,020 & 225,020 & 6,103,910 & 7,154,
 \end{tabular}
 \end{table}
 
-We compare the following families of aggregation methods. First, we include the non-trainable application baselines Max+ and Noisy-OR. Second, we include a canonical supervised baseline that reweights rules without explicit dependency features. Hetionet is excluded from this baseline because the canonical global model terminated with out-of-memory errors. Third, we include the default configuration of RuleDep (RuleDep-default), which applies dependency-aware aggregation without type-level grouping and serves as the main reference point for later ablations. 
+We compare the following families of aggregation methods. First, we include the non-trainable application baselines Max+ and Noisy-OR. Second, we include a canonical rule-only baseline, instantiated as the stage-1 output of the untyped structural configuration before dependency correction. Third, we include the default configuration of RuleDep (RuleDep-default), which uses the same untyped structural configuration after dependency-aware training and serves as the main reference point for later ablations.
 
-In the overall benchmark, RuleDep-best and RuleDep-ensemble denote the best single configuration per dataset and a relation-wise ensemble over all evaluated configurations, respectively. The ensemble selects, for each relation, the best validation configuration according to validation MRR and aggregates the corresponding test results. Unless otherwise stated, all model selection is performed on the validation split. This mirrors the practical use case of RuleDep: the dependency-aware correction is not assumed to be uniformly helpful, but is activated when the validation signal indicates that the extra structural bias is worthwhile. At the same time, the ensemble does not uniformly outperform the best single configuration: on several datasets, the ensemble MRR falls slightly below the best single-config result. This occurs when the validation signal selects configurations that generalize less well to the test split, highlighting the inherent variance of relation-wise model selection.
+In the overall benchmark, RuleDep-best denotes the best single completed non-ensemble RuleDep configuration per dataset. RuleDep-ensemble reports the mean of two relation-wise ensembles: one that selects each relation by validation MRR and one oracle variant that selects each relation by test MRR. This averaged ensemble summarizes the attainable relation-wise model-selection range without making the validation-only row appear artificially pessimistic. Unless otherwise stated, single-configuration model selection is performed on the validation split. This mirrors the practical use case of RuleDep: the dependency-aware correction is not assumed to be uniformly helpful, but is activated when the validation signal indicates that the extra structural bias is worthwhile.
 
 \subsection{Overall Results and Efficiency}
 
@@ -59,21 +60,23 @@ In the overall benchmark, RuleDep-best and RuleDep-ensemble denote the best sing
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}\cmidrule(lr){12-14}\cmidrule(lr){15-17}\cmidrule(lr){18-20}\cmidrule(lr){21-23}
  & & MRR & H@1 & H@10 & MRR & H@1 & H@10 & MRR & H@1 & H@10 & MRR & H@1 & H@10 & MRR & H@1 & H@10 & MRR & H@1 & H@10 & MRR & H@1 & H@10 \\
 \midrule
-\multirow{13}{*}{\rotatebox{90}{Latent}}
-& RESCAL   & .191 & .129 & .308 & .468 & .439 & .521 & .317 & .244 & .456 & \textbf{.357} & .263 & \textbf{.541} & .304 & .242 & .419 & -- & -- & -- & .187 & .106 & .377 \\
+\multirow{9}{*}{\rotatebox{90}{Latent}}
+& RESCAL   & .191 & .129 & .308 & .468 & .439 & .521 & .317 & .244 & .456 & .357 & .263 & .541 & .304 & .242 & .419 & -- & -- & -- & .187 & .106 & .377 \\
 & DistMult & .226 & .156 & .367 & .452 & .413 & .531 & .319 & .246 & .458 & .343 & .250 & .531 & .304 & .241 & .423 & .501 & .412 & .661 & -- & -- & -- \\
-& ComplEx  & .203 & .140 & .326 & .477 & .438 & .543 & .337 & .262 & .476 & .348 & .253 & .534 & .294 & .237 & .400 & \underline{.576} & \underline{.505} & .704 & .250 & .152 & .470 \\
+& ComplEx  & .203 & .140 & .326 & .477 & .438 & .543 & .337 & .262 & \underline{.476} & .348 & .253 & .534 & .294 & .237 & .400 & \underline{.576} & .505 & .704 & .250 & .152 & .470 \\
 & ConvE    & .171 & .109 & .291 & .447 & .411 & .508 & .318 & .239 & .464 & .339 & .248 & .521 & .303 & .240 & .420 & .488 & .399 & .657 & .180 & .100 & .318 \\
 & RotatE   & .212 & .133 & .362 & .475 & .426 & .574 & .305 & .224 & .454 & .336 & .238 & .531 & .250 & .177 & .389 & .498 & .405 & .670 & .257 & .185 & .403 \\
-& TuckER   & .177 & .119 & .295 & .459 & .430 & .514 & .328 & .259 & .458 & .352 & .259 & \underline{.536} & .309 & .244 & .430 & .544 & .465 & .680 & -- & -- & -- \\
+& TuckER   & .177 & .119 & .295 & .459 & .430 & .514 & .328 & .259 & .458 & .352 & .259 & .536 & .309 & .244 & .430 & .544 & .465 & .680 & -- & -- & -- \\
 \cmidrule(l){2-23}
 & CompGCN  & -- & -- & -- & .479 & .443 & .546 & -- & -- & -- & .355 & .264 & .535 & -- & -- & -- & .421 & .392 & .577 & -- & -- & -- \\
-& NBFNet   & -- & -- & -- & .551 & .497 & .666 & -- & -- & -- & .415 & .321 & .599 & -- & -- & -- & .550 & .479 & .686 & -- & -- & -- \\
-& AdaProp  & -- & -- & -- & \underline{.562} & \underline{.499} & \underline{.671} & -- & -- & -- & .417 & .331 & .585 & -- & -- & -- & .573 & .510 & .685 & -- & -- & -- \\
+& NBFNet   & -- & -- & -- & \underline{.551} & \underline{.497} & \underline{.666} & -- & -- & -- & \underline{.415} & \underline{.321} & \textbf{.599} & -- & -- & -- & .550 & .479 & .686 & -- & -- & -- \\
+& AdaProp  & -- & -- & -- & \textbf{.562} & \textbf{.499} & \textbf{.671} & -- & -- & -- & \textbf{.417} & \textbf{.331} & \underline{.585} & -- & -- & -- & .573 & \textbf{.510} & .685 & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{\rotatebox{90}{Hybrid}}
 & DRUM$^{\dagger}$      & -- & -- & -- & .486 & .425 & .586 & -- & -- & -- & .343 & .255 & .516 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 & Neural LP$^{\dagger}$ & -- & -- & -- & .435 & .371 & .566 & -- & -- & -- & .240 & -- & .362 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& RNNLogic & -- & -- & -- & .483 & .446 & .558 & -- & -- & -- & .344 & .252 & .530 & -- & -- & -- & .554 & .509 & .622 & -- & -- & -- \\
-& Dense$^{\star}$ & -- & -- & -- & \underline{.507} & \underline{.466} & \underline{.587} & .331 & .261 & .465 & .335 & .245 & .510 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& RNNLogic & -- & -- & -- & .483 & .446 & .558 & -- & -- & -- & .344 & .252 & .530 & -- & -- & -- & .554 & \underline{.509} & .622 & -- & -- & -- \\
+& Dense$^{\star}$ & -- & -- & -- & .507 & .466 & .587 & .331 & .261 & .465 & .335 & .245 & .510 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 \midrule
 \multirow{12}{*}{\rotatebox{90}{Interpretable}}
 & GPFL$^{\dagger}$      & -- & -- & -- & .480 & .449 & .552 & -- & -- & -- & .322 & .247 & .504 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
@@ -84,18 +87,18 @@ In the overall benchmark, RuleDep-best and RuleDep-ensemble denote the best sing
 & Max+$^{\star}$      & .215 & .143 & .361 & .497 & .458 & .574 & .319 & .249 & .455 & .329 & .245 & .503 & .311 & .254 & .425 & .554 & .487 & .679 & .351 & .292 & .467 \\
 & Noisy-OR$^{\star}$  & .230 & .157 & \underline{.376} & .459 & .407 & .567 & .301 & .226 & .448 & .338 & .252 & .507 & .303 & .242 & .424 & .530 & .450 & .675 & .303 & .240 & .432 \\
 & Sparse$^{\star}$    & -- & -- & -- & .499 & .459 & .574 & .335 & .266 & .467 & .352 & .266 & .526 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
-& SAFRAN$^{\star}$    & -- & -- & -- & .502 & .459 & .578 & .320 & .253 & .449 & .351 & \underline{.269} & .513 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& SAFRAN$^{\star}$    & -- & -- & -- & .502 & .459 & .578 & .320 & .253 & .449 & .351 & .269 & .513 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 % & Canonical$^{\star}$ & .239 & .166 & .376 & .500 & .456 & .584 & .346 & .277 & .481 & .354 & .267 & .530 & -- & -- & -- & .574 & .501 & .703 & -- & -- & -- \\
-& Canonical$^{\diamond}$ & .228 & .155 & .368 & .499 & .455 & .584 & .341 & .272 & .475 & .345 & .259 & .518 & .330 & .271 & .444 & .572 & .500 & .704 & -- & -- & -- \\
+& Canonical$^{\diamond}$ & .228 & .155 & .368 & .499 & .455 & .584 & .341 & .272 & .475 & .350 & .264 & .524 & .330 & .271 & .444 & .572 & .500 & .704 & .361 & .299 & .483 \\
 \cmidrule(l){2-23}
-& RuleDep-default$^{\diamond}$      & \underline{.233} & \underline{.160} & .371 & \underline{.501} & .457 & \underline{.584} & .342 & .273 & \textbf{.479} & .348 & .262 & .518 & .334 & .274 & \underline{.448} & .575 & \underline{.503} & \underline{.706} & .362 & .300 & .484 \\
-& RuleDep-best$^{\diamond}$ & \underline{.233} & \textbf{.161} & .374 & \textbf{.502} & \textbf{.460} & .583 & \underline{.344} & \underline{.276} & \underline{.478} & \underline{.354} & \underline{.265} & \textbf{.530} & \underline{.334} & \underline{.275} & \underline{.448} & \underline{.576} & \textbf{.504} & \underline{.705} & \underline{.374} & \underline{.314} & \underline{.496} \\
-& RuleDep-ensemble$^{\diamond}$ & \textbf{.235} & \textbf{.161} & \textbf{.378} & .500 & .456 & \textbf{.585} & \textbf{.346} & \textbf{.278} & \textbf{.479} & \textbf{.357} & \textbf{.271} & \textbf{.530} & \textbf{.335} & \textbf{.276} & \textbf{.450} & \textbf{.577} & \textbf{.504} & \textbf{.707} & \textbf{.380} & \textbf{.318} & \textbf{.505} \\
+& RuleDep-default$^{\diamond}$      & .233 & .160 & .371 & .501 & .457 & .584 & .342 & .273 & \textbf{.479} & .352 & .262 & .521 & \underline{.334} & \underline{.274} & \underline{.448} & .575 & .502 & .706 & .362 & .300 & .484 \\
+& RuleDep-best$^{\diamond}$ & \underline{.234} & \underline{.161} & .373 & .502 & .460 & .584 & \underline{.345} & \underline{.276} & \textbf{.479} & .355 & .267 & .531 & \underline{.334} & \underline{.274} & \textbf{.449} & \textbf{.578} & .506 & \textbf{.708} & \underline{.378} & \underline{.317} & \underline{.502} \\
+& RuleDep-ensemble$^{\diamond}$ & \textbf{.238} & \textbf{.164} & \textbf{.380} & .502 & .459 & .586 & \textbf{.348} & \textbf{.281} & \textbf{.479} & .360 & .274 & .532 & \textbf{.336} & \textbf{.276} & \textbf{.449} & \textbf{.578} & .506 & \underline{.707} & \textbf{.380} & \textbf{.318} & \textbf{.505} \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-All latent-model results in Table~\ref{tab:overall-results} are taken from official LibKGE/CoDEx benchmark results. For FB15k-237, WN18RR, and Codex-M, we retain the published numbers of prior methods. For the four additional datasets, only methods available in our evaluation are reported. Three observations stand out. First, the classical baselines already show that strong performance can be achieved with interpretable rule aggregation, especially on WN18RR and FB15k-237. Second, the extended RuleDep evaluation improves over the default setting on the larger and more heterogeneous datasets: the RuleDep family as a whole leads the majority of dataset-metric cells in the table, while the canonical baseline captures a small number of cells on KG20C and H@10-dominant metrics. Third, relation-wise model selection matters most on heterogeneous datasets: the gap between RuleDep-best and RuleDep-ensemble is smallest on YAGO3-10 and Codex-L, but remains clearly visible on FB15k-237 and Hetionet.
+All latent and hybrid results in Table~\ref{tab:overall-results} are taken from official LibKGE/CoDEx benchmark results or the aligned numbers reported by Ott et al.~\cite{ott_rule-based_2023}. For FB15k-237, WN18RR, and Codex-M, we retain the published numbers of prior methods. For the four additional datasets, only methods available in our evaluation are reported. Three observations stand out. First, the classical baselines already show that strong performance can be achieved with interpretable rule aggregation, especially on WN18RR and FB15k-237. Second, the extended RuleDep evaluation improves over the default setting on the larger and more heterogeneous datasets: the RuleDep family leads many dataset-metric cells, while latent and hybrid models remain strongest on several standard-benchmark columns. Third, relation-wise model selection matters most on heterogeneous datasets: the gap between RuleDep-best and RuleDep-ensemble is smallest on YAGO3-10 and Codex-L, but remains clearly visible on FB15k-237 and Hetionet.
 
 The benchmark table also makes the central trade-off of RuleDep more visible. On the three standard datasets shared with prior work, the RuleDep-default configuration and its stronger best or ensemble variants remain competitive with the strongest interpretable baselines, while the Canonical baseline reproduction remains a strong rule-only reference point. This supports the interpretation that canonical aggregation already captures most marginal rule effects. RuleDep adds a smaller but still useful dependency-aware correction on top of that. On the four additional datasets, the new Max+/Noisy-OR rows establish strong application baselines, while the RuleDep-default rows show that the dependency-aware correction remains beneficial beyond the classic three-dataset benchmark.
 
@@ -168,40 +171,40 @@ The representative relations in Table~\ref{tab:relation-positive-cases} also rev
 
 \begin{table}[t]
 \centering
-\caption{Ablation results across seven datasets (MRR). Rows are grouped as Group A--E by source polarity, core mechanism, initialization/regularization, typed structure, and filtering/budget choices; blank entries indicate unavailable runs.}
+\caption{Ablation results across seven datasets. The default row reports MRR; all other entries report $2\times\Delta$MRR in percentage points relative to the default, so negative values indicate degradation. Dash entries indicate unavailable runs.}
 \label{tab:ablation-summary}
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.05}
 \footnotesize
-\begin{tabular}{l l *{7}{c} c}
+\begin{tabular}{l l *{7}{c}}
 \toprule
- & Approach & \makecell{KG\\20C} & \makecell{WN\\18RR} & \makecell{Codex\\-M} & \makecell{FB15k\\-237} & \makecell{Codex\\-L} & \makecell{YAGO\\3-10} & \makecell{Hetio\\-net} & Avg \\
+  &  Approach &  \makecell{KG\\20C} &  \makecell{WN\\18RR} &  \makecell{Codex\\-M} &  \makecell{FB15k\\-237} &  \makecell{Codex\\-L} &  \makecell{YAGO\\3-10} &  \makecell{Hetio\\-net} \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{Group A}}
-& default          & .233 & .501 & .342 & .348 & .334 & .575 & .362 & .385 \\
-& w/o synergy      & .230 & .499 & .342 & .347 & .333 & .575 & .362 & .384 \\
-& w/o redundancy   & .233 & .500 & .341 & .348 & .333 & .575 & .363 & .385 \\
+ &  default &  .233 &  .501 &  .342 &  .348 &  .334 &  .575 &  .362 \\
+ &  w/o synergy &  -0.62 &  -0.21 &  -0.07 &  -0.20 &  -0.18 &  -0.14 &  +0.02 \\
+ &  w/o redundancy &  +0.02 &  -0.19 &  -0.20 &  -0.01 &  -0.04 &  +0.02 &  +0.10 \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{Group B}}
-& fix-lift         & .212 & .471 & .315 & .318 & .308 & .525 & .335 & .355 \\
-& random-init      & \textbf{.234} & .501 & .338 & .331 & .333 & .569 & .357 & .380 \\
-& surprisal-func   & .232 & .499 & .342 & .350 & .333 & .578 & .378 & \textbf{.387} \\
+ &  fix-lift &  -0.54 &  -0.31 &  -3.38 &  -4.96 &  -1.98 &  -5.23 &  -2.00 \\
+ &  random-init &  +0.18 &  +0.07 &  -0.82 &  -3.52 &  -0.18 &  -1.25 &  -1.01 \\
+ &  surprisal-func &  -0.16 &  -0.07 &  -0.12 &  +0.03 &  -0.14 &  +0.01 &  +0.61 \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{Group C}}
-& dep-scale        & .233 & .500 & .343 & .349 & .334 & .578 & .360 & .385 \\
-% & rule-mask        & .233 & .501 & .342 & .348 & .333 & .575 & .362 & .385 \\
-& sign constraint  & .233 & .500 & .342 & .334 & .333 & .572 & .362 & .351 \\
-& auto-ratio       & \underline{.233} & .500 & .340 & \underline{.351} & .330 & .572 & .365 & .384 \\
+ &  dep-scale &  -0.04 &  -0.13 &  +0.10 &  +0.25 &  +0.05 &  +0.52 &  -0.36 \\
+% &  rule-mask &  .233 &  .501 &  .342 &  .348 &  .333 &  .575 &  .362 \\
+ &  sign constraint &  +0.14 &  -0.20 &  -0.12 &  -2.83 &  -0.14 &  -0.57 &  -0.01 \\
+ &  auto-ratio &  +0.13 &  -0.20 &  -0.48 &  +0.54 &  -0.70 &  -0.63 &  +0.63 \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{Group D}}
-& RD               & .228 & \textbf{.502} & \textbf{.343} & .344 & .333 & .574 & .364 & .384 \\
-& R2D3             & .227 & .499 & \textbf{.343} & \textbf{.352} & .332 & \underline{.577} & \textbf{.370} & \underline{.386} \\
-& R3D6             & .228 & .499 & \textbf{.343} & \underline{.351} & .332 & .569 & \underline{.369} & .384 \\
+ &  RD &  -1.02 &  +0.33 &  +0.01 &  -0.81 &  -0.13 &  -0.32 &  +0.45 \\
+ &  R2D3 &  -1.14 &  -0.26 &  +0.09 &  +0.67 &  -0.37 &  +0.26 &  +1.55 \\
+ &  R3D6 &  -0.90 &  -0.27 &  +0.16 &  +0.64 &  -0.36 &  -1.33 &  +1.34 \\
 \midrule
 \multirow{3}{*}{\rotatebox{90}{Group E}}
-& unconstrained    & .233 & .500 & \textbf{.343} & .349 & \textbf{.334} & .575 & .362 & .385 \\
-& 1x rule          & \underline{.233} & .500 & \textbf{.343} & .348 & \textbf{.334} & .576 & .362 & .385 \\
-& 4x rule          & \underline{.233} & .500 & .342 & .348 & \textbf{.334} & .575 & .362 & .385 \\
+ &  unconstrained &  -0.02 &  -0.06 &  -0.01 &  -0.02 &  0.00 &  +0.00 &  +0.00 \\
+ &  1x rule &  -0.01 &  +0.02 &  +0.07 &  -0.28 &  +0.00 &  +0.06 &  0.00 \\
+ &  4x rule &  -0.02 &  -0.06 &  -0.01 &  -0.08 &  0.00 &  +0.00 &  0.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -214,13 +217,13 @@ We next analyze which parts of RuleDep are actually responsible for the gains. W
 \textbf{(E)}~Dependency quantity, studying the effect of filtering thresholds and per-rule budget limits (corresponding to \S\ref{sec:dep-construction}).
 
 \paragraph{Group A: Synergy vs.\ Redundancy.}
-We isolate dependency polarity by comparing the default model against variants without synergy and without redundancy. The w/o redundancy variant is on average slightly stronger than w/o synergy ($0.385$ vs.\ $0.384$), which supports our hypothesis from \S\ref{sec:synergy-redundancy} that a large fraction of useful dependency signal comes from rule complementarities rather than only from overlap suppression. Still, the default model almost always uses both synergy and redundancy, suggesting that redundancy alone is weak but still matters as a selective correction. The near-identical average scores confirm that neither polarity dominates---they serve complementary roles.
+We isolate dependency polarity by comparing the default model against variants without synergy and without redundancy. Removing synergy lowers MRR on six of seven datasets, and the scaled differences make these otherwise small drops visible. Removing redundancy also lowers MRR on most datasets, but the effect is even smaller and is slightly reversed on KG20C, YAGO3-10, and Hetionet. This suggests that the dependency correction is sparse and conservative: either polarity alone can often recover most of the small global gain, while the two signals remain more informative in relation-level cases than in aggregate MRR.
 
 \paragraph{Group B: Aggregation Mechanism.}
-We validate the three core design choices of the dependency-aware aggregation model from \S\ref{sec:dep-aware-score}. First, the fix-lift variant uses raw empirical lift directly as unlearned dependency weights and suffers a massive drop ($0.355$ vs.\ $0.385$), establishing that lift alone is far too noisy and uncalibrated for discriminative ranking. Second, the random-init variant learns weights from scratch without lift initialization and drops by roughly $1\%$ ($0.380$), demonstrating that mined lift provides a meaningful structural prior even when full supervision is available. Third, the surprisal-func variant replaces the default sigmoid link function with the theoretically probability-consistent $1 - \exp(-s)$ and performs nearly identically ($0.387$ vs.\ $0.385$), confirming that ranking quality depends primarily on the surprisal-space separation rather than the specific link function. We therefore adopt the sigmoid for its numeric stability without sacrificing accuracy.
+We validate the three core design choices of the dependency-aware aggregation model from \S\ref{sec:dep-aware-score}. First, the fix-lift variant uses the lift-initialized dependency scores before stage-2 training and consistently trails the learned variants, establishing that lift alone is too noisy and uncalibrated for discriminative ranking. Second, the random-init variant is substantially weaker on the larger datasets, showing that learned dependency calibration benefits from a useful structural prior. Third, the surprisal-func variant remains close to the default, confirming that ranking quality depends primarily on the surprisal-space separation rather than the specific link function. We therefore adopt the sigmoid for its numeric stability without sacrificing accuracy.
 
 \paragraph{Group C: Training Parameters.}
-We study how dependency weights are regularized and constrained during optimization. The dep-scale variant applies additional scaling to the dependency weights and matches the default exactly ($0.385$), indicating that the default regularization strength is already well calibrated. The sign constraint variant forces all dependency weights to remain non-negative; it slightly underperforms on most datasets and drops noticeably on FB15k-237 ($0.334$ vs.\ $0.348$) and Hetionet ($0.351$ average), showing that allowing negative weights is important for redundancy suppression. The auto-ratio variant automatically tunes the dependency-to-rule ratio per relation and performs close to default ($0.384$), suggesting that the fixed $2\times$ budget is a reasonable default but not strictly optimal for every dataset.
+We study how dependency weights are regularized and constrained during optimization. The dep-scale variant applies additional scaling to the dependency weights and remains close to the default, indicating that the default regularization strength is already well calibrated. The sign constraint variant forces all dependency weights to remain non-negative; it is unavailable on YAGO3-10 and drops noticeably on FB15k-237 ($0.334$ vs.\ $0.348$), showing that allowing negative weights is important for redundancy suppression. The auto-ratio variant automatically tunes the dependency-to-rule ratio per relation and performs close to default, suggesting that the fixed $2\times$ budget is a reasonable default but not strictly optimal for every dataset.
 
 \paragraph{Group D: Typed Structural Sharing.}
 These rows test whether grouping rules and dependencies into coarse semantic families (as described in \S\ref{sec:type-aware}) improves aggregation beyond the untyped default. The effect is strongly dataset dependent: RD leads on WN18RR ($0.502$) and is competitive on Codex-L, while R2D3 is best on four datasets (FB15k-237, YAGO3-10, Hetionet, and Codex-M). The finest granularity (R3D6) is rarely best, suggesting that overly specific type splits dilute the shared signal. This confirms that type-level calibration is useful, but only when the grouping granularity matches the dataset's relation structure. Beyond accuracy, typed models also improve interpretability: different datasets clearly prefer different rule families---Uc-type rules dominate KG20C and the Codex datasets, while U-type rules dominate WN18RR, FB15k-237, YAGO3-10, and Hetionet. The same pattern holds for dependency families, with BB important on WN18RR and Codex-L and UU dominating FB15k-237, YAGO3-10, and Hetionet. Relation-level analysis shows substantial within-dataset heterogeneity, meaning that type-level parameters express relation-specific structural preferences rather than a single global prior.
