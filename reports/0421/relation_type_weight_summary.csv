@@ -4,5 +4,5 @@ codex-m,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,
 WN18RR,structural_rd,,,,,,,,,,,,
 FB15k-237,tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5,0.899254,1.116004,,,1.027006,1.027668,1.034192,,,,,
 codex-l,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,
-YAGO3-10,structural_dep_scale,,,,,,,,,,,,
-hetionet,dep_scale_surprisal_init,,,,,,,,,,,,
+YAGO3-10,tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5,1.072908,,2.407315,5.054185,0.517327,,,1.393766,,1.174176,0.482584,0.523413
+hetionet,tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,

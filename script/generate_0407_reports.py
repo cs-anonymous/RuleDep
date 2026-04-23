@@ -1194,26 +1194,61 @@ def build_type_weight_summary(rows: List[Dict[str, object]]) -> List[Dict[str, o
     return out
 
 
+def signed_sqrt_gain(value: float) -> float:
+    value = float(value)
+    if value == 0.0:
+        return 0.0
+    return math.copysign(math.sqrt(abs(value)), value)
+
+
+def apply_signed_sqrt_gain_axis(ax, gains: List[float], ylabel: str) -> None:
+    if not gains:
+        ax.set_ylabel(ylabel)
+        return
+
+    transformed = [signed_sqrt_gain(g) for g in gains]
+    ymin = min(transformed)
+    ymax = max(transformed)
+    span = max(ymax - ymin, 1.0)
+    pad = 0.08 * span
+    ax.set_ylim(ymin - pad, ymax + pad)
+
+    tick_candidates = [-64, -49, -36, -25, -16, -9, -4, -1, 0, 1, 4, 9, 16, 25, 36, 49, 64]
+    gmin = min(gains)
+    gmax = max(gains)
+    selected = [t for t in tick_candidates if gmin - 1e-9 <= t <= gmax + 1e-9]
+    if 0 not in selected:
+        selected.append(0)
+    selected = sorted(set(selected))
+
+    if selected:
+        ax.set_yticks([signed_sqrt_gain(v) for v in selected])
+        ax.set_yticklabels([f"{int(v)}" for v in selected])
+
+    ax.set_ylabel(ylabel)
+
+
 def plot_gain_vs_stage1(rows: List[Dict[str, object]], out_path: Path) -> None:
     if plt is None:
         return
     plt.figure(figsize=(8, 5))
     datasets = sorted({row["dataset"] for row in rows}, key=lambda name: PREFERRED_DATASET_ORDER.index(name) if name in PREFERRED_DATASET_ORDER else 999)
     cmap = plt.get_cmap("tab10")
+    all_gains = [float(row["rel_gain_pct"]) for row in rows]
     for idx, dataset in enumerate(datasets):
         subset = [row for row in rows if row["dataset"] == dataset]
         plt.scatter(
             [row["baseline_stage1_mrr"] for row in subset],
-            [row["rel_gain_pct"] for row in subset],
+            [signed_sqrt_gain(float(row["rel_gain_pct"])) for row in subset],
             s=[max(20, math.sqrt(max(row["test_triple_count"], 1)) * 3) for row in subset],
             alpha=0.75,
             label=dataset,
             color=cmap(idx % 10),
         )
-    plt.axhline(3.0, color="green", linestyle="--", linewidth=1)
+    plt.axhline(signed_sqrt_gain(3.0), color="green", linestyle="--", linewidth=1)
     plt.axhline(0.0, color="red", linestyle="--", linewidth=1)
     plt.xlabel("Baseline structural_none stage1 MRR")
-    plt.ylabel("Relative Gain on Final Test (%)")
+    apply_signed_sqrt_gain_axis(plt.gca(), all_gains, "Relative Gain on Final Test (%) [signed sqrt]")
     plt.title("Gain vs Baseline Stage1 Strength")
     plt.legend(fontsize=8, ncol=2)
     plt.tight_layout()
@@ -1227,15 +1262,16 @@ def plot_gain_vs_dep_density(rows: List[Dict[str, object]], out_path: Path) -> N
     plt.figure(figsize=(8, 5))
     datasets = sorted({row["dataset"] for row in rows}, key=lambda name: PREFERRED_DATASET_ORDER.index(name) if name in PREFERRED_DATASET_ORDER else 999)
     cmap = plt.get_cmap("tab10")
+    all_gains = [float(row["rel_gain_pct"]) for row in rows]
     for idx, dataset in enumerate(datasets):
         subset = [row for row in rows if row["dataset"] == dataset]
         xs = [math.log10(1.0 + float(row["dep_per_rule"] or 0.0)) for row in subset]
-        ys = [float(row["rel_gain_pct"]) for row in subset]
+        ys = [signed_sqrt_gain(float(row["rel_gain_pct"])) for row in subset]
         plt.scatter(xs, ys, alpha=0.75, label=dataset, color=cmap(idx % 10))
-    plt.axhline(3.0, color="green", linestyle="--", linewidth=1)
+    plt.axhline(signed_sqrt_gain(3.0), color="green", linestyle="--", linewidth=1)
     plt.axhline(0.0, color="red", linestyle="--", linewidth=1)
     plt.xlabel("log10(1 + dependency per rule)")
-    plt.ylabel("Relative Gain on Final Test (%)")
+    apply_signed_sqrt_gain_axis(plt.gca(), all_gains, "Relative Gain on Final Test (%) [signed sqrt]")
     plt.title("Gain vs Dependency Density")
     plt.legend(fontsize=8, ncol=2)
     plt.tight_layout()
@@ -1250,6 +1286,7 @@ def plot_bucket_summary(summary_rows: List[Dict[str, object]], title: str, out_p
     positive = [100.0 * float(row["positive_ratio"] or 0.0) for row in summary_rows]
     negative = [100.0 * float(row["negative_ratio"] or 0.0) for row in summary_rows]
     avg_gain = [float(row["avg_rel_gain_pct"] or 0.0) for row in summary_rows]
+    avg_gain_sqrt = [signed_sqrt_gain(v) for v in avg_gain]
 
     fig, ax1 = plt.subplots(figsize=(8, 5))
     x = np.arange(len(labels))
@@ -1262,8 +1299,8 @@ def plot_bucket_summary(summary_rows: List[Dict[str, object]], title: str, out_p
     ax1.set_title(title)
 
     ax2 = ax1.twinx()
-    ax2.plot(x, avg_gain, color="#222222", marker="o", label="avg gain (%)")
-    ax2.set_ylabel("Average Gain (%)")
+    ax2.plot(x, avg_gain_sqrt, color="#222222", marker="o", label="avg gain (%)")
+    apply_signed_sqrt_gain_axis(ax2, avg_gain, "Average Gain (%) [signed sqrt]")
 
     handles1, labels1 = ax1.get_legend_handles_labels()
     handles2, labels2 = ax2.get_legend_handles_labels()
@@ -1494,6 +1531,9 @@ def build_relation_analysis_md(
     def _to_float(row: Dict[str, object], key: str) -> float:
         return float(row[key])
 
+    def _md_escape(text: object) -> str:
+        return str(text).replace("|", "\\|")
+
     def _median_text(subset: List[Dict[str, object]], key: str) -> str:
         vals = sorted(float(row[key]) for row in subset if row.get(key) not in (None, ""))
         if not vals:
@@ -1514,6 +1554,7 @@ def build_relation_analysis_md(
     lines.append("- `relation_gain_dep_density_bucket_summary.csv`")
     lines.append("- `relation_relative_gain_gt_3pct_best_config.csv`")
     lines.append("- `relation_relative_gain_lt_0_best_config.csv`")
+    lines.append("- `relation_stage2_gain_gt_3pt_best_config.csv`")
     lines.append("")
     lines.append("实验口径如下：")
     lines.append("")
@@ -1599,18 +1640,21 @@ def build_relation_analysis_md(
     lines.append("")
     lines.append("表格文件 `relation_relative_gain_gt_3pct_best_config.csv` 给出了完整列表，下面列出最有代表性的正例及其规模信息：")
     lines.append("")
+    lines.append("| Dataset | Relation | Baseline | Final | Rel gain | Train | Test | #Rules | #Deps | Dep/Rule | Selected stage |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
     for row in positive_examples:
+        relation_name = _md_escape(row["relation_name"] or row["relation"])
         lines.append(
-            f"- `{row['dataset']}` / `{row['relation_name'] or row['relation']}`: "
-            f"baseline `{fmt_float_short(_to_float(row, 'baseline_stage1_mrr'))}`, "
-            f"final `{fmt_float_short(_to_float(row, 'final_test_mrr'))}`, "
-            f"rel_gain `{fmt_float_short(_to_float(row, 'rel_gain_pct'))}%`, "
-            f"`train={int(float(row['train_triple_count']))}`, "
-            f"`test={int(float(row['test_triple_count']))}`, "
-            f"`rules={int(float(row['num_relation_rules']))}`, "
-            f"`deps={int(float(row['num_relation_dependencies']))}`, "
-            f"`dep_per_rule={fmt_float_short(_to_float(row, 'dep_per_rule'))}`, "
-            f"`selected_stage={row['selected_stage']}`"
+            f"| {_md_escape(row['dataset'])} | {relation_name} | "
+            f"{fmt_float_short(_to_float(row, 'baseline_stage1_mrr'))} | "
+            f"{fmt_float_short(_to_float(row, 'final_test_mrr'))} | "
+            f"{fmt_float_short(_to_float(row, 'rel_gain_pct'))}% | "
+            f"{int(float(row['train_triple_count']))} | "
+            f"{int(float(row['test_triple_count']))} | "
+            f"{int(float(row['num_relation_rules']))} | "
+            f"{int(float(row['num_relation_dependencies']))} | "
+            f"{fmt_float_short(_to_float(row, 'dep_per_rule'))} | "
+            f"{_md_escape(row['selected_stage'])} |"
         )
     lines.append("")
     lines.append("从这些代表性正例可以看到两类模式：")
@@ -1626,6 +1670,30 @@ def build_relation_analysis_md(
     for row in negative_examples:
         lines.append(
             f"- `{row['dataset']}` / `{row['relation_name'] or row['relation']}`: baseline `{fmt_float_short(row['baseline_stage1_mrr'])}`, final `{fmt_float_short(row['final_test_mrr'])}`, rel_gain `{fmt_float_short(row['rel_gain_pct'])}%`, selected_stage `{row['selected_stage']}`"
+        )
+    lines.append("")
+
+    stage2_gain_rows = [
+        row
+        for row in relation_rows
+        if row.get("stage2_gain_vs_selected_stage1") is not None and float(row["stage2_gain_vs_selected_stage1"]) > 0.03
+    ]
+    stage2_gain_rows = sorted(stage2_gain_rows, key=lambda row: float(row["stage2_gain_vs_selected_stage1"]), reverse=True)
+
+    lines.append("## Stage2 vs Stage1: Gain pt > 3")
+    lines.append("")
+    lines.append("以下关系满足 `stage2_gain_vs_selected_stage1 > 0.03`（即提升超过 3 个百分点）。")
+    lines.append("")
+    lines.append("| Dataset | Relation | Selected stage1 MRR | Final MRR | Stage2 gain (pt) | Selected stage |")
+    lines.append("| --- | --- | ---: | ---: | ---: | --- |")
+    for row in stage2_gain_rows:
+        relation_name = _md_escape(row["relation_name"] or row["relation"])
+        lines.append(
+            f"| {_md_escape(row['dataset'])} | {relation_name} | "
+            f"{fmt_float_short(_to_float(row, 'selected_config_stage1_mrr'))} | "
+            f"{fmt_float_short(_to_float(row, 'final_test_mrr'))} | "
+            f"{fmt_float_short(100.0 * _to_float(row, 'stage2_gain_vs_selected_stage1'))} | "
+            f"{_md_escape(row['selected_stage'])} |"
         )
     lines.append("")
     return "\n".join(lines)
@@ -1854,6 +1922,39 @@ def main() -> None:
         for row in negative_rows:
             negative_csv_rows.append({key: fmt_float_short(row[key]) if isinstance(row[key], float) else row[key] for key in positive_fields})
         write_csv(report_dir / "relation_relative_gain_lt_0_best_config.csv", negative_csv_rows, positive_fields)
+
+        stage2_gain_gt_3pt_rows = [
+            row
+            for row in relation_rows
+            if row.get("stage2_gain_vs_selected_stage1") is not None and float(row["stage2_gain_vs_selected_stage1"]) > 0.03
+        ]
+        stage2_gain_fields = [
+            "dataset",
+            "aggregation",
+            "relation",
+            "relation_name",
+            "test_triple_count",
+            "baseline_stage1_mrr",
+            "selected_config_stage1_mrr",
+            "final_test_mrr",
+            "selected_stage1_gain_vs_baseline",
+            "stage2_gain_vs_selected_stage1",
+            "selected_stage",
+        ]
+        stage2_gain_csv_rows = []
+        for row in stage2_gain_gt_3pt_rows:
+            csv_row: Dict[str, object] = {}
+            for key in stage2_gain_fields:
+                value = row.get(key)
+                csv_row[key] = fmt_float_short(value) if isinstance(value, float) else value
+            stage2_gain = row.get("stage2_gain_vs_selected_stage1")
+            csv_row["stage2_gain_pt"] = fmt_float_short(float(stage2_gain) * 100.0) if isinstance(stage2_gain, float) else ""
+            stage2_gain_csv_rows.append(csv_row)
+        write_csv(
+            report_dir / "relation_stage2_gain_gt_3pt_best_config.csv",
+            stage2_gain_csv_rows,
+            stage2_gain_fields + ["stage2_gain_pt"],
+        )
 
         (report_dir / "dependency_relation_analysis.md").write_text(
             build_relation_analysis_md(best_config_map, relation_rows, group_rows, dataset_rows),

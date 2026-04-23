@@ -4,5 +4,5 @@ codex-m,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,7890.144000,
 WN18RR,structural_rd,6391.193000,actual,894.579796,361.305494,1255.885290,11,0
 FB15k-237,tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5,15532.391000,actual,3891.108337,2305.502197,6196.610535,237,0
 codex-l,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,33603.206000,actual,12567.181074,10070.174733,22637.355807,65,0
-YAGO3-10,structural_dep_scale,18013.941000,actual,2294.825899,1439.794369,3734.620268,37,0
-hetionet,dep_scale_surprisal_init,,,3676.193010,2731.743648,6407.936658,24,0
+YAGO3-10,tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5,18013.941000,actual,2526.499372,2228.888708,4755.388079,37,0
+hetionet,tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,,,2147.438905,2035.149371,4182.588276,24,0

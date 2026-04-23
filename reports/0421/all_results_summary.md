@@ -24,13 +24,13 @@
 
 | Dataset | Best config | Best MRR | Ensemble-valid | Ensemble-safe | Ensemble-test | Canonical | Best app |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| KG20C | tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.233952 | 0.235725 | 0.235325 | 0.239769 | 0.239401 | 0.229772 |
-| codex-m | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.344803 | 0.346569 | 0.344357 | 0.349667 | 0.345537 | 0.319487 |
-| WN18RR | structural_rd | 0.502189 | 0.500511 | 0.499341 | 0.503990 | 0.499500 | 0.496968 |
-| FB15k-237 | tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5 | 0.355348 | 0.357476 | 0.355354 | 0.362664 | 0.353919 | 0.337685 |
-| codex-l | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.334178 | 0.334817 | 0.334735 | 0.336422 | 0.331778 | 0.311458 |
-| YAGO3-10 | structural_dep_scale | 0.577961 | 0.576236 | 0.575860 | 0.579491 | 0.573990 | 0.554384 |
-| hetionet | dep_scale_surprisal_init | 0.378467 | 0.377523 | 0.375250 | 0.377751 | - | 0.350685 |
+| KG20C | tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.233952 | 0.235725 | - | 0.239769 | 0.239401 | 0.229772 |
+| codex-m | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.344803 | 0.346569 | - | 0.349667 | 0.345537 | 0.319487 |
+| WN18RR | structural_rd | 0.502189 | 0.500511 | - | 0.503990 | 0.499500 | 0.496968 |
+| FB15k-237 | tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5 | 0.355348 | 0.357476 | - | 0.362664 | 0.353919 | 0.337685 |
+| codex-l | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.334178 | 0.334810 | - | 0.336508 | 0.331778 | 0.311458 |
+| YAGO3-10 | tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5 | 0.578974 | 0.578353 | - | 0.582268 | 0.573990 | 0.554384 |
+| hetionet | tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.390256 | 0.395001 | - | 0.395569 | - | 0.350685 |
 
 ## Estimated Runtime Breakdown
 
@@ -41,13 +41,13 @@
 | WN18RR | structural_rd | 6391.193000 | actual | 894.579796 | 361.305494 | 1255.885290 |
 | FB15k-237 | tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5 | 15532.391000 | actual | 3891.108337 | 2305.502197 | 6196.610535 |
 | codex-l | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 33603.206000 | actual | 12567.181074 | 10070.174733 | 22637.355807 |
-| YAGO3-10 | structural_dep_scale | 18013.941000 | actual | 2294.825899 | 1439.794369 | 3734.620268 |
-| hetionet | dep_scale_surprisal_init | - | - | 3676.193010 | 2731.743648 | 6407.936658 |
+| YAGO3-10 | tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5 | 18013.941000 | actual | 2526.499372 | 2228.888708 | 4755.388079 |
+| hetionet | tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 | - | - | 2147.438905 | 2035.149371 | 4182.588276 |
 
 ## Notes
 
 - 覆盖数据集数：`7`
 - 有已完成 canonical 的数据集：`6`
 - 有 ensemble-valid 的数据集：`7`
-- 有 ensemble-safe 的数据集：`7`
+- 有 ensemble-safe 的数据集：`0`
 - 有 ensemble-test 的数据集：`7`

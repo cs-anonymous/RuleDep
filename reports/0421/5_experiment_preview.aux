@@ -11,6 +11,7 @@
 \citation{vrandecic2014wikidata}
 \citation{ott_rule-based_2023}
 \citation{ott_rule-based_2023}
+\citation{ott_rule-based_2023}
 \HyPL@Entry{0<</S/D>>}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Experiments}{1}{section.1}\protected@file@percent }
 \newlabel{sec:exp}{{1}{1}{Experiments}{section.1}{}}
@@ -21,25 +22,27 @@
 \citation{ott_rule-based_2023}
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Overall benchmark comparison in the style of Ott et al.~\cite  {ott_rule-based_2023}. Symbols indicate published results ($^{\dagger }$), AnyBURL with the corresponding aggregator ($^{\star }$), and our current RuleDep pipeline ($^{\diamond }$); blank entries indicate unavailable aligned results.}}{2}{table.2}\protected@file@percent }
 \newlabel{tab:overall-results}{{2}{2}{Overall benchmark comparison in the style of Ott et al.~\cite {ott_rule-based_2023}. Symbols indicate published results ($^{\dagger }$), AnyBURL with the corresponding aggregator ($^{\star }$), and our current RuleDep pipeline ($^{\diamond }$); blank entries indicate unavailable aligned results}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Representative positive relations: top-3 highest relative MRR gain per dataset (canonical baseline to final RuleDep).}}{3}{table.3}\protected@file@percent }
+\newlabel{tab:relation-top3-gain}{{3}{3}{Representative positive relations: top-3 highest relative MRR gain per dataset (canonical baseline to final RuleDep)}{table.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Wall-clock comparison between the global canonical baseline and the best RuleDep configuration on six datasets. The gray bar is the total runtime of the canonical global model. The RuleDep bar is decomposed into the relation-wise canonical baseline sweep (blue) and the additional dependency training overhead (orange). Hetionet is excluded because the canonical run terminated with out-of-memory errors.}}{3}{figure.1}\protected@file@percent }
 \newlabel{fig:runtime-global-vs-ruledep}{{1}{3}{Wall-clock comparison between the global canonical baseline and the best RuleDep configuration on six datasets. The gray bar is the total runtime of the canonical global model. The RuleDep bar is decomposed into the relation-wise canonical baseline sweep (blue) and the additional dependency training overhead (orange). Hetionet is excluded because the canonical run terminated with out-of-memory errors}{figure.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Representative relation-level gains from RuleDep. Each dataset shows the two relations with the highest relative MRR gain over the canonical baseline; DrD and DpS denote ``Disease resembles Disease'' and ``Disease presents Symptom''.}}{3}{table.3}\protected@file@percent }
-\newlabel{tab:relation-positive-cases}{{3}{3}{Representative relation-level gains from RuleDep. Each dataset shows the two relations with the highest relative MRR gain over the canonical baseline; DrD and DpS denote ``Disease resembles Disease'' and ``Disease presents Symptom''}{table.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.3}When Does Dependency Help?}{3}{subsection.1.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Ablation results across seven datasets. The default row reports MRR; all other entries report $2\times \Delta $MRR in percentage points relative to the default, so negative values indicate degradation. The Avg column averages each row under the same scale. Dash entries indicate unavailable runs.}}{3}{table.4}\protected@file@percent }
-\newlabel{tab:ablation-summary}{{4}{3}{Ablation results across seven datasets. The default row reports MRR; all other entries report $2\times \Delta $MRR in percentage points relative to the default, so negative values indicate degradation. The Avg column averages each row under the same scale. Dash entries indicate unavailable runs}{table.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Ablation and Variant Comparison}{3}{subsection.1.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Representative minus-gain relations: top-3 lowest relative MRR gain per dataset (canonical baseline to final RuleDep). When a dataset has fewer than three negative-gain relations, the remaining rows are filled by the smallest non-negative gains.}}{4}{table.4}\protected@file@percent }
+\newlabel{tab:relation-top3-minus-gain}{{4}{4}{Representative minus-gain relations: top-3 lowest relative MRR gain per dataset (canonical baseline to final RuleDep). When a dataset has fewer than three negative-gain relations, the remaining rows are filled by the smallest non-negative gains}{table.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Ablation results across seven datasets. The default row reports MRR; all other entries report $2\times \Delta $MRR in percentage points relative to the default, so negative values indicate degradation. Dash entries indicate unavailable runs.}}{4}{table.5}\protected@file@percent }
+\newlabel{tab:ablation-summary}{{5}{4}{Ablation results across seven datasets. The default row reports MRR; all other entries report $2\times \Delta $MRR in percentage points relative to the default, so negative values indicate degradation. Dash entries indicate unavailable runs}{table.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Ablation and Variant Comparison}{4}{subsection.1.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Group A: Synergy vs.\ Redundancy.}{4}{section*.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Group B: Aggregation Mechanism.}{4}{section*.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Group C: Training Parameters.}{4}{section*.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Group D: Typed Structural Sharing.}{4}{section*.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Group E: Dependency Quantity.}{4}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Learned Weights and Case Study}{4}{subsection.1.5}\protected@file@percent }
-\newlabel{sec:exp-weight}{{1.5}{4}{Learned Weights and Case Study}{subsection.1.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Group C: Training Parameters.}{5}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Group D: Typed Structural Sharing.}{5}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Group E: Dependency Quantity.}{5}{section*.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Learned weight behavior by dataset. ``R'' and ``D'' denote rule and dependency components; ``-nz'' and ``-max'' denote near-zero ratio and maximum absolute value; ``\#v'' and ``Top3'' summarize valid terms and top-3 concentration.}}{5}{table.6}\protected@file@percent }
+\newlabel{tab:weight-summary}{{6}{5}{Learned weight behavior by dataset. ``R'' and ``D'' denote rule and dependency components; ``-nz'' and ``-max'' denote near-zero ratio and maximum absolute value; ``\#v'' and ``Top3'' summarize valid terms and top-3 concentration}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Learned Weights and Case Study}{5}{subsection.1.5}\protected@file@percent }
+\newlabel{sec:exp-weight}{{1.5}{5}{Learned Weights and Case Study}{subsection.1.5}{}}
 \bibstyle{plainnat}
 \bibdata{references}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Learned weight behavior by dataset. ``R'' and ``D'' denote rule and dependency components; ``-nz'' and ``-max'' denote near-zero ratio and maximum absolute value; ``\#v'' and ``Top3'' summarize valid terms and top-3 concentration.}}{5}{table.5}\protected@file@percent }
-\newlabel{tab:weight-summary}{{5}{5}{Learned weight behavior by dataset. ``R'' and ``D'' denote rule and dependency components; ``-nz'' and ``-max'' denote near-zero ratio and maximum absolute value; ``\#v'' and ``Top3'' summarize valid terms and top-3 concentration}{table.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces FB15k-237 case study for countries\_spoken\_in(Iraq). Abbreviations: csi = countries\_spoken\_in, ol = official\_language, lc = location\_contains, cc = continents\_countries\_within, adj = adjoins, cnt = contains, el = event\_loc.}}{6}{table.6}\protected@file@percent }
-\newlabel{tab:case-study}{{6}{6}{FB15k-237 case study for countries\_spoken\_in(Iraq). Abbreviations: csi = countries\_spoken\_in, ol = official\_language, lc = location\_contains, cc = continents\_countries\_within, adj = adjoins, cnt = contains, el = event\_loc}{table.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces FB15k-237 case study for countries\_spoken\_in(Iraq). Abbreviations: csi = countries\_spoken\_in, ol = official\_language, lc = location\_contains, cc = continents\_countries\_within, adj = adjoins, cnt = contains, el = event\_loc.}}{6}{table.7}\protected@file@percent }
+\newlabel{tab:case-study}{{7}{6}{FB15k-237 case study for countries\_spoken\_in(Iraq). Abbreviations: csi = countries\_spoken\_in, ol = official\_language, lc = location\_contains, cc = continents\_countries\_within, adj = adjoins, cnt = contains, el = event\_loc}{table.7}{}}
 \gdef \@abspage@last{6}

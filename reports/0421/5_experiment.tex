@@ -117,34 +117,77 @@ A similar pattern emerges when we compare against the learned Dense and Sparse a
 \subsection{When Does Dependency Help?}
 
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\caption{Representative relation-level gains from RuleDep. Each dataset shows the two relations with the highest relative MRR gain over the canonical baseline; DrD and DpS denote ``Disease resembles Disease'' and ``Disease presents Symptom''.}
-\label{tab:relation-positive-cases}
+\caption{Representative positive relations: top-3 highest relative MRR gain per dataset (canonical baseline to final RuleDep).}
+\label{tab:relation-top3-gain}
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.05}
 \footnotesize
-\begin{tabular}{llrrrrr}
+\begin{tabular}{llccc}
 \toprule
-Dataset & Relation & \makecell{Avg\\Obj.} & \makecell{Avg\\Subj.} & Canon. & RuleDep & \makecell{Rel.\\Gain} \\
+Dataset & Relation & Canon. & RuleDep & \makecell{Rel.\\Gain} \\
 \midrule
-\multirow{2}{*}{KG20C} & author\_write\_paper & 1.54 & 2.52 & .231 & .248 & 7.5\% \\
- & paper\_in\_domain & 3.61 & 9.24 & .116 & .118 & 1.5\% \\
-\multirow{2}{*}{WN18RR} & \_has\_part & 2.43 & 1.21 & .205 & .219 & 6.9\% \\
- & \_member\_meronym & 2.39 & 1.01 & .318 & .329 & 3.4\% \\
-\multirow{2}{*}{Codex-M} & P20 (place of death) & 1.00 & 13.17 & .327 & .336 & 2.6\% \\
- & P737 (influenced by) & 2.82 & 2.47 & .119 & .121 & 2.3\% \\
-\multirow{2}{*}{FB15k-237} & combatants & 9.11 & 8.59 & .255 & .325 & 27.5\% \\
- & region & 1.17 & 7.48 & .573 & .657 & 14.8\% \\
-\multirow{2}{*}{Codex-L} & P749 (parent org.) & 1.07 & 2.64 & .275 & .293 & 6.6\% \\
- & P737 (influenced by) & 2.58 & 2.29 & .114 & .119 & 4.8\% \\
-\multirow{2}{*}{YAGO3-10} & dealsWith & 5.92 & 7.75 & .265 & .325 & 22.8\% \\
- & diedIn & 1.00 & 4.89 & .180 & .201 & 11.5\% \\
-\multirow{2}{*}{Hetionet} & DrD & 4.11 & 4.27 & .263 & .309 & 17.7\% \\
- & DpS & 20.35 & 6.52 & .233 & .241 & 3.5\% \\
+\multirow{3}{*}{KG20C} & author\_write\_paper & .231 & .248 & 7.4\% \\
+ & paper\_cite\_paper & .182 & .195 & 7.1\% \\
+ & paper\_in\_domain & .116 & .122 & 4.9\% \\
+\multirow{3}{*}{WN18RR} & \_has\_part & .209 & .219 & 4.8\% \\
+ & \_member\_of\_domain\_usage & .347 & .355 & 2.2\% \\
+ & \_member\_meronym & .322 & .329 & 2.1\% \\
+\multirow{3}{*}{Codex-M} & P159 & .262 & .304 & 16.1\% \\
+ & P30 & .660 & .712 & 7.9\% \\
+ & P27 & .477 & .495 & 3.6\% \\
+\multirow{3}{*}{FB15k-237} & /olympics/olympic\_games/sports & .263 & .415 & 57.8\% \\
+ & \makecell[l]{/award/award\_winner/awards\_won.\\/award/award\_honor/award\_winner} & .265 & .378 & 42.5\% \\
+ & \makecell[l]{/film/film/distributors./film/\\film\_film\_distributor\_relationship/region} & .565 & .768 & 36.0\% \\
+\multirow{3}{*}{Codex-L} & P737 & .114 & .126 & 10.4\% \\
+ & P740 & .231 & .250 & 8.2\% \\
+ & P159 & .345 & .368 & 6.6\% \\
+\multirow{3}{*}{YAGO3-10} & dealsWith & .265 & .325 & 22.8\% \\
+ & diedIn & .180 & .198 & 10.2\% \\
+ & happenedIn & .406 & .432 & 6.4\% \\
+\multirow{3}{*}{Hetionet} & CcSE & .215 & .261 & 21.7\% \\
+ & DrD & .221 & .268 & 21.0\% \\
+ & AeG & .322 & .360 & 11.8\% \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Representative minus-gain relations: top-3 lowest relative MRR gain per dataset (canonical baseline to final RuleDep). When a dataset has fewer than three negative-gain relations, the remaining rows are filled by the smallest non-negative gains.}
+\label{tab:relation-top3-minus-gain}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.05}
+\footnotesize
+\begin{tabular}{llccc}
+\toprule
+Dataset & Relation & Canon. & RuleDep & \makecell{Rel.\\Gain} \\
+\midrule
+\multirow{3}{*}{KG20C} & author\_in\_affiliation & .483 & .464 & -3.9\% \\
+ & paper\_in\_venue & .407 & .406 & -0.1\% \\
+ & paper\_in\_domain & .116 & .122 & 4.9\% \\
+\multirow{3}{*}{WN18RR} & \_also\_see & .660 & .651 & -1.4\% \\
+ & \_member\_of\_domain\_region & .381 & .381 & -0.0\% \\
+ & \_instance\_hypernym & .365 & .365 & 0.0\% \\
+\multirow{3}{*}{Codex-M} & P37 & .459 & .436 & -4.9\% \\
+ & P495 & .512 & .502 & -1.9\% \\
+ & P119 & .348 & .344 & -1.3\% \\
+\multirow{3}{*}{FB15k-237} & /base/locations/continents/countries\_within & .820 & .514 & -37.3\% \\
+ & /music/artist/origin & .160 & .119 & -25.2\% \\
+ & /film/film/film\_art\_direction\_by & .750 & .667 & -11.1\% \\
+\multirow{3}{*}{Codex-L} & P509 & .166 & .161 & -2.8\% \\
+ & P749 & .275 & .270 & -1.8\% \\
+ & P1454 & .151 & .149 & -1.7\% \\
+\multirow{3}{*}{YAGO3-10} & hasChild & .456 & .418 & -8.3\% \\
+ & isCitizenOf & .384 & .367 & -4.3\% \\
+ & livesIn & .195 & .188 & -3.9\% \\
+\multirow{3}{*}{Hetionet} & DdG & .121 & .113 & -6.4\% \\
+ & DuG & .126 & .121 & -3.8\% \\
+ & GcG & .090 & .087 & -3.0\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 % \begin{figure*}[t]
 % \centering
@@ -162,7 +205,7 @@ The strongest relation-level gains are substantial: they reach $27.5\%$ on FB15k
 
 Two trends are especially consistent. First, positive-gain relations are typically not yet saturated under the canonical baseline: their average canonical baseline MRR is $0.296$, lower than the $0.406$ observed for negative-gain relations. Second, negative-gain relations actually have higher dependency density on average ($1.53$ dependencies per rule vs.~$1.27$ for positive-gain relations), which suggests that raw dependency count alone does not predict benefit---it is the quality and structural alignment of dependencies, rather than their sheer number, that determines whether the correction helps.
 
-The representative relations in Table~\ref{tab:relation-positive-cases} also reveal a clear semantic pattern. FB15k-237 and YAGO3-10 are dominated by event-participation, role-filling, and contextual relations such as \textit{combatants}, \textit{region}, \textit{dealsWith}, and \textit{diedIn}; in these cases, several partially informative rules must co-occur before a candidate becomes convincing. Hetionet shows the same phenomenon in biomedical form: DrD and DpS benefit because disease-level predictions are naturally supported by multiple corroborating biological paths. By contrast, the Codex datasets contain smaller but still consistent gains on attribute-like relations such as P20, P737, and P749, where only a few dependencies survive filtering but still improve ranking. KG20C and WN18RR lie between these extremes: their positive cases are fewer, but the gains are still concentrated on relations where multiple structural cues agree on the same answer. Overall, dependency helps most when relation semantics make co-support meaningful rather than accidental.
+The representative relations in Tables~\ref{tab:relation-top3-gain} and~\ref{tab:relation-top3-minus-gain} also reveal a clear semantic pattern. FB15k-237 and YAGO3-10 are dominated by event-participation, role-filling, and contextual relations such as \textit{dealsWith}, \textit{diedIn}, and several event-location or role relations; in these cases, several partially informative rules must co-occur before a candidate becomes convincing. Hetionet shows the same phenomenon in biomedical form: multiple disease- and compound-centered relations benefit when predictions are supported by corroborating biological paths. By contrast, the Codex datasets contain smaller but still consistent gains on entity-attribute relations (e.g., P159, P737, P740), where only a few dependencies survive filtering but can still improve ranking. KG20C and WN18RR lie between these extremes: their positive cases are fewer, and the minus-gain table confirms that many relations stay near zero gain. Overall, dependency helps most when relation semantics make co-support meaningful rather than accidental.
 
 
 \subsection{Ablation and Variant Comparison}
