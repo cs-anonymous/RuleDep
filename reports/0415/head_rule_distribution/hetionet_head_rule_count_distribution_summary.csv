@@ -1,3 +1,0 @@
-dataset,head_type,num_heads,mean_rules_per_head
-hetionet,unary,95011,64.219680
-hetionet,binary,24,97.250000

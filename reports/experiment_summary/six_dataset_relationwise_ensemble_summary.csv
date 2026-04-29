@@ -1,7 +1,0 @@
-dataset,ensemble_test_mrr,ensemble_test_h@1,ensemble_test_h@10,ensemble_test_mrr_raw,ensemble_test_h@1_raw,ensemble_test_h@10_raw,num_relations,total_test_samples,pick_count_R,pick_count_R2,pick_count_R3,pick_count_rd,pick_count_r2d3,pick_count_r3d6,pick_count_synergy,pick_count_redundancy,pick_count_sign_constraint_dependency,pick_count_init_dep_with_lift,pick_count_pos_auto_ratio
-KG20C,0.23556,0.16152,0.37742,0.22740,0.15521,0.36117,5,3724,0,0,0,1,0,0,1,0,0,2,1
-codex-m,0.34535,0.27606,0.47939,0.32009,0.25259,0.45403,46,10311,12,2,0,9,1,1,3,2,3,1,12
-WN18RR,0.49914,0.45389,0.58488,0.38289,0.31047,0.53382,11,3134,2,0,0,4,0,1,1,0,0,0,3
-FB15k-237,0.35530,0.26979,0.52741,0.34521,0.26019,0.51439,237,20466,48,14,1,26,15,6,9,12,19,26,61
-codex-l,0.33464,0.27513,0.44899,0.32289,0.26367,0.43715,65,30620,15,0,0,13,2,4,6,0,5,11,9
-YAGO3-10,0.57581,0.50180,0.70700,0.56791,0.49200,0.69980,37,5000,8,0,1,4,7,2,2,3,0,4,6

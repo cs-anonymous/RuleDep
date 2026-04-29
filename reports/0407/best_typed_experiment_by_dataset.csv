@@ -1,8 +1,0 @@
-dataset,best_typed_experiment,best_typed_grouping,best_typed_mrr
-KG20C,structural_r3d6,r3d6,0.228288
-codex-m,structural_r3d6,r3d6,0.343299
-WN18RR,structural_r2d3,r2d3,0.499230
-FB15k-237,structural_r2d3,r2d3,0.351555
-codex-l,structural_r3d6,r3d6,0.331726
-YAGO3-10,structural_r2d3,r2d3,0.576659
-hetionet,structural_r2d3,r2d3,0.369847

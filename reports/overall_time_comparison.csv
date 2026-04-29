@@ -1,0 +1,8 @@
+dataset,best_config,canonical_time_s,canonical_time_source,ruledep_stage1_time_s,ruledep_stage2_time_s,ruledep_total_time_s,relation_count,missing_epoch_count
+KG20C,tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,2448.914000,actual,246.780672,294.087057,540.867729,5,0
+codex-m,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,7890.144000,actual,1063.709421,678.443825,1742.153246,46,0
+WN18RR,structural_rd,6391.193000,actual,894.579796,361.305494,1255.885290,11,0
+FB15k-237,tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5,15532.391000,actual,3891.108337,2305.502197,6196.610535,237,0
+codex-l,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,33603.206000,actual,12567.181074,10070.174733,22637.355807,65,0
+YAGO3-10,tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5,18013.941000,actual,2526.499372,2228.888708,4755.388079,37,0
+hetionet,tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,,,2147.438905,2035.149371,4182.588276,24,0

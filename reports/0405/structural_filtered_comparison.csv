@@ -1,8 +1,0 @@
-dataset,structural_none,structural_r2d3,structural_r3d6,best_by_mrr
-FB15k-237,0.348228,0.351555,0.351437,structural_r2d3
-KG20C,0.232779,0.227091,0.228288,structural_none
-WN18RR,0.500535,0.499230,0.499178,structural_none
-YAGO3-10,0.575377,0.576659,0.568721,structural_r2d3
-codex-l,0.333535,0.331684,0.331726,structural_none
-codex-m,0.342474,0.342941,0.343299,structural_r3d6
-hetionet,0.362111,0.369847,0.368801,structural_r2d3

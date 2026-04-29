@@ -1,0 +1,10 @@
+scope,name,value
+dataset_best_typed_grouping,mixed,2
+dataset_best_typed_grouping,r2d3,2
+dataset_best_typed_grouping,rd,3
+dominant_rule_type,B,29
+dominant_rule_type,U,213
+dominant_dep_type,BB,96
+dominant_dep_type,BU,5
+dominant_dep_type,UU,135
+r3d6_relation_ordering,Ud<B<Uc,

@@ -1,3 +1,0 @@
-dataset,head_type,num_heads,mean_rules_per_head
-YAGO3-10,unary,101599,9.621581
-YAGO3-10,binary,510,25.368627

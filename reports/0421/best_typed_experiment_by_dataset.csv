@@ -1,8 +1,0 @@
-dataset,best_typed_experiment,best_typed_grouping,best_typed_mrr
-KG20C,tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,r2d3,0.233952
-codex-m,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,rd,0.344803
-WN18RR,structural_rd,rd,0.502189
-FB15k-237,tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5,r2d3,0.355348
-codex-l,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,rd,0.334178
-YAGO3-10,structural_dep_scale,mixed,0.577961
-hetionet,dep_scale_surprisal_init,mixed,0.378467

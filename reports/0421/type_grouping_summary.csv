@@ -1,8 +1,0 @@
-dataset,best_grouping_experiment,best_type_grouping,best_grouping_mrr,structural_none,structural_rd,structural_r2d3,structural_r3d6,best_rule_weight_B,best_rule_weight_U,best_rule_weight_Uc,best_rule_weight_Ud,best_dep_weight_BB,best_dep_weight_BU,best_dep_weight_UU,best_dep_weight_B_Uc,best_dep_weight_B_Ud,best_dep_weight_Uc_Uc,best_dep_weight_Uc_Ud,best_dep_weight_Ud_Ud
-KG20C,structural_none,none,0.232779,0.232779,0.227670,0.227091,0.228288,,,,,,,,,,,,
-codex-m,structural_r3d6,r3d6,0.343299,0.342474,0.342537,0.342941,0.343299,0.839027,,1.508408,1.088229,1.099279,,,1.044176,,1.099067,1.038710,0.832895
-WN18RR,structural_rd,rd,0.502189,0.500535,0.502189,0.499230,0.499178,,,,,,,,,,,,
-FB15k-237,structural_r2d3,r2d3,0.351555,0.348228,0.344174,0.351555,0.351437,0.792864,0.936619,,,1.030817,0.898863,1.055715,,,,,
-codex-l,structural_none,none,0.333535,0.333535,0.332875,0.331684,0.331726,,,,,,,,,,,,
-YAGO3-10,structural_r2d3,r2d3,0.576659,0.575377,0.573780,0.576659,0.568721,1.044411,1.199944,,,1.272611,1.245317,1.300594,,,,,
-hetionet,structural_r2d3,r2d3,0.369847,0.362111,0.364354,0.369847,0.368801,0.741385,0.785696,,,0.778125,0.777777,0.991797,,,,,

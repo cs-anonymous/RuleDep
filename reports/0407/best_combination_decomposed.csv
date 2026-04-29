@@ -1,8 +1,0 @@
-dataset,best_combination_mrr,type_grouping,rule_init_mode,pos,synergy,redundancy,sign_constraint_dependency,dep_filter_variant,synergy_file,redundancy_file,dep_l1_lambda(base),dep_score_clip_gamma(base),best_combination_dep_l1_regularization_mrr,best_combination_dep_score_clip_mrr,best_combination_static_per_rule_dep_norm_mrr,best_combination_global_preselected_topk_mrr
-KG20C,0.233439,none,conf,auto_ratio,True,True,False,default,,,,,0.233342,0.233448,0.231797,0.232752
-codex-m,0.343197,r3d6,conf,auto_sqrt,True,True,False,ratio_k2,data/codex-m/rules/synergy_filtered_ratio_k2.txt,data/codex-m/rules/redundancy_filtered_ratio_k2.txt,,,0.343797,0.343660,0.343331,0.343425
-WN18RR,0.501890,rd,conf,auto_sqrt,True,True,False,ratio_k1,data/WN18RR/rules/synergy_filtered_ratio_k1.txt,data/WN18RR/rules/redundancy_filtered_ratio_k1.txt,,,0.502195,0.500810,0.501095,0.501590
-FB15k-237,0.353336,r2d3,surprisal,auto_ratio,True,True,False,ratio_k2,data/FB15k-237/rules/synergy_filtered_ratio_k2.txt,data/FB15k-237/rules/redundancy_filtered_ratio_k2.txt,,,0.353831,0.353529,0.352155,0.352434
-codex-l,0.333575,none,conf,auto_sqrt,True,True,False,mix_k1,data/codex-l/rules/synergy_filtered_mix_k1.txt,data/codex-l/rules/redundancy_filtered_mix_k1.txt,,,0.334126,0.333453,0.332486,0.332766
-YAGO3-10,0.576069,r2d3,surprisal,auto_sqrt,True,True,False,ratio_k1,data/YAGO3-10/rules/synergy_filtered_ratio_k1.txt,data/YAGO3-10/rules/redundancy_filtered_ratio_k1.txt,,,0.576319,0.575810,0.574927,0.574772
-hetionet,0.373229,r2d3,surprisal,auto_ratio,True,True,False,lift_k1,data/hetionet/rules/synergy_filtered_lift_k1.txt,data/hetionet/rules/redundancy_filtered_lift_k1.txt,,,0.374393,0.372298,0.373354,0.372125

@@ -1,4 +1,0 @@
-file,copied,reason,case_role,dataset,relation_id,relation_label,query_entity,gold_label
-FB15k-237_countries_spoken_in_m_0d05q4_0112.yml,1,kept as final paper case,redundancy: generic language evidence pushed English to top-1; dependency suppresses English and supports Persian for Iraq,FB15k-237,/language/human_language/countries_spoken_in,human languages are spoken in various countries,,Persian_Language
-YAGO3-10_isLocatedIn_South_Governorate_0086.yml,1,kept as final paper case,redundancy: Lebanon is semantically related but has wrong granularity/direction; dependency strongly penalizes it,YAGO3-10,isLocatedIn,city isLocatedIn country,,Tyre
-YAGO3-10_isLocatedIn_Jasper_County_Missouri_0080.yml,1,kept as final paper case,synergy: correct state receives an explicit positive dependency while the nearby-city distractor has no active dependency,YAGO3-10,isLocatedIn,city isLocatedIn country,"Jasper_County,_Missouri",Missouri

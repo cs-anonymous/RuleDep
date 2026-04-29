@@ -1,3 +1,0 @@
-dataset,head_type,num_heads,mean_rules_per_head
-codex-m,unary,12876,39.832168
-codex-m,binary,46,117.391304

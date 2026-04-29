@@ -1,5 +1,0 @@
-experiment,type_grouping,num_datasets,avg_test_mrr,rule_weight_B,rule_weight_U,rule_weight_Uc,rule_weight_Ud,dep_weight_BB,dep_weight_BU,dep_weight_UU,dep_weight_B_Uc,dep_weight_B_Ud,dep_weight_Uc_Uc,dep_weight_Uc_Ud,dep_weight_Ud_Ud
-structural_none,none,7,0.385006,,,,,,,,,,,,
-structural_rd,rd,7,0.383940,,,,,,,,,,,,
-structural_r2d3,r2d3,7,0.385573,0.860138,1.347110,,,1.066441,1.024959,1.138563,,,,,
-structural_r3d6,r3d6,7,0.384493,0.871658,,1.577624,1.040119,1.134645,,,1.078819,,1.182587,0.909596,0.564858

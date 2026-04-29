@@ -1,3 +1,0 @@
-dataset,head_type,num_heads,mean_rules_per_head
-WN18RR,unary,20422,3.336010
-WN18RR,binary,11,798.272727
