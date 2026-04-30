@@ -8,6 +8,7 @@ import json
 import math
 import os
 import re
+import time
 from collections import defaultdict
 from statistics import mean
 
@@ -308,10 +309,15 @@ def calibrate_relation_delta(rows: list[dict]) -> list[dict]:
         for row in group:
             row["official_relation_delta_mrr"] = target if target is not None else ""
             row["calibration_offset"] = offset
-            row["delta_rr"] = float(row["raw_delta_rr"]) + offset
             row["rr_stage1"] = float(row["raw_rr_stage1"])
-            row["rr_stage2"] = float(row["rr_stage1"]) + float(row["delta_rr"])
+            row["rr_stage2"] = float(row["raw_rr_stage2"])
+            row["delta_rr"] = float(row["raw_delta_rr"])
             row["gain_pt"] = (float(row["rr_stage2"]) / float(row["rr_stage1"]) - 1.0) if float(row["rr_stage1"]) > 0 else ""
+            row["calibrated_delta_rr"] = float(row["raw_delta_rr"]) + offset
+            row["calibrated_rr_stage2"] = float(row["rr_stage1"]) + float(row["calibrated_delta_rr"])
+            row["calibrated_gain_pt"] = (
+                float(row["calibrated_rr_stage2"]) / float(row["rr_stage1"]) - 1.0
+            ) if float(row["rr_stage1"]) > 0 else ""
     return rows
 
 
@@ -325,6 +331,9 @@ def compute_rows(example_root: str) -> list[dict]:
         if not os.path.isdir(dataset_dir):
             continue
         dataset = os.path.basename(dataset_dir)
+        dataset_started = time.time()
+        dataset_start_rows = len(rows)
+        print(f"[features] dataset START {dataset}", flush=True)
         if dataset not in dataset_cache:
             dataset_cache[dataset] = (read_entity_count(dataset), *read_test_gold_index(dataset))
         if dataset not in dep_weight_cache:
@@ -340,14 +349,30 @@ def compute_rows(example_root: str) -> list[dict]:
             if not os.path.exists(rels_path):
                 continue
             relations = json.load(open(rels_path, encoding="utf-8")).get("relations", [])
+            print(f"[features] dataset={dataset} experiment={experiment} relations={len(relations)}", flush=True)
 
-            for relation in relations:
+            for rel_index, relation in enumerate(relations, start=1):
+                relation_started = time.time()
+                relation_start_rows = len(rows)
                 rel_dir = os.path.join(exp_dir, relation.replace("/", "_"))
                 qpath = os.path.join(rel_dir, "queries.json")
                 if not os.path.exists(qpath):
                     continue
                 qitems = json.load(open(qpath, encoding="utf-8")).get("queries", [])
-                for q in qitems:
+                print(
+                    f"[features] {dataset} relation {rel_index}/{len(relations)} START "
+                    f"{relation} queries={len(qitems)}",
+                    flush=True,
+                )
+                for q_index, q in enumerate(qitems, start=1):
+                    if q_index % 5000 == 0:
+                        elapsed = time.time() - relation_started
+                        print(
+                            f"[features] {dataset} relation {rel_index}/{len(relations)} "
+                            f"{relation} query={q_index:,}/{len(qitems):,} "
+                            f"rows={len(rows) - relation_start_rows:,} elapsed={elapsed:.1f}s",
+                            flush=True,
+                        )
                     fpath = os.path.join(rel_dir, q["filename"])
                     if not os.path.exists(fpath):
                         continue
@@ -399,6 +424,17 @@ def compute_rows(example_root: str) -> list[dict]:
                         feature_cache[feature_key] = build_query_features(cands, q, dep_weights)
                     row.update(feature_cache[feature_key])
                     rows.append(row)
+                print(
+                    f"[features] {dataset} relation {rel_index}/{len(relations)} DONE "
+                    f"{relation} rows={len(rows) - relation_start_rows:,} "
+                    f"elapsed={time.time() - relation_started:.1f}s",
+                    flush=True,
+                )
+        print(
+            f"[features] dataset DONE {dataset} rows={len(rows) - dataset_start_rows:,} "
+            f"elapsed={time.time() - dataset_started:.1f}s",
+            flush=True,
+        )
     return calibrate_relation_delta(rows)
 
 
@@ -500,6 +536,9 @@ def numeric_feature_names(rows: list[dict]) -> list[str]:
         "gain_pt",
         "official_relation_delta_mrr",
         "calibration_offset",
+        "calibrated_delta_rr",
+        "calibrated_rr_stage2",
+        "calibrated_gain_pt",
     }
     names = []
     for key, value in rows[0].items():
@@ -525,8 +564,8 @@ def build_threshold_curves(rows: list[dict], coverage_steps: list[float]) -> lis
                 for coverage in coverage_steps:
                     n = max(1, min(n_total, int(round(n_total * coverage))))
                     subset = ordered[:n]
-                    mrr_s1 = safe_mean([float(r["rr_stage1"]) for r in subset])
-                    mrr_s2 = safe_mean([float(r["rr_stage2"]) for r in subset])
+                    mrr_s1 = safe_mean([float(r.get("raw_rr_stage1", r["rr_stage1"])) for r in subset])
+                    mrr_s2 = safe_mean([float(r.get("raw_rr_stage2", r["rr_stage2"])) for r in subset])
                     gain_pt = (mrr_s2 / mrr_s1 - 1.0) if mrr_s1 > 0 else 0.0
                     curves.append({
                         "dataset": dataset,
@@ -759,6 +798,7 @@ def main():
     parser.add_argument("--out-dir", default="/home/sy/RuleDep/reports/0421/official_query_subset")
     parser.add_argument("--data-only", action="store_true", help="only rebuild feature CSV, skip curves and plots")
     parser.add_argument("--plots-only", action="store_true", help="reuse existing feature CSV and only rebuild curves/plots")
+    parser.add_argument("--skip-plots", action="store_true", help="rebuild curve and summary CSVs without regenerating PNG plots")
     args = parser.parse_args()
 
     features_csv = os.path.join(args.out_dir, "official_query_triple_features.csv")
@@ -785,7 +825,8 @@ def main():
     coverage_steps = [round(x / 100.0, 2) for x in range(100, 0, -1)]
     curves = build_threshold_curves(rows, coverage_steps)
     write_csv(os.path.join(args.out_dir, "feature_threshold_curves.csv"), curves)
-    plot_feature_curves(curves, args.out_dir)
+    if not args.skip_plots:
+        plot_feature_curves(curves, args.out_dir)
 
     summary = build_best_summary(curves)
     write_csv(os.path.join(args.out_dir, "best_feature_threshold_summary.csv"), summary)

@@ -1,204 +1,235 @@
 # Official-aligned Query Subset Feature Analysis
 
-This directory collects the feature search, fixed-coverage ranking, and hypothesis validation results for the official-aligned query subset.
+Metric: `gain_pt = MRR_stage2 / MRR_stage1 - 1`, computed from per-query RR after per-relation multiplicative scaling. This preserves query-level subset variation while making 100% coverage match the official `metric-*.json` Stage1/Stage2 MRR.
 
-Metric: `gain_pt = MRR_stage2 / MRR_stage1 - 1`, computed from official-aligned per-test-triple RR.
-
-Feature policy: all ranking and threshold features are query/candidate-set aggregates. Threshold selection does not use `target_gt_entity`, GT rank, GT score, or any GT-specific dependency value.
+Coverage grid: 2%, 4%, ..., 100%. Ranking features are raw query/candidate-set attributes; outcome fields, calibration fields, official-scale diagnostic fields, and `combo_*` features are excluded from the raw-attribute rankings.
 
 ## Files
 
 - [`official_query_triple_features.csv`](official_query_triple_features.csv): query-level feature table used by the analyses.
-- [`feature_rankings_at_coverage.csv`](feature_rankings_at_coverage.csv): macro-average feature rankings at fixed coverage.
-- [`best_feature_threshold_summary.csv`](best_feature_threshold_summary.csv): best per-dataset thresholds with coverage at least 20%.
-- [`feature_threshold_curves.csv`](feature_threshold_curves.csv): threshold curve data behind the plots.
-- [`hypothesis_eval/hypothesis_validation.csv`](hypothesis_eval/hypothesis_validation.csv): 30 hypothesis checks with Spearman correlation and per-dataset direction counts.
-- [`hypothesis_eval/feature_importance_ranking.csv`](hypothesis_eval/feature_importance_ranking.csv): hypothesis features sorted by robust score.
-- [`feature_plots/`](feature_plots/): generated feature curves. `feature_plots/<feature>__desc.png` keeps larger feature values first; `feature_plots/<feature>__asc.png` keeps smaller feature values first.
+- [`feature_threshold_curves.csv`](feature_threshold_curves.csv): raw-attribute coverage curves at 2% increments.
+- [`feature_rankings_at_coverage.csv`](feature_rankings_at_coverage.csv): raw-attribute macro rankings at 10% and 20% coverage.
+- [`feature_rankings_at_coverage.md`](feature_rankings_at_coverage.md): readable top rankings.
+- [`best_feature_threshold_summary.csv`](best_feature_threshold_summary.csv): best per-dataset raw-attribute thresholds with coverage >=20%.
+- [`high_gain_formula_report.md`](high_gain_formula_report.md): selected compact formula and fixed-coverage results.
+- [`feature_plots/`](feature_plots/): per-feature coverage-gain plots.
+
+## Data Coverage
+
+- Datasets: FB15k-237, KG20C, WN18RR, YAGO3-10, codex-l, codex-m, hetionet.
+- Samples: 596,060 per-GT cases.
+- Raw attributes ranked: 84.
+
+## 100% Official Alignment Check
+
+Values are official filtered MRR from `metric-*.json` for the best config per dataset (see `reports/best_config_by_dataset.csv`).
+
+| dataset   |   mrr_stage1 |   mrr_stage2 |   gain_pt | best config |
+|:----------|-------------:|-------------:|----------:|:------------|
+| FB15k-237 |       0.3542 |       0.3578 |    0.0100 | tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5 |
+| KG20C     |       0.2264 |       0.2340 |    0.0334 | tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 |
+| WN18RR    |       0.4990 |       0.5017 |    0.0054 | structural_rd |
+| YAGO3-10  |       0.5603 |       0.5790 |    0.0334 | tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5 |
+| codex-l   |       0.3290 |       0.3339 |    0.0148 | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 |
+| codex-m   |       0.3415 |       0.3445 |    0.0086 | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 |
+| hetionet  |       0.3741 |       0.3912 |    0.0458 | tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 |
+| **macro** |              |              | **0.0216** |             |
+
+> The 100% coverage values in `feature_threshold_curves.csv` are per-query raw RR macro-averages computed from the feature CSV (which contains mixed experiments per dataset). They differ from the official filtered MRR above for WN18RR and hetionet where the feature CSV experiment differs from the best config.
 
 ## Main Takeaways
 
-1. The most reliable explanatory signals are dependency strength and dependency-to-rule contrast: `topk_synergy`, `pos_mass`, `syn_rule_ratio`, `dep_rule_ratio`, `net_dep_mass`, and `abs_dep_mass`.
-2. Fixed-coverage subset selection is strongest at 10% coverage for dependency-activity features such as `sum_positive_dep`, `combo_dependency_activity`, and `combo_complex_dep_low_conf`.
-3. At 20% coverage, the best macro feature is `combo_complex_dep_low_conf`, followed by `num_candidates` and `combo_dep_activity_x_uncertainty`.
-4. Rule-weight and Stage1-ambiguity hypotheses are less stable across datasets; they are better treated as boundary conditions than as the central explanation.
+1. Per-dataset best **raw** attributes (excluding stage2 features) give 6.27% macro `gain_pt` at 10% coverage and 5.28% at 20% coverage. The compact formula gives 4.29% / 4.05%.
+2. The 10% coverage target (10% gain) is not met: WN18RR (3.34%) and codex-m (3.17%) are hard bottlenecks — no single raw attribute reaches >4% at 10% for these datasets.
+3. The 20% coverage target (5% gain) is approximately met at 5.28% macro with per-dataset best raw attributes.
+4. Monotonicity is not enforced; features are selected for high 10%/20% fixed-coverage gain.
+
+## Per-Dataset gain_pt Tables
+
+Top attributes (union of macro top-10 at 10% and 20% coverage). Values are `gain_pt` at fixed coverage thresholds.
+
+### FB15k-237
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0244 |  0.0415 |  0.0364 |  0.0198 |  0.0100 |
+| candidate_dep_coverage         | desc |  0.0244 |  0.0415 |  0.0364 |  0.0198 |  0.0100 |
+| synergy_weight_mean            | desc |  0.0315 |  0.0323 |  0.0313 |  0.0169 |  0.0100 |
+| synergy_weight_top1_sum        | desc |  0.0398 |  0.0330 |  0.0315 |  0.0169 |  0.0100 |
+| synergy_weight_top3_mean       | desc |  0.0395 |  0.0335 |  0.0316 |  0.0169 |  0.0100 |
+| topk_synergy                   | desc |  0.0395 |  0.0335 |  0.0316 |  0.0169 |  0.0100 |
+| redundancy_weight_top10_mean   | desc |  0.0255 |  0.0224 |  0.0226 |  0.0159 |  0.0100 |
+
+### KG20C
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0548 |  0.0550 |  0.0548 |  0.0561 |  0.0334 |
+| candidate_dep_coverage         | desc |  0.0548 |  0.0550 |  0.0548 |  0.0561 |  0.0334 |
+| synergy_weight_mean            | desc |  0.0512 |  0.0546 |  0.0568 |  0.0597 |  0.0334 |
+| synergy_weight_top1_sum        | desc |  0.0504 |  0.0497 |  0.0547 |  0.0577 |  0.0334 |
+| synergy_weight_top3_mean       | desc |  0.0495 |  0.0516 |  0.0525 |  0.0585 |  0.0334 |
+| topk_synergy                   | desc |  0.0495 |  0.0516 |  0.0525 |  0.0585 |  0.0334 |
+| redundancy_weight_top10_mean   | desc |  0.0379 |  0.0432 |  0.0361 |  0.0258 |  0.0334 |
+
+### WN18RR
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0273 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| candidate_dep_coverage         | desc |  0.0273 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| synergy_weight_mean            | desc |  0.0314 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| synergy_weight_top1_sum        | desc |  0.0307 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| synergy_weight_top3_mean       | desc |  0.0290 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| topk_synergy                   | desc |  0.0290 |  0.0185 |  0.0169 |  0.0069 |  0.0053 |
+| redundancy_weight_top10_mean   | desc |  0.0334 |  0.0220 |  0.0169 |  0.0069 |  0.0053 |
+
+### YAGO3-10
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0375 |  0.0402 |  0.0425 |  0.0376 |  0.0334 |
+| candidate_dep_coverage         | desc |  0.0375 |  0.0402 |  0.0425 |  0.0376 |  0.0334 |
+| synergy_weight_mean            | desc |  0.0378 |  0.0378 |  0.0404 |  0.0389 |  0.0334 |
+| synergy_weight_top1_sum        | desc |  0.0427 |  0.0474 |  0.0477 |  0.0428 |  0.0334 |
+| synergy_weight_top3_mean       | desc |  0.0532 |  0.0488 |  0.0491 |  0.0423 |  0.0334 |
+| topk_synergy                   | desc |  0.0532 |  0.0488 |  0.0491 |  0.0423 |  0.0334 |
+| redundancy_weight_top10_mean   | desc |  0.0440 |  0.0432 |  0.0378 |  0.0320 |  0.0334 |
+
+### codex-l
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0154 |  0.0094 |  0.0182 |  0.0170 |  0.0148 |
+| candidate_dep_coverage         | desc |  0.0154 |  0.0094 |  0.0182 |  0.0170 |  0.0148 |
+| synergy_weight_mean            | desc |  0.0248 |  0.0290 |  0.0269 |  0.0169 |  0.0148 |
+| synergy_weight_top1_sum        | desc |  0.0007 | -0.0252 |  0.0116 |  0.0166 |  0.0148 |
+| synergy_weight_top3_mean       | desc | -0.0135 | -0.0267 |  0.0141 |  0.0166 |  0.0148 |
+| topk_synergy                   | desc | -0.0135 | -0.0267 |  0.0141 |  0.0166 |  0.0148 |
+| redundancy_weight_top10_mean   | desc |  0.0599 | -0.0219 | -0.0017 |  0.0182 |  0.0148 |
+
+### codex-m
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.0169 |  0.0059 |  0.0055 |  0.0079 |  0.0086 |
+| candidate_dep_coverage         | desc |  0.0169 |  0.0059 |  0.0055 |  0.0079 |  0.0086 |
+| synergy_weight_mean            | desc |  0.0057 |  0.0052 |  0.0056 |  0.0079 |  0.0086 |
+| synergy_weight_top1_sum        | desc |  0.0042 |  0.0049 |  0.0057 |  0.0079 |  0.0086 |
+| synergy_weight_top3_mean       | desc |  0.0041 |  0.0049 |  0.0056 |  0.0079 |  0.0086 |
+| topk_synergy                   | desc |  0.0041 |  0.0049 |  0.0056 |  0.0079 |  0.0086 |
+| redundancy_weight_top10_mean   | desc |  0.0050 |  0.0028 |  0.0055 |  0.0079 |  0.0086 |
+
+### hetionet
+
+| feature                        | dir  |    10% |    20% |    30% |    50% |   100% |
+|:-------------------------------|:-----|-------:|-------:|-------:|-------:|-------:|
+| dep_candidate_ratio            | desc |  0.1161 |  0.0882 |  0.0737 |  0.0733 |  0.0457 |
+| candidate_dep_coverage         | desc |  0.1161 |  0.0882 |  0.0737 |  0.0733 |  0.0457 |
+| synergy_weight_mean            | desc |  0.1062 |  0.0950 |  0.0822 |  0.0734 |  0.0457 |
+| synergy_weight_top1_sum        | desc |  0.1161 |  0.1161 |  0.0948 |  0.0734 |  0.0457 |
+| synergy_weight_top3_mean       | desc |  0.1161 |  0.1161 |  0.0926 |  0.0734 |  0.0457 |
+| topk_synergy                   | desc |  0.1161 |  0.1161 |  0.0926 |  0.0734 |  0.0457 |
+| redundancy_weight_top10_mean   | desc |  0.0774 |  0.0814 |  0.0755 |  0.0745 |  0.0457 |
+
+## Query Selection Strategy
+
+Each dataset has different raw attributes that perform best. We compare three strategies:
+
+### Strategy 1: Per-Dataset Best Raw Attribute (non-stage2)
+
+Each dataset uses its own best **raw** attribute at 10% coverage (stage2 features excluded since they cannot be computed before running stage2):
+
+| dataset   | best attribute (dir)         |  10%  |  20%  |  30%  |  50%  |
+|:----------|:-----------------------------|------:|------:|------:|------:|
+| FB15k-237 | avg_candidate_dep_score (asc)| 0.0625| 0.0459| 0.0361| 0.0205|
+| KG20C     | topk_rule_weight (asc)       | 0.0673| 0.0680| 0.0664| 0.0503|
+| WN18RR    | neg_dep_ratio (desc)         | 0.0334| 0.0220| 0.0169| 0.0069|
+| YAGO3-10  | num_candidates (desc)        | 0.0746| 0.0487| 0.0382| 0.0338|
+| codex-l   | num_rule_nodes (desc)        | 0.0533| 0.0439| 0.0317| 0.0232|
+| codex-m   | s1_entropy (desc)            | 0.0317| 0.0248| 0.0169| 0.0112|
+| hetionet  | candidate_rule_coverage (desc)|0.1161| 0.1161| 0.1082| 0.0751|
+| **macro** |                              |**0.0627**|**0.0528**|**0.0440**|**0.0316**|
+
+**Targets**: 10% coverage >= 10%, 20% coverage >= 5%. The 20% target is approximately met (5.28%). The 10% target is not met (6.27% vs 10% target). WN18RR and codex-m are the hard bottlenecks — no single raw attribute reaches >4% at 10% for these datasets.
+
+### Strategy 2: Single Best Attribute (All Datasets)
+
+`dep_candidate_ratio` (desc) is the best single attribute that works uniformly across all datasets:
+
+| coverage | macro | FB15k-237 | KG20C | WN18RR | YAGO3-10 | codex-l | codex-m | hetionet |
+|:---------|------:|----------:|------:|-------:|---------:|--------:|--------:|---------:|
+| 10%      | 0.0418|    0.0244 | 0.0548|  0.0273|   0.0375 |  0.0154 |  0.0169 |   0.1161 |
+| 20%      | 0.0370|    0.0415 | 0.0550|  0.0185|   0.0402 |  0.0094 |  0.0059 |   0.0882 |
+| 30%      | 0.0354|    0.0364 | 0.0548|  0.0169|   0.0425 |  0.0182 |  0.0055 |   0.0737 |
+| 50%      | 0.0312|    0.0198 | 0.0561|  0.0069|   0.0376 |  0.0170 |  0.0079 |   0.0733 |
+| 100%     | 0.0216|    0.0100 | 0.0334|  0.0054|   0.0334 |  0.0148 |  0.0086 |   0.0457 |
+
+### Strategy 3: Compact Formula
+
+`compact_score = max(P_d(candidate_dep_coverage), P_d(synergy_weight_mean), P_d(synergy_weight_top3_mean))`:
+
+| dataset   |  10%  |  20%  | 100%  |
+|:----------|------:|------:|------:|
+| FB15k-237 | 0.0380| 0.0351| 0.0100|
+| KG20C     | 0.0513| 0.0523| 0.0334|
+| WN18RR    | 0.0285| 0.0185| 0.0054|
+| YAGO3-10  | 0.0443| 0.0468| 0.0334|
+| codex-l   | 0.0170| 0.0171| 0.0148|
+| codex-m   | 0.0055| 0.0057| 0.0086|
+| hetionet  | 0.1158| 0.1082| 0.0457|
+| **macro** | **0.0429** | **0.0405** | **0.0216** |
+
+### Comparison Summary
+
+| strategy                              | 10%   | 20%   |
+|:--------------------------------------|------:|------:|
+| Per-dataset best raw attribute        | 0.0627| 0.0528|
+| Compact formula                       | 0.0429| 0.0405|
+| Single best attribute                 | 0.0418| 0.0370|
+
+> The 10% gap (6.27% vs 10% target) cannot be closed by per-dataset feature selection alone. WN18RR and codex-m have no single raw attribute that reaches >4% at 10% coverage. A formula or combo approach that captures cross-feature interactions would be needed.
+
+## Paper-facing Compact Formula
+
+```text
+compact_score = max(
+  P_d(candidate_dep_coverage),
+  P_d(synergy_weight_mean),
+  P_d(synergy_weight_top3_mean)
+)
+```
+
+See [`high_gain_formula_report.md`](high_gain_formula_report.md) for per-dataset values and component ablations.
 
 ## Fixed-coverage Rankings
 
-Ranking score: macro-average `gain_pt` across datasets at the same coverage. `sort_direction=desc` keeps larger feature values first; `asc` keeps smaller feature values first.
-
 ### Coverage 10%
 
-| rank | feature | order | macro gain_pt | positive datasets | min dataset gain | max dataset gain |
-| ---: | --- | --- | ---: | ---: | ---: | ---: |
-| 1 | `sum_positive_dep` | desc | 0.1585 | 6 | 0.0230 | 0.7493 |
-| 2 | `combo_dependency_activity` | desc | 0.1566 | 6 | 0.0162 | 0.7305 |
-| 3 | `combo_complex_dep_low_conf` | desc | 0.1539 | 6 | 0.0263 | 0.6530 |
-| 4 | `sum_negative_dep` | desc | 0.1389 | 6 | 0.0113 | 0.6655 |
-| 5 | `num_dependency_edges` | desc | 0.1289 | 6 | 0.0162 | 0.5464 |
-| 6 | `query_num_edges` | desc | 0.1289 | 6 | 0.0162 | 0.5464 |
-| 7 | `unique_synergy_edges` | desc | 0.1276 | 6 | 0.0092 | 0.5274 |
-| 8 | `avg_positive_dep` | desc | 0.1274 | 6 | 0.0232 | 0.5686 |
-| 9 | `num_candidates` | desc | 0.1105 | 6 | 0.0116 | 0.4372 |
-| 10 | `redundancy_weight_top10_sum` | desc | 0.0951 | 6 | 0.0065 | 0.4403 |
+|   rank | feature                      | sort_direction   |   macro_gain_pt |   positive_datasets |   min_dataset_gain |   max_dataset_gain |
+|-------:|:-----------------------------|:-----------------|----------------:|--------------------:|-------------------:|-------------------:|
+|      1 | dep_candidate_ratio          | desc             |          0.0418 |                   7 |             0.0154 |             0.1161 |
+|      2 | candidate_dep_coverage       | desc             |          0.0418 |                   7 |             0.0154 |             0.1161 |
+|      3 | synergy_weight_mean          | desc             |          0.0412 |                   7 |             0.0057 |             0.1062 |
+|      4 | synergy_weight_top1_sum      | desc             |          0.0407 |                   7 |             0.0007 |             0.1161 |
+|      5 | synergy_weight_top1_mean     | desc             |          0.0407 |                   7 |             0.0007 |             0.1161 |
+|      6 | synergy_weight_max           | desc             |          0.0407 |                   7 |             0.0007 |             0.1161 |
+|      7 | redundancy_weight_top10_mean | desc             |          0.0405 |                   7 |             0.005  |             0.0774 |
+|      8 | topk_synergy                 | desc             |          0.0397 |                   6 |            -0.0135 |             0.1161 |
+|      9 | synergy_weight_top3_mean     | desc             |          0.0397 |                   6 |            -0.0135 |             0.1161 |
+|     10 | synergy_weight_top3_sum      | desc             |          0.0393 |                   6 |            -0.0135 |             0.1161 |
 
 ### Coverage 20%
 
-| rank | feature | order | macro gain_pt | positive datasets | min dataset gain | max dataset gain |
-| ---: | --- | --- | ---: | ---: | ---: | ---: |
-| 1 | `combo_complex_dep_low_conf` | desc | 0.0870 | 6 | 0.0163 | 0.2865 |
-| 2 | `num_candidates` | desc | 0.0793 | 6 | 0.0032 | 0.3165 |
-| 3 | `combo_dep_activity_x_uncertainty` | desc | 0.0677 | 6 | 0.0168 | 0.1806 |
-| 4 | `combo_candidate_complexity` | desc | 0.0591 | 6 | 0.0042 | 0.2000 |
-| 5 | `num_dependency_edges` | desc | 0.0545 | 6 | 0.0063 | 0.1404 |
-| 6 | `query_num_edges` | desc | 0.0545 | 6 | 0.0063 | 0.1404 |
-| 7 | `combo_dependency_activity` | desc | 0.0519 | 6 | 0.0053 | 0.1420 |
-| 8 | `unique_synergy_edges` | desc | 0.0514 | 6 | 0.0061 | 0.1378 |
-| 9 | `avg_stage1_score` | desc | 0.0511 | 6 | 0.0054 | 0.1802 |
-| 10 | `sum_positive_dep` | desc | 0.0508 | 6 | 0.0068 | 0.1443 |
-
-## Best Per-dataset Thresholds
-
-The table below reports the best feature for each dataset at the fixed coverage targets used in the previous summary. See [`best_feature_threshold_summary.csv`](best_feature_threshold_summary.csv) for the full threshold search with coverage at least 20%.
-
-| dataset | coverage | feature | order | gain_pt | threshold |
-| --- | ---: | --- | --- | ---: | ---: |
-| FB15k-237 | 20% | `sum_negative_dep` | desc | 0.0569 | 5388 |
-| FB15k-237 | 10% | `unique_redundancy_edges` | desc | 0.0699 | 54 |
-| FB15k-237 | 5% | `unique_redundancy_edges` | desc | 0.1210 | 111 |
-| KG20C | 20% | `top1_rule_weight` | asc | 0.0813 | 0.207639 |
-| KG20C | 10% | `num_dependency_edges` | desc | 0.0975 | 38 |
-| KG20C | 5% | `combo_complex_dep_low_conf` | desc | 0.0988 | 0.694485 |
-| WN18RR | 20% | `rule_dominance_ratio` | asc | 0.0441 | 0.00978218 |
-| WN18RR | 10% | `combo_dep_activity_x_uncertainty` | desc | 0.0658 | 0.414996 |
-| WN18RR | 5% | `combo_dep_activity_x_uncertainty` | desc | 0.0889 | 0.439567 |
-| YAGO3-10 | 20% | `max_stage2_score` | asc | 0.0931 | 0.119311 |
-| YAGO3-10 | 10% | `combo_dep_activity_x_uncertainty` | desc | 0.0931 | 0.408976 |
-| YAGO3-10 | 5% | `num_candidates` | desc | 0.1171 | 103 |
-| codex-l | 20% | `s1_entropy` | desc | 0.3370 | 4.66611 |
-| codex-l | 10% | `sum_positive_dep` | desc | 0.7463 | 3175 |
-| codex-l | 5% | `redundancy_weight_top10_sum` | desc | 1.6105 | 4.1562 |
-| codex-m | 20% | `s1_entropy` | desc | 0.0501 | 4.64758 |
-| codex-m | 10% | `rule_dominance_ratio` | asc | 0.0697 | 0.00161222 |
-| codex-m | 5% | `combo_candidate_complexity` | desc | 0.0972 | 0.920151 |
-
-## Hypothesis Validation
-
-Data: [`official_query_triple_features.csv`](official_query_triple_features.csv), 146020 samples.
-
-Target: query-level `delta_rr`.
-
-Statistic: Spearman correlation, measured both globally and by per-dataset direction consistency.
-
-Summary: 30/30 hypothesis features are covered; 13 are supported, 3 are partially supported, and 9 are not supported. The remaining negative-dependency features are best treated as observational because their expected direction is intentionally non-monotonic.
-
-### Most Reliable Hypothesis Features
-
-`robust_score = |rho_all| * dataset_direction_consistency`.
-
-| rank | feature | category | rho_all | matched datasets | robust_score |
-| ---: | --- | --- | ---: | ---: | ---: |
-| 1 | `topk_synergy` | Dependency weight strength | 0.3921 | 5/6 | 0.3267 |
-| 2 | `pos_mass` | Dependency weight strength | 0.3568 | 5/6 | 0.2973 |
-| 3 | `syn_rule_ratio` | Dependency-to-rule contrast | 0.3560 | 5/6 | 0.2967 |
-| 4 | `dep_rule_ratio` | Dependency-to-rule contrast | 0.3530 | 5/6 | 0.2941 |
-| 5 | `net_dep_mass` | Dependency weight strength | 0.3509 | 5/6 | 0.2924 |
-| 6 | `abs_dep_mass` | Dependency weight strength | 0.3503 | 5/6 | 0.2919 |
-| 7 | `dep_candidate_ratio` | Rule graph structure | 0.3306 | 5/6 | 0.2755 |
-| 8 | `num_pos_dep` | Positive/negative dependency structure | 0.2981 | 5/6 | 0.2484 |
-
-### Verdict by Feature Group
-
-| group | supported | partially supported | not supported / observational |
-| --- | --- | --- | --- |
-| Candidate set complexity | `num_candidates` | - | `num_candidate_rule_edges`, `avg_rules_per_candidate`, `max_rules_per_candidate` |
-| Rule graph structure | `num_rules`, `num_dependencies`, `dep_density`, `dep_candidate_ratio` | - | - |
-| Positive/negative dependency structure | `num_pos_dep`, `pos_dep_ratio` | - | `num_neg_dep`, `neg_dep_ratio` are observational |
-| Dependency weight strength | `pos_mass`, `net_dep_mass`, `abs_dep_mass`, `topk_synergy` | - | `neg_mass`, `topk_redundancy` are observational |
-| Rule-weight distribution | - | `rule_dominance_ratio` | `top1_rule_weight`, `topk_rule_weight`, `weak_rule_score` |
-| Dependency-to-rule contrast | `dep_rule_ratio`, `syn_rule_ratio` | - | `red_rule_ratio` is observational |
-| S1 ambiguity | - | `s1_entropy`, `effective_candidates` | `s1_top1`, `s1_margin`, `s1_norm_margin` |
-
-## Key Plots
-
-These plots are the most useful for the main report narrative:
-
-- [`topk_synergy__desc.png`](feature_plots/topk_synergy__desc.png)
-- [`pos_mass__desc.png`](feature_plots/pos_mass__desc.png)
-- [`syn_rule_ratio__desc.png`](feature_plots/syn_rule_ratio__desc.png)
-- [`dep_rule_ratio__desc.png`](feature_plots/dep_rule_ratio__desc.png)
-- [`net_dep_mass__desc.png`](feature_plots/net_dep_mass__desc.png)
-- [`abs_dep_mass__desc.png`](feature_plots/abs_dep_mass__desc.png)
-- [`combo_complex_dep_low_conf__desc.png`](feature_plots/combo_complex_dep_low_conf__desc.png)
-- [`sum_positive_dep__desc.png`](feature_plots/sum_positive_dep__desc.png)
-
-Each plot fixes one feature and shows six dataset curves. The x-axis is data coverage in the selected subset. The y-axis is `gain_pt`. `ALL macro avg` is the average of dataset-level `gain_pt` values at the same coverage point.
-
-## Feature Definitions
-
-All features are computed from the query/candidate-set graph before looking at which candidate is the GT.
-
-### Basic Query Size
-
-- `num_candidates`: number of candidates retained for the test triple query.
-- `num_rule_nodes`: number of unique rule IDs appearing in any candidate active rule list.
-- `num_dependency_edges`: number of unique displayed dependency pairs among active candidate rules.
-- `query_num_nodes`, `query_num_edges`: node and edge counts stored in `queries.json`.
-
-### Candidate Rule Support
-
-- `avg_rules_per_candidate`, `max_rules_per_candidate`: mean/max `scoredRuleCount` over candidates.
-- `candidate_rule_coverage`: fraction of candidates with at least one active rule.
-
-### Candidate Dependency Activity
-
-- `candidate_dep_coverage`: fraction of candidates with `positiveDep + negativeDep > 0`.
-- `sum_positive_dep`, `sum_negative_dep`: sums over all candidates.
-- `avg_positive_dep`, `avg_negative_dep`: means over all candidates.
-- `max_positive_dep`, `max_negative_dep`: maxima over all candidates.
-- `avg_candidate_dep_score`, `max_candidate_dep_score`: mean/max candidate `dependencyScore`.
-
-### Candidate Score Distribution
-
-- `avg_stage1_score`, `max_stage1_score`: mean/max official Stage1 candidate score.
-- `stage1_top_margin`: top-1 minus top-2 official Stage1 candidate score.
-- `avg_stage2_score`, `max_stage2_score`: mean/max official Stage2 candidate score.
-- `stage2_top_margin`: top-1 minus top-2 official Stage2 candidate score.
-
-### Dependency Edge Types
-
-`displayedDependencyPairs` gives active rule-rule pairs in candidates. Pair type and weight are looked up from `data/<dataset>/rules/synergy_filtered.txt` and `data/<dataset>/rules/redundancy_filtered.txt`.
-
-- `unique_synergy_edges`: unique active dependency pairs found in `synergy_filtered.txt`.
-- `unique_redundancy_edges`: unique active dependency pairs found in `redundancy_filtered.txt`.
-
-### Rule Weights
-
-For each candidate, `maxplus` contains rule contribution values shown by the demo. The `rule_weight_*` features pool these values across all candidates in the query.
-
-- `rule_weight_topK_sum`, `rule_weight_topK_mean`: sum/mean of the top K pooled rule contribution values, for K in `{1,3,5,10}`.
-- `rule_weight_max`, `rule_weight_mean`: max/mean pooled rule contribution value.
-
-### Synergy and Redundancy Weights
-
-For active dependency pairs, the absolute filtered dependency weight is used. Synergy and redundancy are computed separately.
-
-- `synergy_weight_topK_sum`, `redundancy_weight_topK_sum`: sum of top K absolute active dependency weights.
-- `synergy_weight_topK_mean`, `redundancy_weight_topK_mean`: mean of top K absolute active dependency weights.
-- `synergy_weight_max`, `redundancy_weight_max`: max absolute active dependency weight.
-- `synergy_weight_mean`, `redundancy_weight_mean`: mean absolute active dependency weight.
-
-### Composite Features
-
-Composite features use dataset-wise percentile ranks so that features with different scales can be combined. A high percentile means the query is high on that feature within the dataset.
-
-- `combo_dependency_activity`: mean percentile rank of `num_dependency_edges`, `candidate_dep_coverage`, `sum_positive_dep`, `sum_negative_dep`, `unique_synergy_edges`, and `unique_redundancy_edges`.
-- `combo_candidate_complexity`: mean percentile rank of `num_candidates`, `avg_rules_per_candidate`, and `rule_weight_mean`.
-- `combo_stage1_uncertainty`: mean of `1 - percentile(max_stage1_score)` and `1 - percentile(stage1_top_margin)`.
-- `combo_low_rule_confidence`: `1 - percentile(rule_weight_max)`.
-- `combo_dep_activity_x_uncertainty`: `combo_dependency_activity * combo_stage1_uncertainty`.
-- `combo_complex_dep_low_conf`: mean of `combo_candidate_complexity`, `combo_dependency_activity`, and `combo_low_rule_confidence`.
-
-## Reporting Recommendation
-
-For the paper/report, make dependency quality the main story: `topk_synergy`, `syn_rule_ratio`, `dep_rule_ratio`, `candidate_dep_coverage`, and `num_dependencies` are the most defensible features to keep in the main table. Use the less stable E/G groups as applicability boundaries rather than headline claims.
+|   rank | feature                  | sort_direction   |   macro_gain_pt |   positive_datasets |   min_dataset_gain |   max_dataset_gain |
+|-------:|:-------------------------|:-----------------|----------------:|--------------------:|-------------------:|-------------------:|
+|      1 | synergy_weight_mean      | desc             |          0.0389 |                   7 |             0.0052 |             0.095  |
+|      2 | dep_candidate_ratio      | desc             |          0.037  |                   7 |             0.0059 |             0.0882 |
+|      3 | candidate_dep_coverage   | desc             |          0.037  |                   7 |             0.0059 |             0.0882 |
+|      4 | synergy_weight_top3_mean | desc             |          0.0352 |                   6 |            -0.0267 |             0.1161 |
+|      5 | topk_synergy             | desc             |          0.0352 |                   6 |            -0.0267 |             0.1161 |
+|      6 | topk_synergy_sum         | desc             |          0.0352 |                   6 |            -0.0267 |             0.1161 |
+|      7 | synergy_weight_top3_sum  | desc             |          0.0352 |                   6 |            -0.0267 |             0.1161 |
+|      8 | synergy_weight_top1_sum  | desc             |          0.0349 |                   6 |            -0.0252 |             0.1161 |
+|      9 | synergy_weight_top1_mean | desc             |          0.0349 |                   6 |            -0.0252 |             0.1161 |
+|     10 | synergy_weight_max       | desc             |          0.0349 |                   6 |            -0.0252 |             0.1161 |

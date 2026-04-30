@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import csv
 import math
 import os
@@ -8,8 +9,8 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 
-FEATURE_CSV = "/home/sy/RuleDep/reports/0421/official_query_subset/official_query_triple_features.csv"
-OUT_DIR = "/home/sy/RuleDep/reports/0421/official_query_subset/hypothesis_eval"
+FEATURE_CSV = "/home/sy/RuleDep/reports/official_query_subset/official_query_triple_features.csv"
+OUT_DIR = "/home/sy/RuleDep/reports/official_query_subset/hypothesis_eval"
 
 
 @dataclass
@@ -96,9 +97,14 @@ def robust_score(expected_sign: int, rho_all: float, ds_pos: int, ds_neg: int, d
 
 
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--feature-csv", default=FEATURE_CSV)
+    parser.add_argument("--out-dir", default=OUT_DIR)
+    args = parser.parse_args()
 
-    with open(FEATURE_CSV, encoding="utf-8") as f:
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    with open(args.feature_csv, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
     numeric_columns = set()
@@ -151,7 +157,7 @@ def main():
     for r in parsed_rows:
         by_dataset[str(r["dataset"])].append(r)
 
-    y_all = [to_float(r.get("delta_rr")) for r in parsed_rows]
+    y_all = [to_float(r.get("raw_delta_rr", r.get("delta_rr"))) for r in parsed_rows]
 
     result_rows = []
     for h in hypotheses:
@@ -184,7 +190,7 @@ def main():
         ds_n = 0
         for ds_rows in by_dataset.values():
             xd = [to_float(r.get(h.feature)) for r in ds_rows]
-            yd = [to_float(r.get("delta_rr")) for r in ds_rows]
+            yd = [to_float(r.get("raw_delta_rr", r.get("delta_rr"))) for r in ds_rows]
             rd = spearman(xd, yd)
             if math.isnan(rd):
                 continue
@@ -215,7 +221,7 @@ def main():
             "robust_score": score,
         })
 
-    csv_path = os.path.join(OUT_DIR, "hypothesis_validation.csv")
+    csv_path = os.path.join(args.out_dir, "hypothesis_validation.csv")
     with open(csv_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(result_rows[0].keys()))
         writer.writeheader()
@@ -224,7 +230,7 @@ def main():
     # importance ranking
     ranked = [r for r in result_rows if r["covered"] == "yes"]
     ranked.sort(key=lambda r: float(r["robust_score"]), reverse=True)
-    rank_path = os.path.join(OUT_DIR, "feature_importance_ranking.csv")
+    rank_path = os.path.join(args.out_dir, "feature_importance_ranking.csv")
     with open(rank_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(ranked[0].keys()))
         writer.writeheader()
@@ -236,7 +242,7 @@ def main():
         "",
         "- 数据：`official_query_triple_features.csv`（重跑后）",
         "- 样本数：{}".format(len(parsed_rows)),
-        "- 目标：query-level `delta_rr`",
+        "- 目标：query-level `raw_delta_rr`（真实 per-query RR 差值，不使用 relation-level calibration offset）",
         "- 统计：Spearman 相关（全量 + 分数据集方向一致性）",
         "",
         "## 一、总体结论",
@@ -316,14 +322,14 @@ def main():
         "",
     ])
 
-    md_path = os.path.join(OUT_DIR, "hypothesis_validation_cn.md")
+    md_path = os.path.join(args.out_dir, "hypothesis_validation_cn.md")
     with open(md_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
 
     print(f"rows={len(parsed_rows)}")
     print(f"hypotheses={len(hypotheses)}")
     print(f"covered={covered_n}")
-    print(f"out={OUT_DIR}")
+    print(f"out={args.out_dir}")
 
 
 if __name__ == "__main__":
