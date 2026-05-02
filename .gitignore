@@ -20,3 +20,4 @@ RuleDepDemo
 feature_plots
 official_query_triple_features.csv
 query_case_level_analysis.csv
+true_official_per_query_rr

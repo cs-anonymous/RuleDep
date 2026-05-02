@@ -746,7 +746,87 @@ def summarize_dependency_type_candidates(candidate_map):
     return relation_type_counts
 
 
-def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=False):
+def read_id_names(path):
+    names = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            parts = line.rstrip("\n").split("\t", 1)
+            if len(parts) == 2:
+                idx, name = parts
+                idx = int(idx)
+                while len(names) <= idx:
+                    names.append("")
+                names[idx] = name
+            elif parts and parts[0] != "":
+                names.append(parts[0])
+    return names
+
+
+ID_NAME_CACHE = {}
+
+
+def get_entity_relation_names():
+    cache_key = (args.data_root, args.dataset)
+    if cache_key not in ID_NAME_CACHE:
+        root = os.path.join(args.data_root, args.dataset)
+        ID_NAME_CACHE[cache_key] = (
+            read_id_names(os.path.join(root, "entity_ids.del")),
+            read_id_names(os.path.join(root, "relation_ids.del")),
+        )
+    return ID_NAME_CACHE[cache_key]
+
+
+def build_rank_rows(relation, direction, keys, data, results, stage):
+    entity_names, relation_names = get_entity_relation_names()
+    relation_name = relation_names[int(relation)] if int(relation) < len(relation_names) else str(relation)
+    experiment_name = str(getattr(args, "export_experiment_name", "") or "").strip()
+    if experiment_name == "":
+        experiment_name = os.path.basename(os.path.normpath(args.experiment))
+    rows = []
+    for key, item, result in zip(keys, data, results):
+        golds_t = item[0]
+        ranks_t, ranks_raw_t, _n = result
+        gold_ids = [int(v) for v in golds_t.detach().cpu().tolist()]
+        ranks = [float(v) for v in ranks_t.detach().cpu().tolist()]
+        ranks_raw = [float(v) for v in ranks_raw_t.detach().cpu().tolist()]
+        if direction == "o":
+            source_id = int(key[0])
+            known_entity_id = source_id
+            query = f"{entity_names[source_id]} {relation_name} ?"
+            direction_name = "tail"
+        else:
+            object_id = int(key[1])
+            known_entity_id = object_id
+            query = f"? {relation_name} {entity_names[object_id]}"
+            direction_name = "head"
+        if not ranks and gold_ids:
+            ranks = [math.inf for _ in gold_ids]
+            ranks_raw = [math.inf for _ in gold_ids]
+        for gold_id, rank, rank_raw in zip(gold_ids, ranks, ranks_raw):
+            rows.append(
+                {
+                    "dataset": args.dataset,
+                    "experiment": experiment_name,
+                    "stage": stage,
+                    "relation_id": int(relation),
+                    "relation": relation_name,
+                    "direction": direction_name,
+                    "query_key": "|".join(str(int(v)) for v in key),
+                    "known_entity_id": known_entity_id,
+                    "known_entity": entity_names[known_entity_id],
+                    "target_entity_id": gold_id,
+                    "target_gt_entity": entity_names[gold_id],
+                    "query": query,
+                    "rank": rank,
+                    "rr": (1.0 / rank) if rank > 0 else 0.0,
+                    "rank_raw": rank_raw,
+                    "rr_raw": (1.0 / rank_raw) if rank_raw > 0 else 0.0,
+                }
+            )
+    return rows
+
+
+def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=False, return_rank_rows=False, stage=""):
     nnm.eval()
     # 优化点：直接使用全局 relation_keys 索引，避免每次 get_ranks 线性扫描所有 keys。
     split_name = "valid" if filter_test else "test"
@@ -755,6 +835,8 @@ def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=Fals
 
     if len(keys) == 0:
         empty = torch.empty((0,), dtype=torch.float32, device=EVAL_DEVICE)
+        if return_rank_rows:
+            return empty, empty, 0, []
         return empty, empty, 0
 
     data = []
@@ -808,7 +890,12 @@ def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=Fals
         results.extend(rank_batch_group(nnm, group))
 
     rank, rank_raw, ns = zip(*results)
-    return torch.hstack(rank), torch.hstack(rank_raw), sum(ns)
+    ranks = torch.hstack(rank)
+    ranks_raw = torch.hstack(rank_raw)
+    n = sum(ns)
+    if return_rank_rows:
+        return ranks, ranks_raw, n, build_rank_rows(relation, direction, keys, data, results, stage)
+    return ranks, ranks_raw, n
 
 
 def build_relation_rule_type_metadata(relation_rule_ids, relation):
@@ -1305,11 +1392,27 @@ class MRR:
         h10 = ((ranks <= 10.0).sum() / n).item()
         return mrr, h1, h10
 
-    def calc_metrics(self, nnm, sp_to_o, processed, direction, filter_test=False):
+    def calc_metrics(self, nnm, sp_to_o, processed, direction, filter_test=False, return_rank_rows=False, stage=""):
         relation = self.relation
-        ranks, ranks_raw, n = get_ranks(nnm, sp_to_o, processed, relation, direction, filter_test)
+        result = get_ranks(
+            nnm,
+            sp_to_o,
+            processed,
+            relation,
+            direction,
+            filter_test,
+            return_rank_rows=return_rank_rows,
+            stage=stage,
+        )
+        if return_rank_rows:
+            ranks, ranks_raw, n, rank_rows = result
+        else:
+            ranks, ranks_raw, n = result
+            rank_rows = None
         mrr, h1, h10 = self.calc_metrics_(ranks, n)
         mrr_raw, h1_raw, h10_raw = self.calc_metrics_(ranks_raw, n)
+        if return_rank_rows:
+            return (mrr, h1, h10, mrr_raw, h1_raw, h10_raw, rank_rows)
         return (mrr, h1, h10, mrr_raw, h1_raw, h10_raw)
 
     @staticmethod
@@ -1654,6 +1757,22 @@ def get_parser():
         action="store_true",
         default=False,
         help="Resume an all-relation run by skipping relations that already have valid metric-<rel>.json files in EXPERIMENT_DIR, then re-write metrics-final.json.",
+    )
+    parser.add_argument(
+        "--stage1_only",
+        action="store_true",
+        default=False,
+        help="Run only the rule-only stage. Useful for exporting exact stage-1 per-query ranks.",
+    )
+    parser.add_argument(
+        "--export_per_query_rr_dir",
+        default="",
+        help="When set, write exact official per-query rank/RR CSV files under this directory.",
+    )
+    parser.add_argument(
+        "--export_experiment_name",
+        default="",
+        help="Experiment label to store in exported per-query RR rows. Defaults to EXPERIMENT_DIR basename.",
     )
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
@@ -2140,6 +2259,76 @@ def evaluate_model_on_test(relation, model, direction_builders):
     return build_test_metrics_from_raw(head_raw, tail_raw)
 
 
+PER_QUERY_RR_FIELDS = [
+    "dataset",
+    "experiment",
+    "stage",
+    "relation_id",
+    "relation",
+    "direction",
+    "query_key",
+    "known_entity_id",
+    "known_entity",
+    "target_entity_id",
+    "target_gt_entity",
+    "query",
+    "rank",
+    "rr",
+    "rank_raw",
+    "rr_raw",
+]
+
+
+def per_query_export_dir():
+    raw = str(getattr(args, "export_per_query_rr_dir", "") or "").strip()
+    if raw == "":
+        return None
+    return raw
+
+
+def write_per_query_rr_rows(relation, stage, rows):
+    out_root = per_query_export_dir()
+    if out_root is None:
+        return None
+    experiment_name = str(getattr(args, "export_experiment_name", "") or "").strip()
+    if experiment_name == "":
+        experiment_name = os.path.basename(os.path.normpath(args.experiment))
+    out_dir = os.path.join(out_root, args.dataset, experiment_name)
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"relation-{int(relation)}-{stage}.csv")
+    with open(out_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=PER_QUERY_RR_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"[per-query-rr] wrote {len(rows)} rows to {out_path}", flush=True)
+    return out_path
+
+
+def export_model_per_query_rr(relation, model, model_builder, stage):
+    if per_query_export_dir() is None:
+        return None
+    head_metrics = MRR(relation=relation, direction="s", model_builder=model_builder)
+    tail_metrics = MRR(relation=relation, direction="o", model_builder=model_builder)
+    head_result = head_metrics.calc_metrics(
+        model,
+        head_metrics.test_sp_to_o,
+        head_metrics.test_processed,
+        direction="s",
+        return_rank_rows=True,
+        stage=stage,
+    )
+    tail_result = tail_metrics.calc_metrics(
+        model,
+        tail_metrics.test_sp_to_o,
+        tail_metrics.test_processed,
+        direction="o",
+        return_rank_rows=True,
+        stage=stage,
+    )
+    rows = list(head_result[6]) + list(tail_result[6])
+    return write_per_query_rr_rows(relation, stage, rows)
+
+
 def evaluate_current_stage_result(relation, model, model_builder, evaluate_every=1):
     head_mrr = MRR(relation=relation, direction="s", model_builder=model_builder)
     tail_mrr = MRR(relation=relation, direction="o", model_builder=model_builder)
@@ -2590,6 +2779,7 @@ def aggregate_single(relation):
         combined_key="best_valid_combined_raw",
         epoch_key="best_valid_epoch_raw",
     )
+    export_model_per_query_rr(relation, stage1_result["model"], rule_model_builder, "stage1")
 
     final_result = stage1_result
     dependency_stage_result = None
@@ -2632,7 +2822,7 @@ def aggregate_single(relation):
     test_stage_2 = stage1_result.get("selected_test", stage1_result["test"])
     test_stage_3 = None
 
-    if (args.synergy or args.redundancy):
+    if (args.synergy or args.redundancy) and not getattr(args, "stage1_only", False):
         selected_stage1_state_dict = stage1_result.get("selected_state_dict")
         relation_dependencies_for_stage2, dependency_mask_info = filter_relation_dependencies_by_rule_strength(
             relation,
@@ -2739,6 +2929,11 @@ def aggregate_single(relation):
         if (dependency_stage_result is not None and final_result is dependency_stage_result)
         else stage1_result.get("selected_test", stage1_result["test"])
     )
+    if per_query_export_dir() is not None and not getattr(args, "stage1_only", False):
+        if dependency_stage_result is not None:
+            export_model_per_query_rr(relation, dependency_stage_result["model"], dependency_model_builder, "stage2")
+        else:
+            export_model_per_query_rr(relation, stage1_result["model"], rule_model_builder, "stage2")
 
     learned_weights = []
     if len(relation_rule_ids) > 0:
