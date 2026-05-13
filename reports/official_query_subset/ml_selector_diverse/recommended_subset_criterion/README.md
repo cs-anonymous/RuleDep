@@ -27,12 +27,11 @@ is harder to state as a compact subset criterion.
 
 ## Feature Definitions
 
-| feature                  | paper_name                     | definition                                                                                                                                       |
-|:-------------------------|:-------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
-| synergy_weight_top5_mean | Synergy strength               | Mean of the top 5 absolute synergy dependency weights among unique displayed rule-pair dependencies in the query case.                           |
-| topk_rule_weight         | Top-k rule weight              | Mean of the top 3 rule weights fired by candidates in the query case.                                                                            |
-| max_candidate_dep_score  | Max candidate dependency score | Maximum candidate-level dependencyScore over all candidate entities in the query case.                                                           |
-| effective_candidates     | Effective candidates           | exp(H(p)), where p is the softmax distribution over candidate stage1 official scores; larger values mean the stage1 ranker is less concentrated. |
+| feature                  | paper_name                     | definition                                                                                                             |
+|:-------------------------|:-------------------------------|:-----------------------------------------------------------------------------------------------------------------------|
+| synergy_weight_top5_mean | Synergy strength               | Mean of the top 5 absolute synergy dependency weights among unique displayed rule-pair dependencies in the query case. |
+| topk_rule_weight         | Top-k rule weight              | Mean of the top 3 rule weights fired by candidates in the query case.                                                  |
+| max_candidate_dep_score  | Max candidate dependency score | Maximum candidate-level dependencyScore over all candidate entities in the query case.                                 |
 
 ## Global RF Importance
 
@@ -78,17 +77,21 @@ queries, not hard threshold rules.
 | synergy_weight_top5_mean | 12.64%    | 8.31%     | 4.01%     | [3.118, 5.55]              | [75.12%, 95.21%]                  |
 | topk_rule_weight         | 12.64%    | 8.31%     | 4.01%     | [0.971, 1.621]             | [36.54%, 73.60%]                  |
 
-## Top-3 Single-Feature Global RF Selectors
+## Paper-Facing Single-Feature Global RF Selectors
 
-The table below uses the same Global RF setup and top-10% per-dataset
-selection rule, then pools the selected queries across datasets to summarize
-feature ranges. `Feature Range` reports the selected subset IQR.
+The table below reports the three single-feature baselines we use for paper
+discussion: the two strongest single-feature global RF selectors plus
+`topk_rule_weight`, which is included because it is the complementary feature
+in the recommended two-feature selector. The same Global RF setup and top-10%
+per-dataset selection rule are used; selected queries are then pooled across
+datasets to summarize feature ranges. `Feature Range` reports the selected
+subset IQR.
 
 | feature                  | gain@10   | gain@20   | gain@50   | Feature Range (abs, IQR)   | Feature Range (percentile, IQR)   |
 |:-------------------------|:----------|:----------|:----------|:---------------------------|:----------------------------------|
 | synergy_weight_top5_mean | 7.32%     | 5.95%     | 3.68%     | [3.088, 5.579]             | [74.64%, 98.39%]                  |
 | max_candidate_dep_score  | 7.25%     | 5.46%     | 3.83%     | [3.531e-05, 0.01706]       | [68.62%, 86.89%]                  |
-| effective_candidates     | 6.05%     | 5.40%     | 3.79%     | [103.5, 111.4]             | [58.45%, 72.95%]                  |
+| topk_rule_weight         | 4.82%     | 3.97%     | 2.59%     | [1.634, 1.699]             | [75.07%, 80.64%]                  |
 
 CSV for the final paper table: `single_feature_top3_paper_table.csv`.
 
@@ -102,8 +105,8 @@ not the RF selector that gives 12.64%.
 | feature                  | criterion                         | gain@10   | gain@20   | gain@50   | Feature Range (abs)   | Feature Range (percentile)   |
 |:-------------------------|:----------------------------------|:----------|:----------|:----------|:----------------------|:-----------------------------|
 | synergy_weight_top5_mean | dataset percentile in [90%, 100%] | 5.71%     | 4.71%     | 3.50%     | [0.2367, 5.579]       | [90%, 100%]                  |
-| effective_candidates     | dataset percentile in [90%, 100%] | 5.61%     | 4.43%     | 3.00%     | [100, 200]            | [90%, 100%]                  |
 | max_candidate_dep_score  | dataset percentile in [90%, 100%] | 4.42%     | 4.12%     | 3.43%     | [0, 6.011]            | [90%, 100%]                  |
+| topk_rule_weight         | dataset percentile in [0%, 10%]   | 1.96%     | 2.98%     | 2.78%     | [0.000998, 0.5976]    | [0%, 10%]                    |
 
 CSV for this optional hard-rule check: `single_feature_hard_range_rules.csv`.
 

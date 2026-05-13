@@ -35,7 +35,11 @@ OUT_DIR = REPORT_DIR / "ml_selector_diverse" / "recommended_subset_criterion"
 SELECTOR = "balanced2_syn_topk_global_rf"
 FEATURES = ["synergy_weight_top5_mean", "topk_rule_weight"]
 COVERAGE = 0.10
-TOP_SINGLE_N = 3
+PAPER_SINGLE_FEATURES = [
+    ("balanced1_syn_global_rf", "synergy_weight_top5_mean", ["synergy_weight_top5_mean"]),
+    ("balanced1_max_global_rf", "max_candidate_dep_score", ["max_candidate_dep_score"]),
+    ("balanced1_topk_global_rf", "topk_rule_weight", ["topk_rule_weight"]),
+]
 
 FEATURE_NAMES = {
     "synergy_weight_top5_mean": "Synergy strength",
@@ -256,27 +260,8 @@ def build_hard_rule_table(df: pd.DataFrame, features: list[str]) -> tuple[pd.Dat
     return out, pd.concat(all_curves, ignore_index=True)
 
 
-def load_top_single_configs() -> list[tuple[str, str, list[str]]]:
-    path = (
-        REPORT_DIR
-        / "ml_selector_diverse"
-        / "balanced_ablation_true_rr"
-        / "balanced_subset_macro_gain_annotated.csv"
-    )
-    macro = pd.read_csv(path)
-    singles = macro[(macro["scope"] == "global") & (macro["size"] == 1)].copy()
-    singles = singles.sort_values("gain_10", ascending=False).head(TOP_SINGLE_N)
-    configs = []
-    tag_to_feature = {
-        "balanced1_syn": "synergy_weight_top5_mean",
-        "balanced1_max": "max_candidate_dep_score",
-        "balanced1_topk": "topk_rule_weight",
-        "balanced1_eff": "effective_candidates",
-    }
-    for row in singles.itertuples(index=False):
-        feature = tag_to_feature[str(row.tag)]
-        configs.append((str(row.selector), feature, [feature]))
-    return configs
+def load_paper_single_configs() -> list[tuple[str, str, list[str]]]:
+    return PAPER_SINGLE_FEATURES
 
 
 def fmt_pct(v: float) -> str:
@@ -485,11 +470,15 @@ queries, not hard threshold rules.
 
 {dual_md}
 
-## Top-3 Single-Feature Global RF Selectors
+## Paper-Facing Single-Feature Global RF Selectors
 
-The table below uses the same Global RF setup and top-10% per-dataset
-selection rule, then pools the selected queries across datasets to summarize
-feature ranges. `Feature Range` reports the selected subset IQR.
+The table below reports the three single-feature baselines we use for paper
+discussion: the two strongest single-feature global RF selectors plus
+`topk_rule_weight`, which is included because it is the complementary feature
+in the recommended two-feature selector. The same Global RF setup and top-10%
+per-dataset selection rule are used; selected queries are then pooled across
+datasets to summarize feature ranges. `Feature Range` reports the selected
+subset IQR.
 
 {single_md}
 
@@ -566,7 +555,7 @@ def main() -> None:
     single_rows = []
     single_range_rows = []
     single_curve_rows = []
-    for selector, feature, features in load_top_single_configs():
+    for selector, feature, features in load_paper_single_configs():
         single_score, _ = fit_global_score(df, selector, features)
         single_scored = df[
             ["dataset", "official_scaled_rr_stage1", "official_scaled_rr_stage2", *features]
