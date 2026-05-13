@@ -28,6 +28,21 @@ oracle ceiling.
 | per_dataset |      2 | balanced2_syn_topk_rf                | balanced2_syn_topk         | 17.42%    | 10.97%    | 5.50%     |
 | per_dataset |      1 | balanced1_eff_rf                     | balanced1_eff              | 12.03%    | 9.08%     | 5.36%     |
 
+## Recommended paper-facing subset criterion
+
+For interpretability, use the **two-feature Global RF** selector
+`balanced2_syn_topk_global_rf`:
+
+1. Train one pooled RF on all 7 datasets.
+2. Use only `synergy_weight_top5_mean` and `topk_rule_weight`.
+3. Score every query with this shared RF.
+4. Within each dataset, keep the top 10% by RF score.
+
+This gives a compact criterion while clearing the 10% in-sample gain target:
+`gain@10 = 12.64%`. The full criterion, feature definitions, RF importance,
+per-dataset top-10% gains, selected feature ranges, and OOF caveat are in
+`../recommended_subset_criterion/README.md`.
+
 ## Full macro gain across all 15 subsets x 2 scopes
 
 | scope       |   size | selector                             | gain_10   | gain_20   | gain_30   | gain_50   |

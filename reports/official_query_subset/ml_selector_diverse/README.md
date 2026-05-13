@@ -13,6 +13,8 @@ Metric: official-scaled `gain_pt = MRR_stage2 / MRR_stage1 - 1`.
 - `diverse_selector_macro_summary.csv`: macro average over datasets.
 - `diverse_selector_feature_sets.csv`: feature definitions for each retained selector.
 - `balanced5_report/`: curated 5-feature Balanced5 selector report, definitions, curves, and figures.
+- `recommended_subset_criterion/`: paper-facing two-feature Global RF subset criterion
+  (`synergy_weight_top5_mean` + `topk_rule_weight`) with top-10% ranges.
 
 ## Retained Configurations
 

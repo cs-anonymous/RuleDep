@@ -1,0 +1,3 @@
+selector,feature,importance
+balanced2_syn_topk_global_rf,synergy_weight_top5_mean,0.7106392530747364
+balanced2_syn_topk_global_rf,topk_rule_weight,0.28936074692526365
