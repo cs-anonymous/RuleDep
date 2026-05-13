@@ -59,23 +59,22 @@ top 10%, i.e., `percentile(score) in [90%, 100%]`.
 
 The selected subset has a simple feature-level interpretation: it tends to
 contain queries with **high `synergy_weight_top5_mean`** and **middle-range
-`topk_rule_weight`**. In the pooled selected top-10% subset, the feature IQRs
-are `synergy_weight_top5_mean` = `[3.118, 5.55]` (pooled percentile
-`[75.12%, 95.21%]`) and `topk_rule_weight` = `[0.971, 1.621]` (pooled
-percentile `[36.54%, 73.60%]`). This two-feature RF subset raises the macro
+`topk_rule_weight`**. In the pooled selected top-10% subset, we report q10-q90
+ranges rather than IQRs so the range captures most selected queries without
+being dominated by outliers. This two-feature RF subset raises the macro
 subset gain to **12.64%** at 10% coverage.
 
 ## Two-Feature RF Selector Paper Table
 
 This is the recommended table for the main text. The gain comes from the
 two-feature Global RF score selector, so it keeps the `gain@10 = 12.64%`
-result. Feature ranges are descriptive summaries of the RF-selected top-10%
-queries, not hard threshold rules.
+result. Feature ranges are descriptive q10-q90 summaries of the RF-selected
+top-10% queries, not hard threshold rules.
 
-| feature                  | gain@10   | gain@20   | gain@50   | Feature Range (abs, IQR)   | Feature Range (percentile, IQR)   |
-|:-------------------------|:----------|:----------|:----------|:---------------------------|:----------------------------------|
-| synergy_weight_top5_mean | 12.64%    | 8.31%     | 4.01%     | [3.118, 5.55]              | [75.12%, 95.21%]                  |
-| topk_rule_weight         | 12.64%    | 8.31%     | 4.01%     | [0.971, 1.621]             | [36.54%, 73.60%]                  |
+| feature                  | gain@10   | gain@20   | gain@50   | Feature Range (abs, q10-q90)   | Feature Range (percentile, q10-q90)   |
+|:-------------------------|:----------|:----------|:----------|:-------------------------------|:--------------------------------------|
+| synergy_weight_top5_mean | 12.64%    | 8.31%     | 4.01%     | [1.302, 5.579]                 | [68.00%, 98.39%]                      |
+| topk_rule_weight         | 12.64%    | 8.31%     | 4.01%     | [0.5355, 1.698]                | [14.47%, 80.52%]                      |
 
 ## Paper-Facing Single-Feature Global RF Selectors
 
@@ -85,13 +84,13 @@ discussion: the two strongest single-feature global RF selectors plus
 in the recommended two-feature selector. The same Global RF setup and top-10%
 per-dataset selection rule are used; selected queries are then pooled across
 datasets to summarize feature ranges. `Feature Range` reports the selected
-subset IQR.
+subset q10-q90 interval.
 
-| feature                  | gain@10   | gain@20   | gain@50   | Feature Range (abs, IQR)   | Feature Range (percentile, IQR)   |
-|:-------------------------|:----------|:----------|:----------|:---------------------------|:----------------------------------|
-| synergy_weight_top5_mean | 7.32%     | 5.95%     | 3.68%     | [3.088, 5.579]             | [74.64%, 98.39%]                  |
-| max_candidate_dep_score  | 7.25%     | 5.46%     | 3.83%     | [3.531e-05, 0.01706]       | [68.62%, 86.89%]                  |
-| topk_rule_weight         | 4.82%     | 3.97%     | 2.59%     | [1.634, 1.699]             | [75.07%, 80.64%]                  |
+| feature                  | gain@10   | gain@20   | gain@50   | Feature Range (abs, q10-q90)   | Feature Range (percentile, q10-q90)   |
+|:-------------------------|:----------|:----------|:----------|:-------------------------------|:--------------------------------------|
+| synergy_weight_top5_mean | 7.32%     | 5.95%     | 3.68%     | [1.418, 5.579]                 | [68.40%, 98.39%]                      |
+| max_candidate_dep_score  | 7.25%     | 5.46%     | 3.83%     | [-1.482e-05, 0.0406]           | [6.76%, 92.65%]                       |
+| topk_rule_weight         | 4.82%     | 3.97%     | 2.59%     | [1.392, 1.775]                 | [53.48%, 85.25%]                      |
 
 CSV for the final paper table: `single_feature_top3_paper_table.csv`.
 
@@ -127,13 +126,13 @@ CSV for this optional hard-rule check: `single_feature_hard_range_rules.csv`.
 The table reports the empirical feature range of the selected top-10% subset
 after applying the top-10% rule within each dataset and then pooling all
 selected queries. Percentiles are computed against the pooled cross-dataset
-feature distribution. The IQR is the recommended compact paper wording;
-min/max are included only to show the full observed spread.
+feature distribution. The q10-q90 interval is the recommended compact paper
+wording; min/max and q25/q75 are included for diagnostics.
 
-| feature                  |   n_selected |   value_min |   value_q25 |   value_median |   value_q75 |   value_max | percentile_min   | percentile_q25   | percentile_median   | percentile_q75   | percentile_max   |
-|:-------------------------|-------------:|------------:|------------:|---------------:|------------:|------------:|:-----------------|:-----------------|:--------------------|:-----------------|:-----------------|
-| synergy_weight_top5_mean |        59607 |     0       |       3.118 |          5.223 |       5.55  |       5.579 | 27.36%           | 75.12%           | 87.72%              | 95.21%           | 98.39%           |
-| topk_rule_weight         |        59607 |     0.05134 |       0.971 |          1.363 |       1.621 |       3.256 | 1.36%            | 36.54%           | 52.06%              | 73.60%           | 99.94%           |
+| feature                  |   n_selected |   value_min |   value_q10 |   value_q25 |   value_median |   value_q75 |   value_q90 |   value_max | percentile_min   | percentile_q10   | percentile_q25   | percentile_median   | percentile_q75   | percentile_q90   | percentile_max   |
+|:-------------------------|-------------:|------------:|------------:|------------:|---------------:|------------:|------------:|------------:|:-----------------|:-----------------|:-----------------|:--------------------|:-----------------|:-----------------|:-----------------|
+| synergy_weight_top5_mean |        59607 |     0       |      1.302  |       3.118 |          5.223 |       5.55  |       5.579 |       5.579 | 27.36%           | 68.00%           | 75.12%           | 87.72%              | 95.21%           | 98.39%           | 98.39%           |
+| topk_rule_weight         |        59607 |     0.05134 |      0.5355 |       0.971 |          1.363 |       1.621 |       1.698 |       3.256 | 1.36%            | 14.47%           | 36.54%           | 52.06%              | 73.60%           | 80.52%           | 99.94%           |
 
 The dual-feature gain curve at every 2% coverage point for each dataset and
 the macro average is in `dual_feature_gain_curves_with_macro.csv`.

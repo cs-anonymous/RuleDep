@@ -127,14 +127,22 @@ def value_range_rows(
                 "feature": feature,
                 "n_selected": len(selected),
                 "value_min": selected_values.min(),
+                "value_q05": selected_values.quantile(0.05),
+                "value_q10": selected_values.quantile(0.10),
                 "value_q25": selected_values.quantile(0.25),
                 "value_median": selected_values.quantile(0.50),
                 "value_q75": selected_values.quantile(0.75),
+                "value_q90": selected_values.quantile(0.90),
+                "value_q95": selected_values.quantile(0.95),
                 "value_max": selected_values.max(),
                 "percentile_min": selected_pct.min(),
+                "percentile_q05": selected_pct.quantile(0.05),
+                "percentile_q10": selected_pct.quantile(0.10),
                 "percentile_q25": selected_pct.quantile(0.25),
                 "percentile_median": selected_pct.quantile(0.50),
                 "percentile_q75": selected_pct.quantile(0.75),
+                "percentile_q90": selected_pct.quantile(0.90),
+                "percentile_q95": selected_pct.quantile(0.95),
                 "percentile_max": selected_pct.max(),
             }
         )
@@ -315,8 +323,8 @@ def write_readme(
             "gain_10": "gain@10",
             "gain_20": "gain@20",
             "gain_50": "gain@50",
-            "value_range_iqr": "Feature Range (abs, IQR)",
-            "percentile_range_iqr": "Feature Range (percentile, IQR)",
+            "value_range_q10_q90": "Feature Range (abs, q10-q90)",
+            "percentile_range_q10_q90": "Feature Range (percentile, q10-q90)",
         }
     )
     for col in ["gain@10", "gain@20", "gain@50"]:
@@ -327,8 +335,8 @@ def write_readme(
             "gain@10",
             "gain@20",
             "gain@50",
-            "Feature Range (abs, IQR)",
-            "Feature Range (percentile, IQR)",
+            "Feature Range (abs, q10-q90)",
+            "Feature Range (percentile, q10-q90)",
         ]
     ].to_markdown(index=False)
 
@@ -357,11 +365,11 @@ def write_readme(
     ].to_markdown(index=False)
 
     dual_paper = ranges[(ranges["selector"] == SELECTOR) & (ranges["dataset"] == "global")].copy()
-    dual_paper["Feature Range (abs, IQR)"] = dual_paper.apply(
-        lambda r: f"[{fmt_num(r['value_q25'])}, {fmt_num(r['value_q75'])}]", axis=1
+    dual_paper["Feature Range (abs, q10-q90)"] = dual_paper.apply(
+        lambda r: f"[{fmt_num(r['value_q10'])}, {fmt_num(r['value_q90'])}]", axis=1
     )
-    dual_paper["Feature Range (percentile, IQR)"] = dual_paper.apply(
-        lambda r: f"[{fmt_pct(r['percentile_q25'])}, {fmt_pct(r['percentile_q75'])}]",
+    dual_paper["Feature Range (percentile, q10-q90)"] = dual_paper.apply(
+        lambda r: f"[{fmt_pct(r['percentile_q10'])}, {fmt_pct(r['percentile_q90'])}]",
         axis=1,
     )
     dual_paper["gain@10"] = float(macro.iloc[0]["gain_10"])
@@ -373,8 +381,8 @@ def write_readme(
             "gain@10",
             "gain@20",
             "gain@50",
-            "Feature Range (abs, IQR)",
-            "Feature Range (percentile, IQR)",
+            "Feature Range (abs, q10-q90)",
+            "Feature Range (percentile, q10-q90)",
         ]
     ].copy()
     for col in ["gain@10", "gain@20", "gain@50"]:
@@ -391,14 +399,18 @@ def write_readme(
             "feature",
             "n_selected",
             "value_min",
+            "value_q10",
             "value_q25",
             "value_median",
             "value_q75",
+            "value_q90",
             "value_max",
             "percentile_min",
+            "percentile_q10",
             "percentile_q25",
             "percentile_median",
             "percentile_q75",
+            "percentile_q90",
             "percentile_max",
         ]
     ].to_markdown(index=False)
@@ -455,18 +467,17 @@ top 10%, i.e., `percentile(score) in [90%, 100%]`.
 
 The selected subset has a simple feature-level interpretation: it tends to
 contain queries with **high `synergy_weight_top5_mean`** and **middle-range
-`topk_rule_weight`**. In the pooled selected top-10% subset, the feature IQRs
-are `synergy_weight_top5_mean` = `[3.118, 5.55]` (pooled percentile
-`[75.12%, 95.21%]`) and `topk_rule_weight` = `[0.971, 1.621]` (pooled
-percentile `[36.54%, 73.60%]`). This two-feature RF subset raises the macro
+`topk_rule_weight`**. In the pooled selected top-10% subset, we report q10-q90
+ranges rather than IQRs so the range captures most selected queries without
+being dominated by outliers. This two-feature RF subset raises the macro
 subset gain to **12.64%** at 10% coverage.
 
 ## Two-Feature RF Selector Paper Table
 
 This is the recommended table for the main text. The gain comes from the
 two-feature Global RF score selector, so it keeps the `gain@10 = 12.64%`
-result. Feature ranges are descriptive summaries of the RF-selected top-10%
-queries, not hard threshold rules.
+result. Feature ranges are descriptive q10-q90 summaries of the RF-selected
+top-10% queries, not hard threshold rules.
 
 {dual_md}
 
@@ -478,7 +489,7 @@ discussion: the two strongest single-feature global RF selectors plus
 in the recommended two-feature selector. The same Global RF setup and top-10%
 per-dataset selection rule are used; selected queries are then pooled across
 datasets to summarize feature ranges. `Feature Range` reports the selected
-subset IQR.
+subset q10-q90 interval.
 
 {single_md}
 
@@ -504,8 +515,8 @@ CSV for this optional hard-rule check: `single_feature_hard_range_rules.csv`.
 The table reports the empirical feature range of the selected top-10% subset
 after applying the top-10% rule within each dataset and then pooling all
 selected queries. Percentiles are computed against the pooled cross-dataset
-feature distribution. The IQR is the recommended compact paper wording;
-min/max are included only to show the full observed spread.
+feature distribution. The q10-q90 interval is the recommended compact paper
+wording; min/max and q25/q75 are included for diagnostics.
 
 {range_md}
 
@@ -576,9 +587,14 @@ def main() -> None:
                 "feature": feature,
                 "paper_name": FEATURE_NAMES[feature],
                 "value_range_iqr": f"[{fmt_num(range_row['value_q25'])}, {fmt_num(range_row['value_q75'])}]",
+                "value_range_q10_q90": f"[{fmt_num(range_row['value_q10'])}, {fmt_num(range_row['value_q90'])}]",
                 "percentile_range_iqr": (
                     f"[{fmt_pct(range_row['percentile_q25'])}, "
                     f"{fmt_pct(range_row['percentile_q75'])}]"
+                ),
+                "percentile_range_q10_q90": (
+                    f"[{fmt_pct(range_row['percentile_q10'])}, "
+                    f"{fmt_pct(range_row['percentile_q90'])}]"
                 ),
             }
         )
@@ -589,15 +605,15 @@ def main() -> None:
     )
     dual_paper_table = ranges[
         (ranges["selector"] == SELECTOR) & (ranges["dataset"] == "global")
-    ][["feature", "value_q25", "value_q75", "percentile_q25", "percentile_q75"]].copy()
+    ][["feature", "value_q10", "value_q90", "percentile_q10", "percentile_q90"]].copy()
     dual_paper_table["gain@10"] = float(macro.iloc[0]["gain_10"])
     dual_paper_table["gain@20"] = float(macro.iloc[0]["gain_20"])
     dual_paper_table["gain@50"] = float(macro.iloc[0]["gain_50"])
     dual_paper_table["Feature Range Absolute"] = dual_paper_table.apply(
-        lambda r: f"[{fmt_num(r['value_q25'])}, {fmt_num(r['value_q75'])}]", axis=1
+        lambda r: f"[{fmt_num(r['value_q10'])}, {fmt_num(r['value_q90'])}]", axis=1
     )
     dual_paper_table["Feature Range Percentile"] = dual_paper_table.apply(
-        lambda r: f"[{fmt_pct(r['percentile_q25'])}, {fmt_pct(r['percentile_q75'])}]",
+        lambda r: f"[{fmt_pct(r['percentile_q10'])}, {fmt_pct(r['percentile_q90'])}]",
         axis=1,
     )
     dual_paper_table = dual_paper_table[
@@ -611,14 +627,14 @@ def main() -> None:
         ]
     ]
     single_paper_table = single_summary[
-        ["feature", "gain_10", "gain_20", "gain_50", "value_range_iqr", "percentile_range_iqr"]
+        ["feature", "gain_10", "gain_20", "gain_50", "value_range_q10_q90", "percentile_range_q10_q90"]
     ].rename(
         columns={
             "gain_10": "gain@10",
             "gain_20": "gain@20",
             "gain_50": "gain@50",
-            "value_range_iqr": "Feature Range Absolute",
-            "percentile_range_iqr": "Feature Range Percentile",
+            "value_range_q10_q90": "Feature Range Absolute",
+            "percentile_range_q10_q90": "Feature Range Percentile",
         }
     )
     single_ranges_all = pd.concat(single_range_rows, ignore_index=True)
