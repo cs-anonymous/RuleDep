@@ -6,9 +6,33 @@ This directory contains the query-level analysis for the 0421 report. Use the of
 
 - `query_case_level_analysis.csv`: main per-GT official-aligned case table.
 - `query_subset_feature_candidates.csv`: candidate single-feature subset thresholds.
+- `case_studies.md`: interpretable RuleDepDemo cases used for mechanism explanation.
+- `figures/fb237_israel_eurasia_africa_tikz.tex`: compact TikZ figure for the FB15k-237 Israel case.
 - `delta_mrr_plots/`: generated delta-RR distribution plots.
 
 Data source: `RuleDepDemo/frontend/public/example/**`, rebuilt from official `processed_*_test.pkl`, then relation-level calibrated against aggregation `metric-*.json`.
+
+## FB15k-237 Israel Figure Symbols
+
+Figure file: `figures/fb237_israel_eurasia_africa_tikz.tex`.
+
+Abbreviations: `c` = `/location/location/contains`, `cw` = `/location/location/countries_within`, and `adj` = `/location/location/adjoins`; `adj'` denotes the reversed adjacency atom used by the corresponding rule body. Entity shorthands in the figure are `Eu` = Eurasia, `As` = Asia, `Af` = Africa, and `Eg` = Egypt. Other compact predicates are `film` = `/film/film/release_region` and `oly` = `/olympics/olympic_athlete_affiliation/country`. Rule weights in the figure are rounded to two decimals.
+
+The figure reports official demo scores (`S_1` and `S_2`) for the rank movement, not the raw internal `stage1/stage2` logits. This matters because Eurasia has a high raw rule logit but a low `maxConf` cap (`0.647059`), while Africa has a higher `maxConf` (`0.753731`). Therefore Stage1 ranks Africa above Eurasia in the official score space, and Stage2 flips the order mainly by applying a large negative dependency adjustment to Africa.
+
+Rule symbols:
+
+- `phi_1`: `c(X,A) and adj(A,Y) => c(X,Y)`.
+- `phi_2`: `c(X,A) and adj(Y,A) => c(X,Y)`.
+- `phi_3`: `c(Asia,Y) => c(Eurasia,Y)`.
+- `phi_4`: `/film/film/release_region(The_Tourist,Y) => c(Eurasia,Y)`.
+- `phi_5`: `/olympics/olympic_athlete_affiliation/country(Archery,Y) => c(Eurasia,Y)`.
+- `phi_6`: `/film/film/release_region(Eternal_Sunshine_of_the_Spotless_Mind,Y) => c(Eurasia,Y)`.
+- `phi_7`: `cw(X,A) and adj(B,A) and adj(Y,B) => c(X,Y)`.
+- `phi_8`: `cw(X,A) and adj(A,B) and adj(B,Y) => c(X,Y)`.
+- `phi_9`: `cw(X,A) and adj(B,A) and adj(B,Y) => c(X,Y)`.
+
+The GT side is dominated by many small positive dependencies (`N_+=1939`, `S_dep=+0.394`): its representative rules are mostly independent, with a few complementary pairs. The C1 side has repeated Africa/Egypt-neighborhood rules with mostly negative dependencies (`N_-=232`, `S_dep=-1.194`): most representative dependency pairs are redundant.
 
 ## Scope
 
