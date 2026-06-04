@@ -1,6 +1,113 @@
 # RuleDep Case Studies
 
-本文档记录两个适合在 RuleDepDemo 中展示的 query-level 案例。两个案例都满足一个共同模式：Stage1 的 rank1 是一个有诱惑力但不够正确的候选 C1；Stage2 通过 rule dependency 把 GT 推到 rank1，同时把 C1 往后压。
+本文档记录适合在 RuleDepDemo 中展示的 query-level 案例。这些案例都满足一个共同模式：Stage1 的 rank1 是一个有诱惑力但不够正确的候选 C1；Stage2 通过 rule dependency 把 GT 推到 rank1，同时把 C1 往后压。
+
+## YAGO3-10: Laurie Calloway 效力 Southern California Lazers
+
+这个例子比 FB15k-237 的 Israel/Eurasia case 更适合用来同时解释 complementarity 和 redundancy。GT 侧有一个很大的正 dependency：一条直接的 `isAffiliatedTo -> playsFor` 规则和一条“共同球队/职业轨迹”规则互补；C1 侧有一个很大的负 dependency：两条几乎相同的出生地代理规则互相冗余。
+
+TikZ 图：
+
+- `reports/query_analysis/figures/yago_laurie_calloway_tikz.tex`
+
+Demo 文件：
+
+- `RuleDepDemo/frontend/public/example/YAGO3-10/tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5/playsFor/Laurie_Calloway_HEAD_.json`
+
+Query：
+
+```text
+Laurie_Calloway playsFor ?
+```
+
+候选对比：
+
+| candidate | 语义 | rank | Stage1 official | Stage2 official | dependency score | positive dep | negative dep |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Southern_California_Lazers | GT | 2 -> 1 | 0.136369 | 0.339155 | +1.351397 | 2 | 0 |
+| Des_Moines_Menace | C1 | 1 -> 2 | 0.339225 | 0.185368 | -0.954824 | 3 | 2 |
+
+这个 case 的语义比较好讲：`Laurie_Calloway` 在训练集中已经有 `isAffiliatedTo Southern_California_Lazers`，并且通过 `San_Jose_Earthquakes_(1974-88)` 与另一个也效力过 `Southern_California_Lazers` 的球员 `Charlie_Kadupski` 形成职业轨迹上的共同证据。C1 `Des_Moines_Menace` 也不是完全荒谬，因为训练集中有 `Laurie_Calloway isAffiliatedTo Des_Moines_Menace`；但 query 问的是 `playsFor`，而不是宽泛 affiliation。Stage2 的作用是：把 GT 侧的直接 affiliation 和轨迹证据合在一起加分，同时把 C1 侧由出生地 Birmingham 触发的重复代理证据压下去。
+
+GT `Southern_California_Lazers` 的主要 rules：
+
+```text
+R39786,  weight=1.404430: playsFor(X,Y) <= isAffiliatedTo(X,Y)
+R113088, weight=0.324349: playsFor(Laurie_Calloway,Y) <= isAffiliatedTo(Laurie_Calloway,Y)
+R899565, weight=0.000249: playsFor(X,Y) <= playsFor(X,A), playsFor(B,A), playsFor(B,Y)
+```
+
+对应 grounding：
+
+```text
+R39786 / R113088:
+  train: Laurie_Calloway isAffiliatedTo Southern_California_Lazers
+  infer: Laurie_Calloway playsFor Southern_California_Lazers
+
+R899565:
+  train: Laurie_Calloway playsFor San_Jose_Earthquakes_(1974-88)
+  train: Charlie_Kadupski playsFor San_Jose_Earthquakes_(1974-88)
+  train: Charlie_Kadupski playsFor Southern_California_Lazers
+  infer: Laurie_Calloway playsFor Southern_California_Lazers
+```
+
+GT 的 top displayed dependencies：
+
+```text
+R39786 + R899565:  +1.351342
+R113088 + R899565: +0.000056
+```
+
+这里的关键是 `R899565` 本身权重几乎为 0，单独看只是很弱的“共同效力过某队”的轨迹规则；但它和 `isAffiliatedTo -> playsFor` 同时触发时，说明 direct affiliation 不是孤立噪声，而是与职业轨迹相互印证。因此 `R39786 + R899565` 得到很大的正 dependency，GT 的 `dependencyScore=+1.351397`，从 rank2 被推到 rank1。这个是比 Israel/Eurasia 更清楚的 complementarity。
+
+C1 `Des_Moines_Menace` 的主要 rules：
+
+```text
+R39786,  weight=1.404430: playsFor(X,Y) <= isAffiliatedTo(X,Y)
+R211342, weight=1.352040: playsFor(X,Des_Moines_Menace) <= isAffiliatedTo(X,Des_Moines_Menace)
+R113088, weight=0.324349: playsFor(Laurie_Calloway,Y) <= isAffiliatedTo(Laurie_Calloway,Y)
+R770881, weight=0.000000: playsFor(X,Y) <= wasBornIn(X,A), wasBornIn(B,A), isAffiliatedTo(B,Y)
+R847023, weight=0.000000: playsFor(X,Y) <= wasBornIn(X,A), wasBornIn(B,A), playsFor(B,Y)
+```
+
+对应 grounding：
+
+```text
+R39786 / R211342 / R113088:
+  train: Laurie_Calloway isAffiliatedTo Des_Moines_Menace
+  infer: Laurie_Calloway playsFor Des_Moines_Menace
+
+R770881:
+  train: Laurie_Calloway wasBornIn Birmingham
+  train: Mickey_Lewis wasBornIn Birmingham
+  train: Mickey_Lewis isAffiliatedTo Des_Moines_Menace
+  infer: Laurie_Calloway playsFor Des_Moines_Menace
+
+R847023:
+  train: Laurie_Calloway wasBornIn Birmingham
+  train: Mickey_Lewis wasBornIn Birmingham
+  train: Mickey_Lewis playsFor Des_Moines_Menace
+  infer: Laurie_Calloway playsFor Des_Moines_Menace
+```
+
+C1 的 displayed dependencies：
+
+```text
+R770881 + R847023: -1.320266
+R39786  + R770881: -0.380889
+R39786  + R847023: +0.745964
+R113088 + R770881: +0.000184
+R113088 + R847023: +0.000184
+```
+
+这里最重要的是 `R770881 + R847023=-1.320266`。这两条规则几乎只差最后一步用 `isAffiliatedTo(B,Y)` 还是 `playsFor(B,Y)`，但前半段完全相同：`Laurie_Calloway` 和 `Mickey_Lewis` 都出生在 Birmingham。它们不是两条独立证据，而是同一个出生地代理模式的重复表达。Stage2 因此学到强负 dependency，把 C1 的 `dependencyScore` 压到 `-0.954824`，使 `Des_Moines_Menace` 从 rank1 掉到 rank2。
+
+这个例子适合在图中讲成一句话：
+
+```text
+GT: direct affiliation + shared career path => complementarity
+C1: two birthplace-proxy paths => redundancy
+```
 
 ## FB15k-237: Israel 被 Eurasia 包含
 
