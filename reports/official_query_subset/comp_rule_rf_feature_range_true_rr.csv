@@ -1,0 +1,10 @@
+feature,feature_col,coverage,q10,q90
+comp1,synergy_weight_top1_mean,0.1,1.683880,5.723510
+comp3,synergy_weight_top3_mean,0.1,1.738050,5.666207
+comp5,synergy_weight_top5_mean,0.1,1.418448,5.578564
+rule1,rule_weight_top1_mean,0.1,1.475907,1.802809
+rule3,rule_weight_top3_mean,0.1,1.392377,1.775006
+rule5,rule_weight_top5_mean,0.1,1.338048,1.744608
+ratio1,ratio1,0.1,2.732482,6.892174
+ratio3,ratio3,0.1,2.594572,7.440369
+ratio5,ratio5,0.1,1.895122,7.670025
