@@ -1,0 +1,349 @@
+{
+  "top_rules_by_trained_weight": [
+    {
+      "rid": 1040659,
+      "original": 0.5897678,
+      "trained": 0.6788875,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /language/human_language/countries_spoken_in(A,Y)"
+    },
+    {
+      "rid": 1663645,
+      "original": 0.4509876,
+      "trained": 0.6160454,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/location/contains(/m/0j0k,Y)"
+    },
+    {
+      "rid": 59293,
+      "original": 0.4780914,
+      "trained": 0.5179946,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /base/locations/continents/countries_within(/m/0j0k,Y)"
+    },
+    {
+      "rid": 1228918,
+      "original": 0.5370861,
+      "trained": 0.5067902,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /government/politician/government_positions_held./government/government_position_held/jurisdiction_of_office(A,Y)"
+    },
+    {
+      "rid": 143831,
+      "original": 0.4775669,
+      "trained": 0.4548141,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,A)"
+    },
+    {
+      "rid": 1671349,
+      "original": 0.5393599,
+      "trained": 0.4526825,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,A)"
+    },
+    {
+      "rid": 297716,
+      "original": 0.430808,
+      "trained": 0.3952228,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 66579,
+      "original": 0.5091751,
+      "trained": 0.3913951,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /language/human_language/countries_spoken_in(/m/0jzc,Y)"
+    },
+    {
+      "rid": 686199,
+      "original": 0.4207535,
+      "trained": 0.3573226,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 16117,
+      "original": 0.4662524,
+      "trained": 0.345402,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/official_language(Y,/m/0jzc)"
+    },
+    {
+      "rid": 1477775,
+      "original": 0.5206035,
+      "trained": 0.2895697,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /olympics/olympic_sport/athletes./olympics/olympic_athlete_affiliation/country(A,Y)"
+    },
+    {
+      "rid": 1555086,
+      "original": 0.5393599,
+      "trained": 0.2637545,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,/m/09nqf)"
+    },
+    {
+      "rid": 1278350,
+      "original": 0.4338609,
+      "trained": 0.2386903,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/location/contains(/m/02qkt,Y)"
+    },
+    {
+      "rid": 1109364,
+      "original": 0.5012804,
+      "trained": 0.2331366,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,A)"
+    },
+    {
+      "rid": 1472329,
+      "original": 0.2985111,
+      "trained": 0.232959,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)"
+    },
+    {
+      "rid": 1300278,
+      "original": 0.4584157,
+      "trained": 0.2238621,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1424175,
+      "original": 0.4722703,
+      "trained": 0.2088753,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 346359,
+      "original": 0.5309566,
+      "trained": 0.1994282,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/official_language(Y,A)"
+    },
+    {
+      "rid": 973574,
+      "original": 0.5222329,
+      "trained": 0.1821989,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,A)"
+    },
+    {
+      "rid": 18961,
+      "original": 0.4372373,
+      "trained": 0.1816238,
+      "text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/capital(Y,A)"
+    }
+  ],
+  "top_deps_by_abs_effective_trained": [
+    {
+      "rule1ID": 19792,
+      "rule2ID": 965904,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0391378,
+      "effective_original": 0.0,
+      "effective_trained": -0.0391378,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /people/person/nationality(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /olympics/olympic_sport/athletes./olympics/olympic_athlete_affiliation/country(/m/0bynt,Y)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 935363,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": 0.0375946,
+      "effective_original": 0.0,
+      "effective_trained": 0.0375946,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 1472329,
+      "rule2ID": 1709539,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0374021,
+      "effective_original": 0.0,
+      "effective_trained": -0.0374021,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/runtime./film/film_cut/film_release_region(A,B), /military/military_combatant/military_conflicts./military/military_combatant_group/combatants(B,Y)"
+    },
+    {
+      "rule1ID": 813334,
+      "rule2ID": 1472329,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0372097,
+      "effective_original": 0.0,
+      "effective_trained": -0.0372097,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /military/military_combatant/military_conflicts./military/military_combatant_group/combatants(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)"
+    },
+    {
+      "rule1ID": 1103761,
+      "rule2ID": 1736846,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0371539,
+      "effective_original": 0.0,
+      "effective_trained": -0.0371539,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/form_of_government(Y,/m/06cx9)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,/m/09nqf)"
+    },
+    {
+      "rule1ID": 98490,
+      "rule2ID": 1146369,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0367215,
+      "effective_original": 0.0,
+      "effective_trained": -0.0367215,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/country/form_of_government(A,B), /location/country/form_of_government(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /award/award_nominee/award_nominations./award/award_nomination/nominated_for(A,B), /film/film/release_date_s./film/film_regional_release_date/film_release_region(B,Y)"
+    },
+    {
+      "rule1ID": 890806,
+      "rule2ID": 1721972,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.03656,
+      "effective_original": 0.0,
+      "effective_trained": -0.03656,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/aareas/schema/administrative_area/administrative_parent(A,B), /base/aareas/schema/administrative_area/administrative_parent(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /film/actor/film./film/performance/film(A,B), /film/film/release_date_s./film/film_regional_release_date/film_release_region(B,Y)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 1558582,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": 0.0365321,
+      "effective_original": 0.0,
+      "effective_trained": 0.0365321,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 27248,
+      "rule2ID": 1103761,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0360384,
+      "effective_original": 0.0,
+      "effective_trained": -0.0360384,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /government/government_office_category/officeholders./government/government_position_held/jurisdiction_of_office(/m/060bp,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/form_of_government(Y,/m/06cx9)"
+    },
+    {
+      "rule1ID": 1084551,
+      "rule2ID": 1605694,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0360226,
+      "effective_original": 0.0,
+      "effective_trained": -0.0360226,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /people/person/languages(A,B), /language/human_language/countries_spoken_in(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(A,B), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,B)"
+    },
+    {
+      "rule1ID": 965904,
+      "rule2ID": 1103761,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.035599,
+      "effective_original": 0.0,
+      "effective_trained": -0.035599,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /olympics/olympic_sport/athletes./olympics/olympic_athlete_affiliation/country(/m/0bynt,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/form_of_government(Y,/m/06cx9)"
+    },
+    {
+      "rule1ID": 1103761,
+      "rule2ID": 1109364,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0348641,
+      "effective_original": 0.0,
+      "effective_trained": -0.0348641,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/country/form_of_government(Y,/m/06cx9)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,A)"
+    },
+    {
+      "rule1ID": 739333,
+      "rule2ID": 1146369,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0341592,
+      "effective_original": 0.0,
+      "effective_trained": -0.0341592,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /award/award_nominee/award_nominations./award/award_nomination/nominated_for(A,B), /film/film/release_date_s./film/film_regional_release_date/film_release_region(B,Y)"
+    },
+    {
+      "rule1ID": 410762,
+      "rule2ID": 1146369,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0337696,
+      "effective_original": 0.0,
+      "effective_trained": -0.0337696,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /award/award_nominee/award_nominations./award/award_nomination/nominated_for(A,B), /film/film/release_date_s./film/film_regional_release_date/film_release_region(B,Y)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 935363,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": 0.0335025,
+      "effective_original": 0.0,
+      "effective_trained": 0.0335025,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 19792,
+      "rule2ID": 502640,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0334827,
+      "effective_original": 0.0,
+      "effective_trained": -0.0334827,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /people/person/nationality(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /base/locations/continents/countries_within(A,Y)"
+    },
+    {
+      "rule1ID": 209976,
+      "rule2ID": 1472329,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0332117,
+      "effective_original": 0.0,
+      "effective_trained": -0.0332117,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/places_exported_to./location/imports_and_exports/exported_to(B,A), /military/military_combatant/military_conflicts./military/military_combatant_group/combatants(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)"
+    },
+    {
+      "rule1ID": 239757,
+      "rule2ID": 1084551,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": -0.033129,
+      "effective_original": 0.0,
+      "effective_trained": -0.033129,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /olympics/olympic_participating_country/athletes./olympics/olympic_athlete_affiliation/olympics(A,B), /olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /people/person/languages(A,B), /language/human_language/countries_spoken_in(B,Y)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1006090,
+      "type": "synergy",
+      "raw_original": 0.0,
+      "raw_trained": 0.0330461,
+      "effective_original": 0.0,
+      "effective_trained": 0.0330461,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 19792,
+      "rule2ID": 1365714,
+      "type": "redundancy",
+      "raw_original": 0.0,
+      "raw_trained": -0.0329939,
+      "effective_original": 0.0,
+      "effective_trained": -0.0329939,
+      "rule1_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /people/person/nationality(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(/m/02h40lc,Y) <= /base/aareas/schema/administrative_area/administrative_area_type(Y,/m/0hzc9wc)"
+    }
+  ],
+  "active_rule_count": 171,
+  "matched_rule_weight_count": 171,
+  "matched_active_dep_count": 701
+}

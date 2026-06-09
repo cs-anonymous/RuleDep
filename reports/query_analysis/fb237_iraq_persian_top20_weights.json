@@ -1,0 +1,288 @@
+{
+  "active_rule_count": 109,
+  "top_rules": [
+    {
+      "rid": 1261186,
+      "trained": 0.83425,
+      "original": 0.2911113,
+      "text": "/language/human_language/countries_spoken_in(/m/032f6,Y) <= /location/location/contains(/m/0j0k,Y)"
+    },
+    {
+      "rid": 1246321,
+      "trained": 0.7926435,
+      "original": 0.572768,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,A)"
+    },
+    {
+      "rid": 403154,
+      "trained": 0.7832003,
+      "original": 0.5501842,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)"
+    },
+    {
+      "rid": 1502852,
+      "trained": 0.5626583,
+      "original": 0.2656845,
+      "text": "/language/human_language/countries_spoken_in(/m/032f6,Y) <= /location/location/contains(/m/02qkt,Y)"
+    },
+    {
+      "rid": 143831,
+      "trained": 0.4548141,
+      "original": 0.4775669,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,A)"
+    },
+    {
+      "rid": 1036876,
+      "trained": 0.447815,
+      "original": 0.4949408,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)"
+    },
+    {
+      "rid": 297716,
+      "trained": 0.3952228,
+      "original": 0.430808,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 686199,
+      "trained": 0.3573226,
+      "original": 0.4207535,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 1472329,
+      "trained": 0.232959,
+      "original": 0.2985111,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)"
+    },
+    {
+      "rid": 1300278,
+      "trained": 0.2238621,
+      "original": 0.4584157,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1424175,
+      "trained": 0.2088753,
+      "original": 0.4722703,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1607189,
+      "trained": 0.2023779,
+      "original": 0.4024218,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /people/person/nationality(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1630125,
+      "trained": 0.1465441,
+      "original": 0.3502021,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/contains(B,A), /base/locations/continents/countries_within(B,Y)"
+    },
+    {
+      "rid": 1449610,
+      "trained": 0.1346666,
+      "original": 0.3896817,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 154639,
+      "trained": 0.1203528,
+      "original": 0.3906538,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)"
+    },
+    {
+      "rid": 451185,
+      "trained": 0.11196,
+      "original": 0.390927,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1156166,
+      "trained": 0.0952425,
+      "original": 0.4013865,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rid": 1366646,
+      "trained": 0.0706331,
+      "original": 0.2687046,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/locations/continents/countries_within(B,A), /base/locations/continents/countries_within(B,Y)"
+    },
+    {
+      "rid": 683736,
+      "trained": 0.0590319,
+      "original": 0.3162278,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/contains(B,A), /base/locations/continents/countries_within(B,Y)"
+    },
+    {
+      "rid": 1556835,
+      "trained": 0.0483547,
+      "original": 0.2442206,
+      "text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/locations/continents/countries_within(B,A), /location/location/contains(B,Y)"
+    }
+  ],
+  "top_complementarity_deps": [
+    {
+      "rule1ID": 686199,
+      "rule2ID": 935363,
+      "type": "synergy",
+      "effective_trained": 0.0375946,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 1558582,
+      "type": "synergy",
+      "effective_trained": 0.0365321,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 935363,
+      "type": "synergy",
+      "effective_trained": 0.0335025,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1006090,
+      "type": "synergy",
+      "effective_trained": 0.0330461,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1047236,
+      "type": "synergy",
+      "effective_trained": 0.0294035,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1558582,
+      "type": "synergy",
+      "effective_trained": 0.0268831,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 1208484,
+      "type": "synergy",
+      "effective_trained": 0.0268786,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,B)"
+    },
+    {
+      "rule1ID": 1036876,
+      "rule2ID": 1208484,
+      "type": "synergy",
+      "effective_trained": 0.026582,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,B)"
+    },
+    {
+      "rule1ID": 1036876,
+      "rule2ID": 1556835,
+      "type": "synergy",
+      "effective_trained": 0.0265602,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/locations/continents/countries_within(B,A), /location/location/contains(B,Y)"
+    },
+    {
+      "rule1ID": 143831,
+      "rule2ID": 1556835,
+      "type": "synergy",
+      "effective_trained": 0.025681,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,A)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/locations/continents/countries_within(B,A), /location/location/contains(B,Y)"
+    },
+    {
+      "rule1ID": 90842,
+      "rule2ID": 403154,
+      "type": "synergy",
+      "effective_trained": 0.0248283,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics(A,B), /olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)"
+    },
+    {
+      "rule1ID": 1556835,
+      "rule2ID": 1607189,
+      "type": "synergy",
+      "effective_trained": 0.0241606,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /base/locations/continents/countries_within(B,A), /location/location/contains(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /people/person/nationality(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 1663272,
+      "type": "synergy",
+      "effective_trained": 0.023931,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 1241270,
+      "rule2ID": 1472329,
+      "type": "synergy",
+      "effective_trained": 0.0237932,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /language/human_language/countries_spoken_in(B,A), /language/human_language/countries_spoken_in(B,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /time/event/locations(B,A), /time/event/locations(B,Y)"
+    },
+    {
+      "rule1ID": 686199,
+      "rule2ID": 1006090,
+      "type": "synergy",
+      "effective_trained": 0.0232223,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency(Y,B)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1076913,
+      "type": "synergy",
+      "effective_trained": 0.0223623,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,B)"
+    },
+    {
+      "rule1ID": 410762,
+      "rule2ID": 1607189,
+      "type": "synergy",
+      "effective_trained": 0.0218962,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /people/person/languages(A,X), /people/person/nationality(A,B), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,Y)"
+    },
+    {
+      "rule1ID": 403154,
+      "rule2ID": 410762,
+      "type": "synergy",
+      "effective_trained": 0.0215653,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,B)"
+    },
+    {
+      "rule1ID": 410762,
+      "rule2ID": 1036876,
+      "type": "synergy",
+      "effective_trained": 0.0212667,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /language/human_language/countries_spoken_in(X,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(A,Y)"
+    },
+    {
+      "rule1ID": 297716,
+      "rule2ID": 1208484,
+      "type": "synergy",
+      "effective_trained": 0.0212233,
+      "rule1_text": "/language/human_language/countries_spoken_in(X,Y) <= /location/country/official_language(A,X), /location/location/adjoin_s./location/adjoining_relationship/adjoins(B,A), /location/location/adjoin_s./location/adjoining_relationship/adjoins(Y,B)",
+      "rule2_text": "/language/human_language/countries_spoken_in(X,Y) <= /film/film/language(A,X), /film/film/estimated_budget./measurement_unit/dated_money_value/currency(A,B), /location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency(Y,B)"
+    }
+  ],
+  "top_redundancy_deps": []
+}

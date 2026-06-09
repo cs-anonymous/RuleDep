@@ -1,0 +1,121 @@
+{
+  "english": {
+    "id": "/m/02h40lc",
+    "stage1_score": 0.299938,
+    "stage1_rank": 1.0,
+    "final_score": 0.178195,
+    "final_rank": 3.0
+  },
+  "persian": {
+    "id": "/m/032f6",
+    "stage1_score": 0.28849,
+    "stage1_rank": 2.0,
+    "final_score": 0.300609,
+    "final_rank": 1.0
+  },
+  "top10_stage1": [
+    {
+      "id": "/m/02h40lc",
+      "score": 0.299938,
+      "rank": 1.0
+    },
+    {
+      "id": "/m/032f6",
+      "score": 0.28849,
+      "rank": 2.0
+    },
+    {
+      "id": "/m/02hwyss",
+      "score": 0.243273,
+      "rank": 3.0
+    },
+    {
+      "id": "/m/0swlx",
+      "score": 0.15231,
+      "rank": 4.0
+    },
+    {
+      "id": "/m/064_8sq",
+      "score": 0.132656,
+      "rank": 5.0
+    },
+    {
+      "id": "/m/06nm1",
+      "score": 0.114731,
+      "rank": 6.0
+    },
+    {
+      "id": "/m/03hkp",
+      "score": 0.114191,
+      "rank": 7.0
+    },
+    {
+      "id": "/m/02hxcvy",
+      "score": 0.089907,
+      "rank": 8.0
+    },
+    {
+      "id": "/m/01bkv",
+      "score": 0.081466,
+      "rank": 9.0
+    },
+    {
+      "id": "/m/0880p",
+      "score": 0.075996,
+      "rank": 10.0
+    }
+  ],
+  "top10_final": [
+    {
+      "id": "/m/032f6",
+      "score": 0.300609,
+      "rank": 1.0
+    },
+    {
+      "id": "/m/02hwyss",
+      "score": 0.258163,
+      "rank": 2.0
+    },
+    {
+      "id": "/m/02h40lc",
+      "score": 0.178195,
+      "rank": 3.0
+    },
+    {
+      "id": "/m/0swlx",
+      "score": 0.161448,
+      "rank": 4.0
+    },
+    {
+      "id": "/m/064_8sq",
+      "score": 0.126876,
+      "rank": 5.0
+    },
+    {
+      "id": "/m/03hkp",
+      "score": 0.112667,
+      "rank": 6.0
+    },
+    {
+      "id": "/m/06nm1",
+      "score": 0.084969,
+      "rank": 7.0
+    },
+    {
+      "id": "/m/02hxcvy",
+      "score": 0.08262,
+      "rank": 8.0
+    },
+    {
+      "id": "/m/01bkv",
+      "score": 0.077687,
+      "rank": 9.0
+    },
+    {
+      "id": "/m/0880p",
+      "score": 0.068866,
+      "rank": 10.0
+    }
+  ],
+  "candidate_count": 100
+}

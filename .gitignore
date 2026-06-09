@@ -21,3 +21,37 @@ feature_plots
 official_query_triple_features.csv
 query_case_level_analysis.csv
 true_official_per_query_rr
+
+# LaTeX / latexmk / LaTeX Workshop intermediates
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.fmt
+*.glg
+*.glo
+*.gls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
+*.xmpi
+
+# Standalone / TikZ helper artifacts
+*.dpth
+*.md5
+
+# Build caches
+_minted*/
+# main.pdf
