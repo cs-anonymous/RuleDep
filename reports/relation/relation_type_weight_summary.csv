@@ -1,8 +1,0 @@
-dataset,aggregation,rule_weight_B,rule_weight_U,rule_weight_Uc,rule_weight_Ud,dep_weight_BB,dep_weight_BU,dep_weight_UU,dep_weight_B_Uc,dep_weight_B_Ud,dep_weight_Uc_Uc,dep_weight_Uc_Ud,dep_weight_Ud_Ud
-KG20C,tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,1.183364,2.149492,,,0.871545,1.473685,1.505191,,,,,
-codex-m,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,
-WN18RR,structural_rd,,,,,,,,,,,,
-FB15k-237,tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5,0.899254,1.116004,,,1.027006,1.027668,1.034192,,,,,
-codex-l,tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,
-YAGO3-10,tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5,1.072908,,2.407315,5.054185,0.517327,,,1.393766,,1.174176,0.482584,0.523413
-hetionet,tg_rd__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5,,,,,,,,,,,,

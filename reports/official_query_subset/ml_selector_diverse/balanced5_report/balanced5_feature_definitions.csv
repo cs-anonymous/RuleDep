@@ -1,6 +1,0 @@
-feature,paper_name,definition,source
-synergy_weight_top5_mean,Synergy strength,Mean of the top 5 absolute synergy dependency weights among unique displayed rule-pair dependencies in the query case.,"script/analyze_official_query_subsets.py: synergy_values from synergy_filtered.txt weights; topk_stats(..., prefix='synergy_weight')."
-max_candidate_dep_score,Max candidate dependency score,Maximum candidate-level dependencyScore over all candidate entities in the query case.,"script/analyze_official_query_subsets.py: max(dep_scores), where dep_scores collect candidate['dependencyScore']."
-topk_rule_weight,Top-k rule weight,Mean of the top 3 rule weights fired by candidates in the query case.,"script/analyze_official_query_subsets.py: safe_mean(sorted(rule_values, reverse=True)[:3]), where rule_values collect candidate['maxplus']."
-num_neg_dep,Number of negative dependencies,Number of unique displayed dependency rule-pairs whose learned dependency type is redundancy.,script/analyze_official_query_subsets.py: len(redundancy_values).
-effective_candidates,Effective candidates,"exp(H(p)), where p is the softmax distribution over candidate stage1 official scores; larger values mean the stage1 ranker is less concentrated.",script/analyze_official_query_subsets.py: exp(-sum p log p) from stage1_scores.
