@@ -49,7 +49,7 @@ mvn -DskipTests compile exec:java > "${run_deplearn_log}" 2>&1 || {
     tail -n 120 "${run_deplearn_log}" >&2
     exit 1
 }
-python filter_dependency.py \
+python src/ruledep/filter_dependency.py \
     -d "${dataset}" \
     --jobs "${worker_threads}" \
     --target_split "${filter_target_split}" \

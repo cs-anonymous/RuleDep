@@ -53,7 +53,7 @@ run_config() {
         export CUDA_VISIBLE_DEVICES="${gpu}"
         export EXPERIMENT_DIR="${exp_dir}"
         export PYTHONUNBUFFERED=1
-        python -u aggregation.py \
+        python -u src/ruledep/aggregation.py \
             -d "${dataset}" \
             --rule_file "data/${dataset}/rules/rule.txt" \
             --relation -1 \

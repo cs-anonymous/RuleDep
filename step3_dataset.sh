@@ -14,7 +14,7 @@ echo "======================================"
 mkdir -p "data/${dataset}/datasets"
 
 for split in train valid test; do
-    python process_rules.py \
+    python src/ruledep/process_rules.py \
         --data_dir "data/${dataset}" \
         --split "${split}" \
         --target_file "data/${dataset}/${split}.txt" \
@@ -25,12 +25,12 @@ done
 
 if [ "${generate_relation_processed}" = "1" ]; then
     echo "Generating relation-local processed explanation files..."
-    python script/split_processed_by_relation.py \
+    python src/rule_application/split_processed_by_relation.py \
         -d "${dataset}" \
         --application_dir "data/${dataset}/application"
 fi
 
-python create_datasets.py -d "${dataset}" \
+python src/ruledep/create_datasets.py -d "${dataset}" \
     --applied_rules "data/${dataset}/application/applied_rules_train.json" \
     --rule_file "data/${dataset}/rules/rule.txt" \
     --output "data/${dataset}/datasets" \

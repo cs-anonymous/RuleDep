@@ -25,9 +25,9 @@ echo "======================================"
 echo "Step 2: Application for ${dataset}"
 echo "======================================"
 
-python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
+python src/rule_application/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
     --aggregation_function noisyor > "data/${dataset}/application/eval-noisyor.log"
-python script/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
+python src/rule_application/eval.py --dataset "${dataset}" --rules "data/${dataset}/rules/rule.txt" \
     --aggregation_function maxplus > "data/${dataset}/application/eval-maxplus.log"
 
 for split in train valid test; do
@@ -49,7 +49,7 @@ for split in train valid test; do
             ;;
     esac
 
-    python script/apply_pyclause.py \
+    python src/rule_application/apply_pyclause.py \
         --filter-w-data "${filter_w_data}" \
         --train "data/${dataset}/train.txt" \
         --valid "${valid_file}" \
@@ -72,13 +72,13 @@ for split in train valid test; do
         # --min-correct-predictions 5 \
 done
 
-python script/eval_base_ranker.py \
+python src/rule_application/eval_base_ranker.py \
     --dataset "${dataset}" \
     --rules "data/${dataset}/rules/rule.txt" \
     --applied_rules "data/${dataset}/application/applied_rules_test.json" \
     --aggregation noisyor > "data/${dataset}/application/eval_base_ranker_noisyor.log"
 
-python script/eval_base_ranker.py \
+python src/rule_application/eval_base_ranker.py \
     --dataset "${dataset}" \
     --rules "data/${dataset}/rules/rule.txt" \
     --applied_rules "data/${dataset}/application/applied_rules_test.json" \
