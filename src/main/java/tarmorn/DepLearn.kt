@@ -499,7 +499,7 @@ object DepLearn {
         if (bodyList.size < 2) return  // Need at least 2 bodyAtoms to combine
         if (i !in bodyList.indices) return
         
-        // 获取当前线程ID，用于控制日志输出（仅线程0输出详细日志）
+        // Get the current threadID, Used to control log output (threads only0Output detailed log)
         val threadId = Thread.currentThread().id % Settings.WORKER_THREADS
         val shouldDebug = (threadId == 0L) && thread0Attempts.incrementAndGet() <= 10
         
@@ -512,13 +512,13 @@ object DepLearn {
         val initialB1Size = B1.instances.size
 
         // Sample B1 until S_H1.size >= MIN_SUPP or exhausted
-        // 只对非L1原子进行采样
+        // Only to nonL1atoms to sample
         if (S_H1_size < Settings.MIN_SUPP && !B1.isL1Atom && !B1.samplingExhausted) {
             synchronized(B1) {
                 S_H1_size = B1.instances.count { it in headInstances }
                 while (S_H1_size < Settings.MIN_SUPP && !B1.isL1Atom && !B1.samplingExhausted) {
                     val newInstances = B1.sampleBinaryInstancesEDIS()
-                    // 只检查新采样的实例
+                    // Check only newly sampled instances
                     val newMatchCount = newInstances.count { it in headInstances }
                     S_H1_size += newMatchCount
                     if (shouldDebug)
@@ -549,7 +549,7 @@ object DepLearn {
                 var S_12_size = 0
                 var S_H12_size = 0
                 
-                // 先检查 B1 已有的 instances
+                // Check first B1 Existing instances
                 for (e in B1.instances) {
                     if (B2.hasBinaryInstance(e)) {
                         S_12_size++
@@ -563,14 +563,14 @@ object DepLearn {
                 val initialSH12 = S_H12_size
                 
                 // Dynamic sampling loop for B1
-                // 只对非L1原子进行采样
+                // Only to nonL1atoms to sample
                 while (S_H12_size < Settings.MIN_SUPP && !B1.isL1Atom && !B1.samplingExhausted) {
                     val newInstances = B1.sampleBinaryInstancesEDIS()
                     
                     var newS12 = 0
                     var newSH12 = 0
                     
-                    // 只检查新采样的实例
+                    // Check only newly sampled instances
                     for (e in newInstances) {
                         if (B2.hasBinaryInstance(e)) {
                             S_12_size++
@@ -602,7 +602,7 @@ object DepLearn {
                 
                 storeDependency(ruleId1, ruleId2, metric, metric1, metric2, binaryPositiveLift, binaryNegativeLift)
         }
-        // 使用新指标更新B1
+        // Updated with new indicatorsB1
         val S_H1 = B1.instances.count { it in headInstances }
         val newMetric = Metric(
             support = S_H1.toDouble(),
@@ -676,7 +676,7 @@ object DepLearn {
         }
 
         for (j in (i + 1) until bodyList.size) {
-            // === 响应线程中断 ===
+            // === Respond to thread interrupts ===
             if (Thread.currentThread().isInterrupted) {
                 println("Thread interrupted, exiting processUnaryHeadAtom for $headAtom (index: $i)")
                 return

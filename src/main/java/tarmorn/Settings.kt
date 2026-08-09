@@ -349,7 +349,7 @@ object Settings {
     }
 
     fun loadFrom(config: MutableMap<String, Any>) {
-        // 创建大小写不敏感的映射
+        // Create a case-insensitive mapping
         val configLower = config.mapKeys { it.key.uppercase() }
         
         for (field in Settings::class.java.getFields()) {

@@ -74,14 +74,14 @@ def slugify(v: str) -> str:
 
 def verdict(expected_sign: int, rho_all: float, ds_pos: int, ds_neg: int, ds_n: int) -> str:
     if expected_sign == 0:
-        return "观察性结果"
+        return "Observational results"
     direction_ok = (rho_all > 0 and expected_sign > 0) or (rho_all < 0 and expected_sign < 0)
     majority_ok = (ds_pos > ds_neg and expected_sign > 0) or (ds_neg > ds_pos and expected_sign < 0)
     if direction_ok and majority_ok and abs(rho_all) >= 0.10:
-        return "成立"
+        return "established"
     if direction_ok and (majority_ok or abs(rho_all) >= 0.05):
-        return "部分成立"
-    return "不成立"
+        return "Partially established"
+    return "Not established"
 
 
 def robust_score(expected_sign: int, rho_all: float, ds_pos: int, ds_neg: int, ds_n: int) -> float:
@@ -121,36 +121,36 @@ def main():
         parsed_rows.append(rr)
 
     hypotheses = [
-        Hypothesis(1, "Number of candidates", "num_candidates", "A. Candidate set complexity", +1, "候选越多，预期 RuleDep 空间更大"),
-        Hypothesis(2, "Candidate-rule incidence count", "num_candidate_rule_edges", "A. Candidate set complexity", +1, "规则覆盖链接越多，预期收益更高"),
-        Hypothesis(3, "Average rules per candidate", "avg_rules_per_candidate", "A. Candidate set complexity", +1, "多规则共现更利于 dependency"),
-        Hypothesis(4, "Max rules per candidate", "max_rules_per_candidate", "A. Candidate set complexity", +1, "至少有一批候选具备丰富规则证据"),
-        Hypothesis(5, "Number of fired rules", "num_rules", "B. Rule graph structure", +1, "规则节点更多，交互空间更大"),
-        Hypothesis(6, "Number of dependencies", "num_dependencies", "B. Rule graph structure", +1, "活跃依赖边越多，预期收益越高"),
-        Hypothesis(7, "Dependency density", "dep_density", "B. Rule graph structure", +1, "局部规则图越稠密，作用更明显"),
-        Hypothesis(8, "Candidate-level dependency coverage", "dep_candidate_ratio", "B. Rule graph structure", +1, "依赖参与的候选越广，影响越全局"),
-        Hypothesis(9, "Number of positive dependencies", "num_pos_dep", "C. Positive/negative dependency structure", +1, "正依赖多时更可能提升候选"),
-        Hypothesis(10, "Number of negative dependencies", "num_neg_dep", "C. Positive/negative dependency structure", 0, "负依赖可抑制 over-count，方向未必单调"),
-        Hypothesis(11, "Positive dependency ratio", "pos_dep_ratio", "C. Positive/negative dependency structure", +1, "更偏 synergy 时预期收益更高"),
-        Hypothesis(12, "Negative dependency ratio", "neg_dep_ratio", "C. Positive/negative dependency structure", 0, "负依赖占比高也可能带来修正收益"),
-        Hypothesis(13, "Total positive dependency mass", "pos_mass", "D. Dependency weight strength", +1, "正依赖权重总量越大，潜在增益越大"),
-        Hypothesis(14, "Total negative dependency mass", "neg_mass", "D. Dependency weight strength", 0, "负依赖质量用于压制冗余"),
-        Hypothesis(15, "Net dependency mass", "net_dep_mass", "D. Dependency weight strength", +1, "净依赖质量越高，预期越有利"),
-        Hypothesis(16, "Absolute dependency mass", "abs_dep_mass", "D. Dependency weight strength", +1, "依赖总体强度越高，介入空间越大"),
-        Hypothesis(17, "Top-k synergy weight", "topk_synergy", "D. Dependency weight strength", +1, "高强度 synergy 是关键机制"),
-        Hypothesis(18, "Top-k redundancy weight", "topk_redundancy", "D. Dependency weight strength", 0, "高冗余可帮助纠偏"),
-        Hypothesis(19, "Top-1 rule weight", "top1_rule_weight", "E. Rule-weight distribution", -1, "单条规则过强时 dependency 作用变小"),
-        Hypothesis(20, "Top-k rule weight", "topk_rule_weight", "E. Rule-weight distribution", -1, "规则太强时可修正空间变小"),
-        Hypothesis(21, "Rule dominance ratio", "rule_dominance_ratio", "E. Rule-weight distribution", -1, "证据越单峰，dependency 越难发挥"),
-        Hypothesis(22, "Weak-rule regime score", "weak_rule_score", "E. Rule-weight distribution", +1, "弱规则场景更依赖 dependency"),
-        Hypothesis(23, "Dependency-to-rule mass ratio", "dep_rule_ratio", "F. Dependency-to-rule contrast", +1, "依赖相对规则越强，收益越大"),
-        Hypothesis(24, "Synergy-to-rule ratio", "syn_rule_ratio", "F. Dependency-to-rule contrast", +1, "synergy 相对规则越强越有利"),
-        Hypothesis(25, "Redundancy-to-rule ratio", "red_rule_ratio", "F. Dependency-to-rule contrast", 0, "冗余对比可能帮助纠偏"),
-        Hypothesis(26, "S1 top-1 score", "s1_top1", "G. S1 ambiguity", -1, "S1 越确定，越难被 RuleDep 改变"),
-        Hypothesis(27, "S1 top1-top2 margin", "s1_margin", "G. S1 ambiguity", -1, "margin 越小越易翻转"),
-        Hypothesis(28, "Normalized S1 margin", "s1_norm_margin", "G. S1 ambiguity", -1, "归一化 margin 越小越易翻转"),
-        Hypothesis(29, "S1 entropy", "s1_entropy", "G. S1 ambiguity", +1, "不确定性高时更易被 dependency 修正"),
-        Hypothesis(30, "Effective candidate number", "effective_candidates", "G. S1 ambiguity", +1, "有效犹豫候选越多，修正空间越大"),
+        Hypothesis(1, "Number of candidates", "num_candidates", "A. Candidate set complexity", +1, "The more candidates there are, the expected RuleDep More space"),
+        Hypothesis(2, "Candidate-rule incidence count", "num_candidate_rule_edges", "A. Candidate set complexity", +1, "The more links the rule covers, the higher the expected revenue"),
+        Hypothesis(3, "Average rules per candidate", "avg_rules_per_candidate", "A. Candidate set complexity", +1, "The co-occurrence of multiple rules is more conducive to dependency"),
+        Hypothesis(4, "Max rules per candidate", "max_rules_per_candidate", "A. Candidate set complexity", +1, "At least one batch of candidates has abundant rule evidence"),
+        Hypothesis(5, "Number of fired rules", "num_rules", "B. Rule graph structure", +1, "There are more rule nodes and a larger interaction space."),
+        Hypothesis(6, "Number of dependencies", "num_dependencies", "B. Rule graph structure", +1, "The more active dependent edges there are, the higher the expected return."),
+        Hypothesis(7, "Dependency density", "dep_density", "B. Rule graph structure", +1, "The denser the local rule graph, the more obvious the effect."),
+        Hypothesis(8, "Candidate-level dependency coverage", "dep_candidate_ratio", "B. Rule graph structure", +1, "The broader the candidates that rely on participation, the more global the impact will be"),
+        Hypothesis(9, "Number of positive dependencies", "num_pos_dep", "C. Positive/negative dependency structure", +1, "Positive dependencies are more likely to promote candidates"),
+        Hypothesis(10, "Number of negative dependencies", "num_neg_dep", "C. Positive/negative dependency structure", 0, "Negative dependence can be suppressed over-count, The direction may not be monotonous"),
+        Hypothesis(11, "Positive dependency ratio", "pos_dep_ratio", "C. Positive/negative dependency structure", +1, "More biased synergy Expected returns are higher when"),
+        Hypothesis(12, "Negative dependency ratio", "neg_dep_ratio", "C. Positive/negative dependency structure", 0, "A high proportion of negative dependence may also bring correction benefits"),
+        Hypothesis(13, "Total positive dependency mass", "pos_mass", "D. Dependency weight strength", +1, "The greater the total amount of positive dependence weight, the greater the potential gain."),
+        Hypothesis(14, "Total negative dependency mass", "neg_mass", "D. Dependency weight strength", 0, "Negatively dependent mass is used to suppress redundancy"),
+        Hypothesis(15, "Net dependency mass", "net_dep_mass", "D. Dependency weight strength", +1, "The higher the net dependence quality, the more favorable the expectations"),
+        Hypothesis(16, "Absolute dependency mass", "abs_dep_mass", "D. Dependency weight strength", +1, "The higher the overall strength of dependence, the greater the space for intervention."),
+        Hypothesis(17, "Top-k synergy weight", "topk_synergy", "D. Dependency weight strength", +1, "High strength synergy is the key mechanism"),
+        Hypothesis(18, "Top-k redundancy weight", "topk_redundancy", "D. Dependency weight strength", 0, "High redundancy helps correct deviations"),
+        Hypothesis(19, "Top-1 rule weight", "top1_rule_weight", "E. Rule-weight distribution", -1, "When a single rule is too strong dependency The effect becomes smaller"),
+        Hypothesis(20, "Top-k rule weight", "topk_rule_weight", "E. Rule-weight distribution", -1, "When the rules are too strong, the room for correction becomes smaller."),
+        Hypothesis(21, "Rule dominance ratio", "rule_dominance_ratio", "E. Rule-weight distribution", -1, "The more unimodal the evidence, thedependency The harder it is to play"),
+        Hypothesis(22, "Weak-rule regime score", "weak_rule_score", "E. Rule-weight distribution", +1, "Weak rule scenarios rely more on dependency"),
+        Hypothesis(23, "Dependency-to-rule mass ratio", "dep_rule_ratio", "F. Dependency-to-rule contrast", +1, "The stronger the reliance on relative rules, the greater the benefits"),
+        Hypothesis(24, "Synergy-to-rule ratio", "syn_rule_ratio", "F. Dependency-to-rule contrast", +1, "synergy The stronger the relative rule, the more advantageous it is"),
+        Hypothesis(25, "Redundancy-to-rule ratio", "red_rule_ratio", "F. Dependency-to-rule contrast", 0, "Redundant comparisons may help correct biases"),
+        Hypothesis(26, "S1 top-1 score", "s1_top1", "G. S1 ambiguity", -1, "S1 The more certain it is, the harder it is to be RuleDep change"),
+        Hypothesis(27, "S1 top1-top2 margin", "s1_margin", "G. S1 ambiguity", -1, "margin The smaller it is, the easier it is to flip"),
+        Hypothesis(28, "Normalized S1 margin", "s1_norm_margin", "G. S1 ambiguity", -1, "normalization margin The smaller it is, the easier it is to flip"),
+        Hypothesis(29, "S1 entropy", "s1_entropy", "G. S1 ambiguity", +1, "When uncertainty is high, it is more likely to be dependency Correction"),
+        Hypothesis(30, "Effective candidate number", "effective_candidates", "G. S1 ambiguity", +1, "The more valid hesitant candidates, the greater the room for correction."),
     ]
 
     by_dataset = defaultdict(list)
@@ -174,7 +174,7 @@ def main():
                 "datasets_pos": "",
                 "datasets_neg": "",
                 "datasets_n": "",
-                "verdict": "未覆盖",
+                "verdict": "not covered",
                 "note": h.note,
                 "plot_desc": "",
                 "plot_asc": "",
@@ -238,24 +238,24 @@ def main():
 
     # markdown report (Chinese)
     md_lines = [
-        "# RuleDep 特征假设验证（中文）",
+        "# RuleDep Feature Hypothesis Verification (Chinese)",
         "",
-        "- 数据：`official_query_triple_features.csv`（重跑后）",
-        "- 样本数：{}".format(len(parsed_rows)),
-        "- 目标：query-level `raw_delta_rr`（真实 per-query RR 差值，不使用 relation-level calibration offset）",
-        "- 统计：Spearman 相关（全量 + 分数据集方向一致性）",
+        "- Data:`official_query_triple_features.csv` (After rerun)",
+        "- Number of samples:{}".format(len(parsed_rows)),
+        "- Goal:query-level `raw_delta_rr` (true per-query RR Difference, not used relation-level calibration offset) ",
+        "- Statistics:Spearman Related (full amount + Directional consistency across data sets)",
         "",
-        "## 一、总体结论",
+        "## 1. Overall conclusion",
         "",
     ]
 
     covered_n = sum(1 for r in result_rows if r["covered"] == "yes")
-    md_lines.append(f"- 覆盖：{covered_n}/30 个假设特征已覆盖并完成评估。")
-    md_lines.append(f"- 成立：{sum(1 for r in result_rows if r['verdict'] == '成立')} 项；部分成立：{sum(1 for r in result_rows if r['verdict'] == '部分成立')} 项；不成立：{sum(1 for r in result_rows if r['verdict'] == '不成立')} 项。")
+    md_lines.append(f"- Coverage:{covered_n}/30 Hypothetical features have been covered and evaluated.")
+    md_lines.append(f"- Established:{sum(1 for r in result_rows if r['verdict'] == 'established')} Item; partially established:{sum(1 for r in result_rows if r['verdict'] == 'Partially established')} item; not established:{sum(1 for r in result_rows if r['verdict'] == 'Not established')} item.")
     md_lines.append("")
 
     md_lines.extend([
-        "## 二、分门别类假设与验证结果",
+        "## 2. Classification hypothesis and verification results",
         "",
     ])
 
@@ -266,11 +266,11 @@ def main():
     for cat, rows_cat in sorted(by_cat.items()):
         md_lines.append(f"### {cat}")
         md_lines.append("")
-        md_lines.append("| # | feature | 假设方向 | rho_all | 方向一致(正/负/总) | 结论 |")
+        md_lines.append("| # | feature | Hypothetical direction | rho_all | same direction(Right/Negative/total) | Conclusion |")
         md_lines.append("| ---: | --- | ---: | ---: | ---: | --- |")
         for r in sorted(rows_cat, key=lambda x: int(x["id"])):
             if r["covered"] != "yes":
-                md_lines.append(f"| {r['id']} | {r['feature']} | {r['expected_sign']} | NA | NA | 未覆盖 |")
+                md_lines.append(f"| {r['id']} | {r['feature']} | {r['expected_sign']} | NA | NA | not covered |")
                 continue
             md_lines.append(
                 f"| {r['id']} | {r['feature']} | {r['expected_sign']} | {float(r['rho_all']):.4f} | {r['datasets_pos']}/{r['datasets_neg']}/{r['datasets_n']} | {r['verdict']} |"
@@ -278,15 +278,15 @@ def main():
         md_lines.append("")
 
     # strongest reliable supporters
-    strong = [r for r in ranked if r["verdict"] in {"成立", "部分成立"} and float(r["robust_score"]) > 0]
+    strong = [r for r in ranked if r["verdict"] in {"established", "Partially established"} and float(r["robust_score"]) > 0]
     strong = strong[:8]
 
     md_lines.extend([
-        "## 三、哪些特征最重要、支撑最可靠",
+        "## 3. Which features are the most important and have the most reliable support?",
         "",
-        "按 `robust_score = |rho_all| × 跨数据集方向一致性` 排序（仅统计方向与假设一致的项）。",
+        "press `robust_score = |rho_all| × Directional consistency across datasets` Ranking (only statistics for items whose direction is consistent with the hypothesis).",
         "",
-        "| rank | feature | 类别 | rho_all | 一致性(匹配方向/总) | robust_score |",
+        "| rank | feature | Category | rho_all | Consistency(Match direction/total) | robust_score |",
         "| ---: | --- | --- | ---: | ---: | ---: |",
     ])
     for i, r in enumerate(strong, 1):
@@ -297,28 +297,28 @@ def main():
         )
 
     md_lines.append("")
-    md_lines.append("直观上，最可靠的一组仍集中在 **dependency 强度与对比**：如 `topk_synergy`、`syn_rule_ratio`、`dep_rule_ratio`、`pos_mass`、`abs_dep_mass` 等。")
+    md_lines.append("Intuitively, the most reliable group remains concentrated in **dependency intensity and contrast**: Such as `topk_synergy`, `syn_rule_ratio`, `dep_rule_ratio`, `pos_mass`, `abs_dep_mass` Wait.")
     md_lines.append("")
 
     # key figures
     key_features = [r["feature"] for r in strong[:6]]
     md_lines.extend([
-        "## 四、关键图片（可直接查看）",
+        "## 4. Key pictures (can be viewed directly)",
         "",
-        "以下选择了最关键的特征曲线图（优先 `desc` 方向）：",
+        "The most critical characteristic curves are selected below (priority `desc` direction):",
         "",
     ])
     for f in key_features:
         slug = slugify(f)
-        md_lines.append(f"- {f}（desc）: ![{f}](../feature_plots/{slug}__desc.png)")
+        md_lines.append(f"- {f} (desc) : ![{f}](../feature_plots/{slug}__desc.png)")
 
     md_lines.extend([
         "",
-        "## 五、解读建议",
+        "## 5. Interpretation suggestions",
         "",
-        "1. 若论文/报告主线强调 RuleDep 的边际价值，优先报告 dependency 质量相关特征（D/F 类）。",
-        "2. 对于 E/G 类中不成立项，建议作为‘适用边界’而非主结论：它们在不同数据集上方向更不稳定。",
-        "3. 建议在主表保留：`topk_synergy`、`syn_rule_ratio`、`dep_rule_ratio`、`candidate_dep_coverage`、`num_dependencies`。",
+        "1. If the paper/The main line of the report emphasizes RuleDep marginal value, priority reporting dependency Quality related characteristics (D/F category).",
+        "2. for E/G The non-established terms in the class are recommended as ‘applicable boundaries’ rather than as main conclusions: they are more unstable in direction across different data sets.",
+        "3. It is recommended to keep in the main table:`topk_synergy`, `syn_rule_ratio`, `dep_rule_ratio`, `candidate_dep_coverage`, `num_dependencies`. ",
         "",
     ])
 

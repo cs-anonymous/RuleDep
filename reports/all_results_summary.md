@@ -1,24 +1,24 @@
 # 0407 Overall Results
 
-本表汇总当前仓库里所有已完成实验的 `test` 指标，时间统一尽量用秒表示。
+This table summarizes all completed experiments in the current workspace. Metrics and times are reported in seconds where applicable.
 
-相关表格：
+Related files:
 
 - `all_results_summary.csv`
 - `best_config_by_dataset.csv`
 - `overall_time_comparison.csv`
 - `all_results_ensemble_debug.json`
 
-说明：
+Description:
 
-- `eval-maxplus` / `eval-noisyor` 来自 application 日志。
-- `canonical` 按老格式目录解析：`head_mrr_*.p + tail_mrr_*.p + canonical.log 中的 Done`。
-- `best_combination*` 配置已整体排除，不参与本报告。
-- `ensemble_best_valid` 是逐 relation 在剩余配置中按 selected valid MRR 选模后的整体 test 汇总。
-- `ensemble_best_test` 是逐 relation 在剩余配置中按 test MRR 选模后的整体 test 汇总（oracle 上界）。
-- `ensemble_safe_valid` 是稳健版：优先 valid 选择，并在不稳定 relation 上回退到数据集级最佳单模型。
-- `structural_rd__stage1 / structural_r2d3__stage1 / structural_r3d6__stage1` 是同一实验里的 stage1 test。
-- 时间对比表中，RuleDep stage1/stage2 时间用 per-relation `epochs_trained` 比例估算，并按当前 `multiprocess=2` 除以 2；canonical 是串行老流程，不除以 2。
+- `eval-maxplus` / `eval-noisyor`: from application logs.
+- `canonical`: parsed from the old-format directory (`head_mrr_*.p + tail_mrr_*.p + canonical.log`).
+- `best_combination*`: excluded from this report as a group.
+- `ensemble_best_valid`: selects per-relation best config by validation MRR, then reports test aggregate.
+- `ensemble_best_test`: selects per-relation best config by test MRR, then reports test aggregate (oracle upper bound).
+- `ensemble_safe_valid`: a stable variant that prefers validation-based selection, with fallback to the best single dataset-level model for unstable relations.
+- `structural_rd__stage1 / structural_r2d3__stage1 / structural_r3d6__stage1`: stage1 test results from the same experiment.
+- In the time comparison table, RuleDep stage 1 and 2 times are estimated proportionally from per-relation `epochs_trained` and divided by 2 (for `multiprocess=2`). Canonical times come from the serial old process and are not divided.
 
 ## Best Non-canonical Config Per Dataset
 
@@ -46,8 +46,8 @@
 
 ## Notes
 
-- 覆盖数据集数：`7`
-- 有已完成 canonical 的数据集：`6`
-- 有 ensemble-valid 的数据集：`7`
-- 有 ensemble-safe 的数据集：`0`
-- 有 ensemble-test 的数据集：`7`
+- Datasets covered: `7`
+- Datasets with completed canonical runs: `6`
+- Datasets with ensemble-valid: `7`
+- Datasets with ensemble-safe: `0`
+- Datasets with ensemble-test: `7`

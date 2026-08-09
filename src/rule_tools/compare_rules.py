@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-规则比较脚本
-比较两个规则文件，分析特定关系作为规则头的所有规则
+Rule comparison script
+Compares two rule files and analyzes all rules with a specific relationship as a rule header
 """
 
 import re
@@ -12,13 +12,13 @@ import argparse
 from typing import Set, List, Tuple, Dict, Optional
 from collections import defaultdict
 
-# 导入analysis_rule模块
+# importanalysis_rulemodule
 from analysis_rule import load_dataset, analyze_rule_from_string, RuleParser
 
 def parse_rule_line(line: str) -> Tuple[str, Dict, str]:
     """
-    解析规则行
-    返回: (完整规则, 指标字典, 原始行)
+    parse rule line
+    Return: (Complete rules, indicator dictionary, original row)
     """
     parts = line.strip().split('\t')
     if len(parts) < 4:
@@ -30,7 +30,7 @@ def parse_rule_line(line: str) -> Tuple[str, Dict, str]:
         confidence = float(parts[2])
         rule = parts[3]
         
-        # 构建指标字典
+        # Build indicator dictionary
         metrics = {
             'bodySize': count1,
             'support': count2,
@@ -45,10 +45,10 @@ def parse_rule_line(line: str) -> Tuple[str, Dict, str]:
 
 def load_rules_with_target_relation(file_path: str, args) -> Dict[str, List[Tuple[str, Dict, str]]]:
     """
-    加载文件中的规则
-    如果target_relation为None，加载所有规则
-    如果target_relation不为None，只加载包含目标关系作为头部的规则
-    返回: {标准化规则: [(原始规则, 指标字典, 原始行)]}
+    Load rules from file
+    iftarget_relationforNone, Load all rules
+    iftarget_relationNot forNone, Only load rules that contain the target relationship as a header
+    Return: {standardized rules: [(original rules, indicator dictionary, original row)]}
     """
     rules_dict = defaultdict(list)
     
@@ -76,10 +76,10 @@ def load_rules_with_target_relation(file_path: str, args) -> Dict[str, List[Tupl
                 
                 rule, metrics, original_line = parse_rule_line(line)
                 
-                # 如果target_relation为None，加载所有规则；否则只加载匹配的规则
+                # iftarget_relationforNone, Load all rules; otherwise only load matching rules
                 if rule and (args.target_relation is None or rule.startswith(args.target_relation)):
                     target_rule_count += 1
-                    # 标准化规则（移除置信度差异，便于比较）
+                    # Standardization rules (remove confidence differences for easier comparison)
                     normalized_rule = normalize_rule(rule)
                     rules_dict[normalized_rule].append((rule, metrics, original_line.strip()))
             
@@ -99,15 +99,15 @@ def load_rules_with_target_relation(file_path: str, args) -> Dict[str, List[Tupl
 
 def normalize_rule(rule: str) -> str:
     """
-    标准化规则，移除变量绑定的差异，便于比较
-    保留规则的结构和关系，但忽略具体的实体ID和变量名差异
+    Standardize rules to remove differences in variable bindings to facilitate comparison
+    Preserve the structure and relationships of rules but ignore specific entitiesIDand variable name difference
     
-    重要：先转换为简写格式，确保不同表示形式的相同规则能够被识别为相同
+    Important: Convert to abbreviated format first to ensure that the same rules in different representations can be recognized as the same
     """
-    # 先转换为简写格式（统一表示形式）
+    # First convert to abbreviated format (unified representation)
     simplified = convert_to_simplified_format(rule)
     
-    # 然后进行标准化：移除空格差异
+    # Then normalize: remove whitespace differences
     if '<=' in simplified:
         head, body = simplified.split('<=', 1)
         return f"{head.strip()} <= {body.strip()}"
@@ -116,14 +116,14 @@ def normalize_rule(rule: str) -> str:
 def filter_rules_by_length(rules_dict: Dict[str, List[Tuple[str, Dict, str]]], 
                            max_length: int) -> Dict[str, List[Tuple[str, Dict, str]]]:
     """
-    根据规则长度过滤规则
+    Filter rules based on rule length
     
     Args:
-        rules_dict: 原始规则字典
-        max_length: 最大规则长度（1, 2, 或 3）
+        rules_dict: original rule dictionary
+        max_length: Maximum rule length (1, 2, or 3) 
     
     Returns:
-        过滤后的规则字典
+        Filtered rule dictionary
     """
     filtered_rules = {}
     
@@ -134,14 +134,14 @@ def filter_rules_by_length(rules_dict: Dict[str, List[Tuple[str, Dict, str]]],
         original_rule = rule_list[0][0]
         length_type = get_rule_length_type(original_rule)
         
-        # 提取数字长度
+        # Extract number length
         if length_type.startswith('L'):
             try:
                 length = int(length_type[1:])
                 if length <= max_length:
                     filtered_rules[normalized_rule] = rule_list
             except ValueError:
-                # 无法解析长度，跳过
+                # Unable to parse length, skipping
                 continue
     
     return filtered_rules
@@ -151,16 +151,16 @@ def filter_rules_by_type(rules_dict: Dict[str, List[Tuple[str, Dict, str]]],
                          only_unary_c: bool = False, 
                          only_unary_d: bool = False) -> Dict[str, List[Tuple[str, Dict, str]]]:
     """
-    根据规则类型过滤规则
+    Filter rules based on rule type
     
     Args:
-        rules_dict: 原始规则字典
-        only_binary: 仅保留binary规则（规则头包含(X,Y)）
-        only_unary_c: 仅保留unary规则，且body中不能出现rp(A,X)和rp(X,A)
-        only_unary_d: 仅保留unary规则，且body中只能是rp(A,X)和rp(X,A)
+        rules_dict: original rule dictionary
+        only_binary: Only keepbinaryRules (the rule header contains(X,Y)) 
+        only_unary_c: Only keepunaryrules, andbodycannot appear inrp(A,X)andrp(X,A)
+        only_unary_d: Only keepunaryrules, andbodyin can only berp(A,X)andrp(X,A)
     
     Returns:
-        过滤后的规则字典
+        Filtered rule dictionary
     """
     if not only_binary and not only_unary_c and not only_unary_d:
         return rules_dict
@@ -168,37 +168,37 @@ def filter_rules_by_type(rules_dict: Dict[str, List[Tuple[str, Dict, str]]],
     filtered_rules = {}
     
     for normalized_rule, rule_list in rules_dict.items():
-        # 使用第一个规则进行判断（所有归一化后相同的规则应该有相同的类型）
+        # Use the first rule for judgment (all rules that are the same after normalization should have the same type)
         if not rule_list:
             continue
         
         original_rule = rule_list[0][0]
         
         try:
-            # 判断是否为binary规则
+            # Determine whether it isbinaryrules
             is_binary = is_binary_rule(original_rule)
             
-            # 如果只要binary规则
+            # if onlybinaryrules
             if only_binary:
                 if is_binary:
                     filtered_rules[normalized_rule] = rule_list
                 continue
             
-            # 如果只要unary规则
+            # if onlyunaryrules
             if only_unary_c or only_unary_d:
                 if is_binary:
                     continue
                 
-                # 解析body中的原子类型
+                # parsebodyAtomic types in
                 if '<=' not in original_rule:
                     continue
                 
                 body = original_rule.split('<=', 1)[1].strip()
                 body_atoms = parse_body_atoms(body)
                 
-                # 检查body中的原子类型
-                has_rp_xa = False  # 是否包含rp(X,A)或rp(A,X)
-                has_other = False  # 是否包含其他类型
+                # CheckbodyAtomic types in
+                has_rp_xa = False  # Does it containrp(X,A)orrp(A,X)
+                has_other = False  # Does it contain other types
                 
                 for atom in body_atoms:
                     try:
@@ -208,21 +208,21 @@ def filter_rules_by_type(rules_dict: Dict[str, List[Tuple[str, Dict, str]]],
                         else:
                             has_other = True
                     except ValueError:
-                        # 无法解析的原子，跳过
+                        # Unresolvable atom, skipped
                         continue
                 
-                # only_unary_c: body中不能出现rp(A,X)和rp(X,A)
+                # only_unary_c: bodycannot appear inrp(A,X)andrp(X,A)
                 if only_unary_c:
                     if not has_rp_xa:
                         filtered_rules[normalized_rule] = rule_list
                 
-                # only_unary_d: body中只能是rp(A,X)和rp(X,A)
+                # only_unary_d: bodyin can only berp(A,X)andrp(X,A)
                 if only_unary_d:
                     if has_rp_xa and not has_other:
                         filtered_rules[normalized_rule] = rule_list
         
         except Exception as e:
-            # 如果解析出错，跳过该规则
+            # If parsing error occurs, skip the rule
             print(f"Warning: Failed to parse rule type for: {original_rule}, error: {e}")
             continue
     
@@ -230,14 +230,14 @@ def filter_rules_by_type(rules_dict: Dict[str, List[Tuple[str, Dict, str]]],
 
 def convert_to_simplified_format(rule: str) -> str:
     """
-    将带括号格式的规则转换为简写格式
-    使用analysis_rule.py中的RuleParser._normalize_to_simplified方法
+    Convert rules in bracketed format to abbreviated format
+    Useanalysis_rule.pyinRuleParser._normalize_to_simplifiedmethod
     
-    例如:
+    For example:
     /award/award_category/winners./award/award_honor/ceremony(X,Y) <=
     /award/award_category/winners./award/award_honor/award_winner(X,A), /award/award_ceremony/awards_presented./award/award_honor/award_winner(Y,A)
     
-    转换为:
+    Convert to:
     /award/award_category/winners./award/award_honor/ceremony <=
     /award/award_category/winners./award/award_honor/award_winner * INVERSE_/award/award_ceremony/awards_presented./award/award_honor/award_winner
     """
@@ -248,25 +248,25 @@ def convert_to_simplified_format(rule: str) -> str:
     head_part = head_part.strip()
     body_part = body_part.strip()
     
-    # 检查是否已经是简写格式
-    # 简写格式特征: 二元规则头部没有括号，或一元规则头部只有一个参数
+    # Check if it is already in abbreviated format
+    # Abbreviation format features: There are no parentheses in the header of a binary rule, or there is only one parameter in the header of a unary rule.
     if '(' not in head_part or ')' not in head_part:
-        # 已经是简写格式，但需要添加空格美化
+        # It is already in abbreviated format, but spaces need to be added to beautify it.
         return beautify_simplified_rule(rule)
     
     paren_content = head_part.split('(')[1].split(')')[0]
     if ',' not in paren_content:
-        # 一元简写格式，但需要添加空格美化
+        # Uniary abbreviation format, but spaces need to be added to beautify it
         return beautify_simplified_rule(rule)
     
-    # 使用RuleParser转换
+    # UseRuleParserConvert
     try:
         normalized = RuleParser._normalize_to_simplified(head_part, body_part)
-        # 美化输出：在*连接符左右添加空格
+        # Beautify output: in*Add spaces around connectors
         normalized = beautify_simplified_rule(normalized)
         return normalized
     except Exception as e:
-        # 如果转换失败，返回原始规则
+        # If the conversion fails, return the original rule
         print(f"Warning: Failed to convert rule to simplified format: {rule}, error: {e}")
         return rule
 
@@ -276,7 +276,7 @@ def beautify_simplified_rule(rule: str) -> str:
 
 def is_binary_rule(rule: str) -> bool:
     """
-    判断是否为Binary规则（规则头包含(X,Y)）
+    Determine whether it isBinaryRules (the rule header contains(X,Y)) 
     """
     if '<=' not in rule:
         return False
@@ -285,30 +285,30 @@ def is_binary_rule(rule: str) -> bool:
 
 def get_head_variable_type(rule: str) -> str:
     """
-    获取规则头的变量类型
-    返回: 'r(X,c)', 'r(c,X)', 'r(X,X)', 'binary'
+    Get the variable type of the rule header
+    Return: 'r(X,c)', 'r(c,X)', 'r(X,X)', 'binary'
     """
     if '<=' not in rule:
-        raise ValueError(f"规则格式错误，缺少'<=': {rule}")
+        raise ValueError(f"Rule format is wrong, missing'<=': {rule}")
     
     head = rule.split('<=', 1)[0].strip()
     
-    # 提取括号中的内容
+    # Extract content in parentheses
     match = re.search(r'\(([^)]+)\)', head)
     if not match:
-        raise ValueError(f"规则头格式错误，无法提取括号内容: {head}")
+        raise ValueError(f"The rule header format is incorrect and the bracket content cannot be extracted.: {head}")
     
     args = match.group(1).split(',')
     if len(args) != 2:
-        raise ValueError(f"规则头参数数量错误，期望2个参数: {args}")
+        raise ValueError(f"Wrong number of rule header parameters, expected2parameters: {args}")
     
     arg1, arg2 = args[0].strip(), args[1].strip()
     
-    # 定义变量类型：X类变量和A类变量
-    x_vars = {'X', 'Y', 'Z'}  # X类变量
-    a_vars = {'A', 'B', 'C'}  # A类变量
+    # Define variable type:Xclass variables andAclass variable
+    x_vars = {'X', 'Y', 'Z'}  # Xclass variable
+    a_vars = {'A', 'B', 'C'}  # Aclass variable
     
-    # 判断变量类型
+    # Determine variable type
     is_x_var1 = arg1 in x_vars
     is_x_var2 = arg2 in x_vars
     is_a_var1 = arg1 in a_vars
@@ -319,18 +319,18 @@ def get_head_variable_type(rule: str) -> str:
     if arg1 == 'X' and arg2 == 'Y':
         return 'binary'
     elif is_x_var1 and is_x_var2 and arg1 == arg2:
-        return 'r(X,X)'  # 两个相同的X类变量
+        return 'r(X,X)'  # two identicalXclass variable
     elif is_x_var1 and not is_var2:
-        return 'r(X,c)'  # X类变量,常量
+        return 'r(X,c)'  # Xclass variable,constant
     elif not is_var1 and is_x_var2:
-        return 'r(c,X)'  # 常量,X类变量
+        return 'r(c,X)'  # constant,Xclass variable
     else:
-        raise ValueError(f"不支持的规则头类型: ({arg1},{arg2}) in {rule}")
+        raise ValueError(f"Unsupported rule header type: ({arg1},{arg2}) in {rule}")
 
 def parse_body_atoms(body: str) -> List[str]:
     """
-    正确解析body中的原子，考虑原子内部可能包含逗号
-    例如: "/award/award_category/winners./award/award_honor/ceremony(/m/0gs9p,X), other_relation(Y,Z)"
+    Parse correctlybodyAtoms in , considering that the atoms may contain commas inside
+    For example: "/award/award_category/winners./award/award_honor/ceremony(/m/0gs9p,X), other_relation(Y,Z)"
     """
     atoms = []
     current_atom = ""
@@ -344,7 +344,7 @@ def parse_body_atoms(body: str) -> List[str]:
         elif char == ')':
             paren_count -= 1
         elif char == ',' and paren_count == 0:
-            # 只有在括号外的逗号才是原子分隔符
+            # Only commas outside parentheses are atom delimiters
             if current_atom.strip():
                 atoms.append(current_atom.strip())
             current_atom = ""
@@ -354,7 +354,7 @@ def parse_body_atoms(body: str) -> List[str]:
         current_atom += char
         i += 1
     
-    # 添加最后一个原子
+    # add last atom
     if current_atom.strip():
         atoms.append(current_atom.strip())
     
@@ -362,26 +362,26 @@ def parse_body_atoms(body: str) -> List[str]:
 
 def get_body_atom_type(atom: str) -> str:
     """
-    获取body中原子的变量类型
-    返回: 'rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)'
+    getbodyatomic variable type
+    Return: 'rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)'
     """
-    # 提取括号中的内容
+    # Extract content in parentheses
     match = re.search(r'\(([^)]+)\)', atom.strip())
     if not match:
         print("Wrong format:", atom)
-        raise ValueError(f"Body原子格式错误，无法提取括号内容: {atom}")
+        raise ValueError(f"BodyAtom format error, unable to extract bracket contents: {atom}")
     
     args = match.group(1).split(',')
     if len(args) != 2:
-        raise ValueError(f"Body原子参数数量错误，期望2个参数: {args} in {atom}")
+        raise ValueError(f"BodyWrong number of atomic arguments, expected2parameters: {args} in {atom}")
     
     arg1, arg2 = args[0].strip(), args[1].strip()
     
-    # 定义变量类型：X类变量和A类变量
-    x_vars = {'X', 'Y', 'Z'}  # X类变量
-    a_vars = {'A', 'B', 'C'}  # A类变量
+    # Define variable type:Xclass variables andAclass variable
+    x_vars = {'X', 'Y', 'Z'}  # Xclass variable
+    a_vars = {'A', 'B', 'C'}  # Aclass variable
     
-    # 判断变量类型
+    # Determine variable type
     is_x_var1 = arg1 in x_vars
     is_x_var2 = arg2 in x_vars
     is_a_var1 = arg1 in a_vars
@@ -390,86 +390,86 @@ def get_body_atom_type(atom: str) -> str:
     is_var2 = is_x_var2 or is_a_var2
     
     if is_x_var1 and is_x_var2 and arg1 == arg2:
-        return 'rp(X,X)'  # 两个相同的X类变量
+        return 'rp(X,X)'  # two identicalXclass variable
     elif is_x_var1 and is_a_var2:
-        return 'rp(X,A)'  # X类变量和A类变量
+        return 'rp(X,A)'  # Xclass variables andAclass variable
     elif is_a_var1 and is_x_var2:
-        return 'rp(A,X)'  # A类变量和X类变量
+        return 'rp(A,X)'  # Aclass variables andXclass variable
     elif is_x_var1 and not is_var2:
-        return 'rp(X,c)'  # X类变量和常量
+        return 'rp(X,c)'  # XClass variables and constants
     elif not is_var1 and is_x_var2:
-        return 'rp(c,X)'  # 常量和X类变量
+        return 'rp(c,X)'  # constant sumXclass variable
     else:
-        raise ValueError(f"不支持的Body原子类型: ({arg1},{arg2}) in {atom}")
+        raise ValueError(f"Not supportedBodyAtomic type: ({arg1},{arg2}) in {atom}")
 
 def get_relation_path_length(atom: str) -> int:
     """
-    获取原子中关系路径的长度（关系的个数）
-    通过计数"*"的个数+1来确定
+    Get the length of the relationship path in the atom (the number of relationships)
+    pass count"*"number of+1to confirm
     
-    注意：这个函数现在用于简写格式的原子
-    简写格式的原子就是一个关系路径，可能包含多个关系用*连接
+    NOTE: This function is now used for atoms in the abbreviated form
+    The abbreviated form of an atom is a relationship path, which may contain multiple relationships.*connect
     """
-    # 对于简写格式，atom可能不包含括号，就是纯关系路径
-    # 或者是 relation_path(constant) 格式
+    # For the abbreviated format,atomMay not contain parentheses, it is a pure relational path
+    # or is relation_path(constant) Format
     
-    # 移除括号部分（如果有）
+    # Remove brackets (if any)
     if '(' in atom:
         relation_path = atom.split('(')[0].strip()
     else:
         relation_path = atom.strip()
     
-    # 计算"*"的个数（忽略空格）
-    # 移除所有空格后再计数
+    # Calculate"*"The number of (ignoring spaces)
+    # Remove all spaces before counting
     relation_path_no_space = relation_path.replace(' ', '')
     dot_count = relation_path_no_space.count('*')
-    # 关系路径长度 = "*"的个数 + 1
+    # Relationship path length = "*"number of + 1
     return dot_count + 1
 
 def get_rule_length_type(rule: str) -> str:
     """
-    获取规则的长度类型
-    返回: 'L1', 'L2', 'L3', 或 'other'
+    Get the length type of the rule
+    Return: 'L1', 'L2', 'L3', or 'other'
     
-    注意：首先将规则转换为简写格式，然后基于简写格式判断长度类型
-    这样可以正确区分L1/L2/L3，避免将L3误判为L1
+    Note: First convert the rule into abbreviated format, and then determine the length type based on the abbreviated format
+    This can correctly distinguishL1/L2/L3, avoidL3Misjudged asL1
     """
     if '<=' not in rule:
         return 'other'
     
-    # 首先转换为简写格式
+    # First convert to abbreviated format
     simplified_rule = convert_to_simplified_format(rule)
     
-    # 从简写格式中提取body
+    # Extract from abbreviated formatbody
     body = simplified_rule.split('<=', 1)[1].strip()
     
-    # 对于简写格式的二元规则，body就是一个关系路径（可能包含*连接多个关系）
-    # 对于简写格式的一元规则，body是 relation_path(constant) 格式
-    # 可能有多个这样的原子（虽然通常一元规则只有一个body原子）
+    # For binary rules in abbreviated form,bodyis a relational path (which may contain*Connect multiple relationships)
+    # For unary rules in abbreviated form,bodyYes relation_path(constant) Format
+    # There may be multiple such atoms (although usually unary rules have only onebodyatoms)
     
-    # 解析body原子
-    # 简写格式的二元规则: body就是一个关系路径，没有逗号分隔
-    # 简写格式的一元规则: body可能是 rel(c) 或 rel1*rel2(c)
+    # parsebodyatom
+    # Binary rules for shorthand format: bodyIt is just a relationship path, without commas separating it.
+    # Unary rules for abbreviated formats: bodymay be rel(c) or rel1*rel2(c)
     
-    # 检查是否为二元规则（简写格式下，二元规则的body没有括号，或者head没有括号）
+    # Check whether it is a binary rule (in abbreviated form, binary rulebodyno parentheses, orheadno brackets)
     head = simplified_rule.split('<=', 1)[0].strip()
     is_binary = '(' not in head or '(X,Y)' in head
     
     if is_binary and ',' not in body:
-        # 二元规则简写格式：body是单个关系路径
+        # Binary rule abbreviation format:bodyis a single relationship path
         length = get_relation_path_length(body)
         return f'L{length}'
     else:
-        # 一元规则或带逗号的body（可能转换失败）
-        # 尝试按照简写格式解析
+        # unary rule or with commabody (The conversion may have failed)
+        # Try to parse according to the abbreviated format
         atoms = parse_body_atoms(body)
         
         if len(atoms) == 1:
-            # 单个原子，直接计算长度
+            # Single atom, directly calculate the length
             length = get_relation_path_length(atoms[0])
             return f'L{length}'
         else:
-            # 多个原子，取最大长度
+            # Multiple atoms, take the maximum length
             lengths = []
             for atom in atoms:
                 length = get_relation_path_length(atom)
@@ -480,14 +480,14 @@ def get_rule_length_type(rule: str) -> str:
                 # print('No valid atoms in rule body:', rule)
                 return 'L0'
                 
-            # 判断规则长度类型
+            # Determine rule length type
             max_length = max(lengths)
             assert max_length <= 3, f"Unexpected relation path length: {max_length} in rule: {rule}"
             return f'L{max_length}'
 
 def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
     """
-    分析规则的详细统计信息
+    Detailed statistics for analysis rules
     """
     stats = {
         'total_rules': len(rules_dict),
@@ -503,11 +503,11 @@ def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
         'atom_relation_lengths': defaultdict(int),
     }
     
-    # Unary规则矩阵：head_type × body_type
+    # UnaryRule matrix:head_type × body_type
     head_types = ['r(X,c)', 'r(c,X)', 'r(X,X)']
     body_types = ['rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)']
     
-    # 初始化矩阵
+    # Initialization matrix
     stats['unary_matrix'] = {}
     for head_type in head_types:
         stats['unary_matrix'][head_type] = {}
@@ -517,7 +517,7 @@ def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
     for normalized_rule, rule_list in rules_dict.items():
         rule = rule_list[0][0]
         length_type = get_rule_length_type(rule)
-        # 判断Binary还是Unary
+        # judgeBinaryStillUnary
         if is_binary_rule(rule):
             stats['binary_rules'] += 1
             if length_type in ['L0', 'L1', 'L2', 'L3']:
@@ -526,7 +526,7 @@ def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
             stats['unary_rules'] += 1
             if length_type in ['L0', 'L1', 'L2']:
                 stats[f'{length_type}_unary'] += 1
-            # 分析Unary规则的头部和body类型
+            # analysisUnaryRule header andbodyType
             try:
                 head_type = get_head_variable_type(rule)
                 if head_type in head_types:
@@ -537,14 +537,14 @@ def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
                             body_type = get_body_atom_type(atom)
                             stats['unary_matrix'][head_type][body_type] += 1
                         except ValueError as e:
-                            print(f"Warning: 无法解析原子 '{atom}' in rule '{rule}': {e}")
+                            print(f"Warning: Unable to resolve atom '{atom}' in rule '{rule}': {e}")
                             continue
                 else:
-                    print(f"Warning: Unary规则的头部类型不在预期范围内: {head_type} in {rule}")
+                    print(f"Warning: UnaryRule's header type is not within the expected range: {head_type} in {rule}")
             except ValueError as e:
-                print(f"Warning: 无法解析规则头 '{rule}': {e}")
+                print(f"Warning: Unable to parse rule header '{rule}': {e}")
                 continue
-        # 分析body中原子的关系路径长度
+        # analysisbodyRelational path length of atoms in
         if '<=' in rule:
             body = rule.split('<=', 1)[1].strip()
             atoms = parse_body_atoms(body)
@@ -557,52 +557,52 @@ def analyze_rule_statistics(rules_dict: Dict[str, List]) -> Dict:
 
 def write_rule_section(writer, rules_set: Set, rules_dict: Dict, section_title: str, kg=None):
     """
-    写入规则示例部分（辅助函数）
+    Write rule example section (helper function)
     
     Args:
-        writer: CSV writer对象
-        rules_set: 规则集合
-        rules_dict: 规则字典
-        section_title: 部分标题
-        kg: 知识图谱（可选）
+        writer: CSV writerobject
+        rules_set: rule set
+        rules_dict: Rule Dictionary
+        section_title: section title
+        kg: Knowledge graph (optional)
     """
     if not rules_set:
         return
     
-    # 分离Binary和Unary规则，并按长度分类Binary规则
+    # separationBinaryandUnaryrules and categorized by lengthBinaryrules
     binary_rules = [rule for rule in rules_set if is_binary_rule(rule)]
     unary_rules = [rule for rule in rules_set if not is_binary_rule(rule)]
     
-    # 将Binary规则按长度分类
+    # willBinaryRules sorted by length
     l1_binary = [r for r in binary_rules if get_rule_length_type(r) == 'L1']
     l2_binary = [r for r in binary_rules if get_rule_length_type(r) == 'L2']
     l3_binary = [r for r in binary_rules if get_rule_length_type(r) == 'L3']
     other_binary = [r for r in binary_rules if get_rule_length_type(r) not in ['L1', 'L2', 'L3']]
     
-    # 选择Binary规则：至少3个L1，3个L2，其余补充
+    # ChooseBinaryRule: at least3aL1, 3aL2, The rest is supplemented
     selected_binary = []
-    selected_binary.extend(l1_binary[:3])  # 至少3个L1
-    selected_binary.extend(l2_binary[:3])  # 至少3个L2
+    selected_binary.extend(l1_binary[:3])  # at least3aL1
+    selected_binary.extend(l2_binary[:3])  # at least3aL2
     
-    # 补充到10个Binary规则
+    # added to10aBinaryrules
     remaining_needed = 10 - len(selected_binary)
     if remaining_needed > 0:
-        # 从剩余的规则中补充
+        # Supplement from remaining rules
         remaining_rules = l1_binary[3:] + l2_binary[3:] + l3_binary + other_binary
         selected_binary.extend(remaining_rules[:remaining_needed])
     
-    # 选择10个Unary规则
+    # Choose10aUnaryrules
     selected_unary = unary_rules[:10]
     
-    # 组合所有选择的规则
+    # Combine all selected rules
     selected_rules = selected_binary + selected_unary
     
-    # 写入标题
-    writer.writerow([f'{section_title} (共{len(rules_set)}条，展示前{len(selected_rules)}条: 前10条Binary(至少3个L1+3个L2), 后10条Unary)'])
+    # write title
+    writer.writerow([f'{section_title} (total{len(rules_set)}strip, before display{len(selected_rules)}Article: before10ArticleBinary(at least3aL1+3aL2), after10ArticleUnary)'])
     
-    # 写入表头和数据
+    # Write header and data
     if kg is not None:
-        writer.writerow(['转换后规则', '指标', '真实结果'])
+        writer.writerow(['Post-conversion rules', 'indicator', 'real results'])
         for rule in selected_rules:
             simplified_rule = convert_to_simplified_format(rule)
             metrics = rules_dict[rule][0][1] if rules_dict[rule] else {}
@@ -610,7 +610,7 @@ def write_rule_section(writer, rules_set: Set, rules_dict: Dict, section_title: 
             real_result_str = str(real_result['join_result']) if real_result else 'N/A'
             writer.writerow([simplified_rule, str(metrics), real_result_str])
     else:
-        writer.writerow(['转换后规则', '指标'])
+        writer.writerow(['Post-conversion rules', 'indicator'])
         for rule in selected_rules:
             simplified_rule = convert_to_simplified_format(rule)
             metrics = rules_dict[rule][0][1] if rules_dict[rule] else {}
@@ -620,22 +620,22 @@ def write_rule_section(writer, rules_set: Set, rules_dict: Dict, section_title: 
 def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_name: str, 
                           set1: Set, set2: Set, rules1: Dict, rules2: Dict, output_file: str, kg=None, list_only: int = 0):
     """
-    将统计结果保存到CSV文件
+    Save statistical results toCSVFile
     """
     with open(output_file, 'w', newline='', encoding='utf-8-sig') as csvfile:
         writer = csv.writer(csvfile)
         
-        # 如果是list_only模式，跳过所有统计信息，直接输出独有规则列表
+        # if yeslist_onlymode, skip all statistical information and directly output the unique rule list
         if list_only != 0:
             only_in_1 = set1 - set2
             only_in_2 = set2 - set1
             
             if list_only == 1:
-                # 仅列举file1独有的规则
-                writer.writerow([f'仅在{file1_name}中的规则 (共{len(only_in_1)}条)'])
+                # List onlyfile1unique rules
+                writer.writerow([f'only in{file1_name}rules in (total{len(only_in_1)}Article)'])
                 writer.writerow([])
                 if kg:
-                    writer.writerow(['转换后规则', f'{file1_name}指标', '真实指标', 'conf差值(文件-真实)', 'real conf', 'length'])
+                    writer.writerow(['Post-conversion rules', f'{file1_name}indicator', 'real indicator', 'confDifference(File-true)', 'real conf', 'length'])
                     for rule in only_in_1:
                         simplified_rule = convert_to_simplified_format(rule)
                         metrics1 = rules1[rule][0][1] if rules1[rule] else {}
@@ -654,18 +654,18 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                         length = get_rule_length_type(rule)
                         writer.writerow([simplified_rule, str(metrics1), real_result_str, conf_diff, real_conf, length])
                 else:
-                    writer.writerow(['转换后规则', f'{file1_name}指标', 'length'])
+                    writer.writerow(['Post-conversion rules', f'{file1_name}indicator', 'length'])
                     for rule in only_in_1:
                         simplified_rule = convert_to_simplified_format(rule)
                         metrics1 = rules1[rule][0][1] if rules1[rule] else {}
                         length = get_rule_length_type(rule)
                         writer.writerow([simplified_rule, str(metrics1), length])
             elif list_only == 2:
-                # 仅列举file2独有的规则
-                writer.writerow([f'仅在{file2_name}中的规则 (共{len(only_in_2)}条)'])
+                # List onlyfile2unique rules
+                writer.writerow([f'only in{file2_name}rules in (total{len(only_in_2)}Article)'])
                 writer.writerow([])
                 if kg:
-                    writer.writerow(['转换后规则', f'{file2_name}指标', '真实指标', 'conf差值(文件-真实)', 'real conf', 'length'])
+                    writer.writerow(['Post-conversion rules', f'{file2_name}indicator', 'real indicator', 'confDifference(File-true)', 'real conf', 'length'])
                     for rule in only_in_2:
                         simplified_rule = convert_to_simplified_format(rule)
                         metrics2 = rules2[rule][0][1] if rules2[rule] else {}
@@ -684,29 +684,29 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                         length = get_rule_length_type(rule)
                         writer.writerow([simplified_rule, str(metrics2), real_result_str, conf_diff, real_conf, length])
                 else:
-                    writer.writerow(['转换后规则', f'{file2_name}指标', 'length'])
+                    writer.writerow(['Post-conversion rules', f'{file2_name}indicator', 'length'])
                     for rule in only_in_2:
                         simplified_rule = convert_to_simplified_format(rule)
                         metrics2 = rules2[rule][0][1] if rules2[rule] else {}
                         length = get_rule_length_type(rule)
                         writer.writerow([simplified_rule, str(metrics2), length])
             
-            print(f"\n统计结果已保存到: {output_file}")
+            print(f"\nThe statistical results have been saved to: {output_file}")
             return
         
-        # ========== 默认模式：输出完整统计信息 ==========
-        # ========== 基本统计 ==========
-        writer.writerow(['基本统计'])
-        writer.writerow(['统计项', file1_name, file2_name, '差异'])
-        writer.writerow(['总规则数', stats1['total_rules'], stats2['total_rules'], 
+        # ========== Default mode: Output complete statistics ==========
+        # ========== basic statistics ==========
+        writer.writerow(['basic statistics'])
+        writer.writerow(['Statistical items', file1_name, file2_name, 'difference'])
+        writer.writerow(['Total number of rules', stats1['total_rules'], stats2['total_rules'], 
                         stats2['total_rules'] - stats1['total_rules']])
         writer.writerow([])
         
-        # ========== 规则类型分布 ==========
-        writer.writerow(['规则类型分布'])
-        writer.writerow(['类型', file1_name, file2_name, '差异'])
+        # ========== Rule type distribution ==========
+        writer.writerow(['Rule type distribution'])
+        writer.writerow(['Type', file1_name, file2_name, 'difference'])
         
-        # 定义规则类型
+        # Define rule type
         rule_types = [
             ('L0 Unary', 'L0_unary'),
             ('L1 Unary', 'L1_unary'), 
@@ -719,7 +719,7 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
             ('Binary', 'binary_rules')
         ]
         
-        # 遍历输出规则类型统计
+        # Traverse output rule type statistics
         for display_name, stat_key in rule_types:
             count1 = stats1[stat_key]
             count2 = stats2[stat_key]
@@ -731,18 +731,18 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                             count2 - count1])
         writer.writerow([])
         
-        # ========== Unary规则矩阵分布 ==========
+        # ========== Unaryregular matrix distribution ==========
         if stats1['unary_rules'] > 0 or stats2['unary_rules'] > 0:
             head_types = ['r(X,c)', 'r(c,X)', 'r(X,X)', 'sum']
             body_types = ['rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)', 'sum']
             
-            # 输出file1的矩阵
-            writer.writerow([f'{file1_name} Unary规则矩阵'])
-            # 表头
+            # outputfile1matrix
+            writer.writerow([f'{file1_name} Unaryrule matrix'])
+            # Header
             header = ['head\\body'] + body_types
             writer.writerow(header)
             
-            # 计算每行和每列的总和
+            # Calculate the sum of each row and column
             matrix1 = stats1.get('unary_matrix', {})
             for head_type in ['r(X,c)', 'r(c,X)', 'r(X,X)']:
                 row = [head_type]
@@ -751,10 +751,10 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                     count = matrix1.get(head_type, {}).get(body_type, 0)
                     row.append(count)
                     row_sum += count
-                row.append(row_sum)  # 行总和
+                row.append(row_sum)  # row sum
                 writer.writerow(row)
             
-            # 计算列总和
+            # Calculate column sum
             sum_row = ['sum']
             total_sum = 0
             for body_type in ['rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)']:
@@ -762,16 +762,16 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                              for head_type in ['r(X,c)', 'r(c,X)', 'r(X,X)'])
                 sum_row.append(col_sum)
                 total_sum += col_sum
-            sum_row.append(total_sum)  # 总总和
+            sum_row.append(total_sum)  # total sum
             writer.writerow(sum_row)
             writer.writerow([])
             
-            # 输出file2的矩阵
-            writer.writerow([f'{file2_name} Unary规则矩阵'])
-            # 表头
+            # outputfile2matrix
+            writer.writerow([f'{file2_name} Unaryrule matrix'])
+            # Header
             writer.writerow(header)
             
-            # 计算每行和每列的总和
+            # Calculate the sum of each row and column
             matrix2 = stats2.get('unary_matrix', {})
             for head_type in ['r(X,c)', 'r(c,X)', 'r(X,X)']:
                 row = [head_type]
@@ -780,10 +780,10 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                     count = matrix2.get(head_type, {}).get(body_type, 0)
                     row.append(count)
                     row_sum += count
-                row.append(row_sum)  # 行总和
+                row.append(row_sum)  # row sum
                 writer.writerow(row)
             
-            # 计算列总和
+            # Calculate column sum
             sum_row = ['sum']
             total_sum = 0
             for body_type in ['rp(X,c)', 'rp(c,X)', 'rp(X,A)', 'rp(A,X)', 'rp(X,X)']:
@@ -791,18 +791,18 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                              for head_type in ['r(X,c)', 'r(c,X)', 'r(X,X)'])
                 sum_row.append(col_sum)
                 total_sum += col_sum
-            sum_row.append(total_sum)  # 总总和
+            sum_row.append(total_sum)  # total sum
             writer.writerow(sum_row)
             writer.writerow([])
 
-        # ========== Atom中关系路径长度分布 ==========
-        writer.writerow(['Atom中关系路径长度分布'])
-        writer.writerow(['长度', file1_name, file2_name, '差异'])
+        # ========== Atompath length distribution ==========
+        writer.writerow(['Atompath length distribution'])
+        writer.writerow(['length', file1_name, file2_name, 'difference'])
         
         total_atoms1 = sum(stats1['atom_relation_lengths'].values())
         total_atoms2 = sum(stats2['atom_relation_lengths'].values())
         
-        # 获取所有出现的长度
+        # Get all occurrences of length
         all_lengths = sorted(set(stats1['atom_relation_lengths'].keys()) | set(stats2['atom_relation_lengths'].keys()))
         
         for length in all_lengths:
@@ -810,42 +810,42 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
             count2 = stats2['atom_relation_lengths'].get(length, 0)
             pct1 = f"{count1/total_atoms1*100:.2f}%" if total_atoms1 > 0 else "0.00%"
             pct2 = f"{count2/total_atoms2*100:.2f}%" if total_atoms2 > 0 else "0.00%"
-            writer.writerow([f'长度{length} (L{length})', 
+            writer.writerow([f'length{length} (L{length})', 
                             f"{count1} ({pct1})",
                             f"{count2} ({pct2})",
                             count2 - count1])
         
-        writer.writerow(['总原子数', total_atoms1, total_atoms2, total_atoms2 - total_atoms1])
+        writer.writerow(['total number of atoms', total_atoms1, total_atoms2, total_atoms2 - total_atoms1])
         writer.writerow([])
         
-        # ========== 规则覆盖情况 ==========
+        # ========== Rule coverage ==========
         common_rules = set1 & set2
         only_in_1 = set1 - set2
         only_in_2 = set2 - set1
         coverage = len(common_rules) / len(set1) if len(set1) > 0 else 0
         
-        writer.writerow(['规则覆盖情况'])
-        writer.writerow(['统计项', '数值'])
-        writer.writerow(['共同规则数', len(common_rules)])
-        writer.writerow([f'仅在{file1_name}中的规则数', len(only_in_1)])
-        writer.writerow([f'仅在{file2_name}中的规则数', len(only_in_2)])
-        writer.writerow([f'{file2_name}对{file1_name}的覆盖率', f'{coverage*100:.2f}%'])
+        writer.writerow(['Rule coverage'])
+        writer.writerow(['Statistical items', 'numerical value'])
+        writer.writerow(['number of common rules', len(common_rules)])
+        writer.writerow([f'only in{file1_name}number of rules in', len(only_in_1)])
+        writer.writerow([f'only in{file2_name}number of rules in', len(only_in_2)])
+        writer.writerow([f'{file2_name}Yes{file1_name}coverage', f'{coverage*100:.2f}%'])
         writer.writerow([])
         
-        # ========== 共同规则示例 ==========
+        # ========== Examples of common rules ==========
         topN = 20
         if common_rules:
-            # 分离Binary和Unary规则
+            # separationBinaryandUnaryrules
             binary_rules = [rule for rule in common_rules if is_binary_rule(rule)]
             unary_rules = [rule for rule in common_rules if not is_binary_rule(rule)]
             
-            # 计算每种类型应该取多少条
+            # Calculate how many items of each type should be taken
             half_n = topN // 2
             selected_rules = binary_rules[:half_n] + unary_rules[:half_n]
             
-            writer.writerow([f'共同规则示例 (共{len(common_rules)}条，展示前{topN}条: 前{half_n}条Binary, 后{half_n}条Unary)'])
+            writer.writerow([f'Examples of common rules (total{len(common_rules)}strip, before display{topN}Article: before{half_n}ArticleBinary, after{half_n}ArticleUnary)'])
             if kg is not None:
-                writer.writerow(['转换后规则', f'{file1_name}指标', f'{file2_name}指标', '真实结果'])
+                writer.writerow(['Post-conversion rules', f'{file1_name}indicator', f'{file2_name}indicator', 'real results'])
                 for rule in selected_rules:
                     simplified_rule = convert_to_simplified_format(rule)
                     metrics1 = rules1[rule][0][1] if rules1[rule] else {}
@@ -854,7 +854,7 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                     real_result_str = str(real_result['join_result']) if real_result else 'N/A'
                     writer.writerow([simplified_rule, str(metrics1), str(metrics2), real_result_str])
             else:
-                writer.writerow(['转换后规则', f'{file1_name}指标', f'{file2_name}指标'])
+                writer.writerow(['Post-conversion rules', f'{file1_name}indicator', f'{file2_name}indicator'])
                 for rule in selected_rules:
                     simplified_rule = convert_to_simplified_format(rule)
                     metrics1 = rules1[rule][0][1] if rules1[rule] else {}
@@ -862,33 +862,33 @@ def save_statistics_to_csv(stats1: Dict, stats2: Dict, file1_name: str, file2_na
                     writer.writerow([simplified_rule, str(metrics1), str(metrics2)])
             writer.writerow([])
         
-        # ========== 仅在某个文件中的规则 ==========
-        # 使用辅助函数处理两个部分
-        write_rule_section(writer, only_in_1, rules1, f'仅在{file1_name}中的规则', kg)
-        write_rule_section(writer, only_in_2, rules2, f'仅在{file2_name}中的规则', kg)
+        # ========== Rules only in a file ==========
+        # Use helper functions to handle both parts
+        write_rule_section(writer, only_in_1, rules1, f'only in{file1_name}rules in', kg)
+        write_rule_section(writer, only_in_2, rules2, f'only in{file2_name}rules in', kg)
 
-    print(f"\n统计结果已保存到: {output_file}")
+    print(f"\nThe statistical results have been saved to: {output_file}")
 
 def main(args):
     """
-    主函数
+    main function
     
     Args:
-        args: 命令行参数对象，包含以下属性：
-            - file1: 第一个规则文件名
-            - file2: 第二个规则文件名
-            - dataset: 数据集名称
-            - target_relation: 目标关系
-            - only_b: 仅比较binary规则
-            - only_u_c: 仅比较unary规则（不包含rp(A,X)和rp(X,A)）
-            - only_u_d: 仅比较unary规则（只包含rp(A,X)和rp(X,A)）
-            - list_only: 列举模式
-            - max_length: 最大规则长度
+        args: Command line parameter object, containing the following properties:
+            - file1: First rule file name
+            - file2: Second rule file name
+            - dataset: Data set name
+            - target_relation: target relationship
+            - only_b: Compare onlybinaryrules
+            - only_u_c: Compare onlyunaryrules (excludingrp(A,X)andrp(X,A)) 
+            - only_u_d: Compare onlyunaryRules (contains onlyrp(A,X)andrp(X,A)) 
+            - list_only: enumeration mode
+            - max_length: Maximum rule length
     """
-    # 文件路径
+    # file path
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
-    # 处理路径：如果是完整路径，直接使用；否则认为是相对于out/{dataset}/的文件名
+    # Processing path: If it is a complete path, use it directly; otherwise, it is considered relative toout/{dataset}/file name
     if os.path.isabs(args.file1) or '\\' in args.file1 or '/' in args.file1:
         file1_path = args.file1
         file1_name = os.path.basename(args.file1)
@@ -905,129 +905,129 @@ def main(args):
     
     dataset_path = os.path.join(base_dir, "data", args.dataset, "train.txt")
     
-    print("=== 规则文件比较工具 ===")
-    print(f"比较文件:")
+    print("=== Rule file comparison tool ===")
+    print(f"Compare files:")
     print(f"  File 1: {file1_path}")
     print(f"  File 2: {file2_path}")
     if args.target_relation:
-        print(f"目标关系: {args.target_relation}")
+        print(f"target relationship: {args.target_relation}")
     else:
-        print("分析模式: 全量规则分析")
+        print("analysis mode: Full rule analysis")
     
-    # 检查文件是否存在
+    # Check if the file exists
     if not os.path.exists(file1_path):
-        print(f"错误: 文件 {file1_path} 不存在")
+        print(f"Error: File {file1_path} does not exist")
         return
     
     if not os.path.exists(file2_path):
-        print(f"错误: 文件 {file2_path} 不存在")
+        print(f"Error: File {file2_path} does not exist")
         return
     
-    # 加载规则
-    print(f"\n=== 加载规则 ===")
+    # Load rules
+    print(f"\n=== Load rules ===")
     rules1 = load_rules_with_target_relation(file1_path, args)
     rules2 = load_rules_with_target_relation(file2_path, args)
-    print(f"已加载 {file1_name}: {len(rules1)} 条规则")
-    print(f"已加载 {file2_name}: {len(rules2)} 条规则")
+    print(f"Loaded {file1_name}: {len(rules1)} rules")
+    print(f"Loaded {file2_name}: {len(rules2)} rules")
     
-    # 过滤规则：先按长度过滤，再按类型过滤
+    # Filtering rules: filter by length first, then filter by type
     if args.max_length < 3:
-        print(f"\n=== 长度过滤 ===")
-        print(f"过滤模式: 仅保留长度 <= {args.max_length} 的规则")
+        print(f"\n=== length filter ===")
+        print(f"filter mode: Only keep the length <= {args.max_length} rules")
         rules1 = filter_rules_by_length(rules1, args.max_length)
         rules2 = filter_rules_by_length(rules2, args.max_length)
-        print(f"长度过滤后 {file1_name}: {len(rules1)} 条规则")
-        print(f"长度过滤后 {file2_name}: {len(rules2)} 条规则")
+        print(f"After length filtering {file1_name}: {len(rules1)} rules")
+        print(f"After length filtering {file2_name}: {len(rules2)} rules")
     
     if args.only_b or args.only_u_c or args.only_u_d:
-        print(f"\n=== 类型过滤 ===")
+        print(f"\n=== Type filtering ===")
         if args.only_b:
-            print("过滤模式: 仅保留binary规则")
+            print("filter mode: Only keepbinaryrules")
         elif args.only_u_c:
-            print("过滤模式: 仅保留unary规则(不包含rp(A,X)和rp(X,A))")
+            print("filter mode: Only keepunaryrules(Not includedrp(A,X)andrp(X,A))")
         elif args.only_u_d:
-            print("过滤模式: 仅保留unary规则(只包含rp(A,X)和rp(X,A))")
+            print("filter mode: Only keepunaryrules(Contains onlyrp(A,X)andrp(X,A))")
         
         rules1 = filter_rules_by_type(rules1, args.only_b, args.only_u_c, args.only_u_d)
         rules2 = filter_rules_by_type(rules2, args.only_b, args.only_u_c, args.only_u_d)
-        print(f"类型过滤后 {file1_name}: {len(rules1)} 条规则")
-        print(f"类型过滤后 {file2_name}: {len(rules2)} 条规则")
+        print(f"After type filtering {file1_name}: {len(rules1)} rules")
+        print(f"After type filtering {file2_name}: {len(rules2)} rules")
     
-    # 加载知识图谱
-    print(f"\n=== 加载知识图谱 ===")
+    # Load knowledge graph
+    print(f"\n=== Load knowledge graph ===")
     kg = None
     if os.path.exists(dataset_path):
         try:
             kg = load_dataset(dataset_path)
-            print(f"知识图谱加载成功")
+            print(f"Knowledge graph loaded successfully")
         except Exception as e:
-            print(f"加载知识图谱失败: {e}")
-            print(f"将不包含真实结果信息")
+            print(f"Failed to load knowledge graph: {e}")
+            print(f"Will not contain actual results information")
     else:
-        print(f"数据集文件不存在: {dataset_path}")
-        print(f"将不包含真实结果信息")
+        print(f"Dataset file does not exist: {dataset_path}")
+        print(f"Will not contain actual results information")
     
-    # 比较规则并生成统计
+    # Compare rules and generate statistics
     stats1 = analyze_rule_statistics(rules1)
     stats2 = analyze_rule_statistics(rules2)
     
     set1 = set(rules1.keys())
     set2 = set(rules2.keys())
     
-    # 导出到CSV
+    # Export toCSV
     output_suffix = "all_rule" if args.target_relation is None else "rule_" + args.target_relation.split('/')[-1]
     csv_output_path = os.path.join(base_dir, "out", args.dataset, f"{output_suffix}_comparison.csv")
     save_statistics_to_csv(stats1, stats2, file1_name, file2_name, set1, set2, rules1, rules2, csv_output_path, kg, args.list_only)
 
 if __name__ == "__main__":
-    # 命令行参数解析
+    # Command line parameter parsing
     parser = argparse.ArgumentParser(
-        description='规则文件比较工具',
+        description='Rule file comparison tool',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
-示例:
+Example:
 python src/rule_tools/compare_rules.py --dataset FB15k-237 --file1 rule.txt --file2 rule_comparison.txt
 python src/rule_tools/compare_rules.py --file1 rule.txt --file2 rule_comparison.txt
 python src/rule_tools/compare_rules.py
 
-# 仅列举file1独有的L1和L2规则
+# List onlyfile1uniqueL1andL2rules
 python src/rule_tools/compare_rules.py --list_only 1 --max_length 2
 
-# 仅列举file2独有的Binary规则
+# List onlyfile2uniqueBinaryrules
 python src/rule_tools/compare_rules.py --list_only 2 --only_b
 
-# 比较L1规则的差异
+# compareL1Differences in rules
 python src/rule_tools/compare_rules.py --max_length 1
         ''')
     
     parser.add_argument('--dataset', type=str, default='FB15k-237',
-                        help='数据集名称 (默认: FB15k-237)')
+                        help='Data set name (Default: FB15k-237)')
     parser.add_argument('--file1', type=str, default='rules-100-3',
-                        help='第一个规则文件名，相对于out/{dataset}/的文件名 (默认: rules-100-10)')
+                        help='First rule file name, relative toout/{dataset}/file name (Default: rules-100-10)')
     parser.add_argument('--file2', type=str, default='rule.txt',
-                        help='第二个规则文件名，相对于out/{dataset}/的文件名 (默认: rule.txt)')
+                        help='The second rule file name, relative toout/{dataset}/file name (Default: rule.txt)')
     parser.add_argument('--target-relation', type=str, default=None,
-                        help='目标关系，如果不指定则分析所有规则')
+                        help='Target relationship, if not specified all rules will be analyzed')
     parser.add_argument('--only_b', action='store_true',
-                        help='仅比较binary规则')
+                        help='Compare onlybinaryrules')
     parser.add_argument('--only_u_c', action='store_true',
-                        help='仅比较unary规则，且body中不能出现rp(A,X)和rp(X,A)')
+                        help='Compare onlyunaryrules, andbodycannot appear inrp(A,X)andrp(X,A)')
     parser.add_argument('--only_u_d', action='store_true',
-                        help='仅比较unary规则，且body中只能是rp(A,X)和rp(X,A)')
+                        help='Compare onlyunaryrules, andbodyin can only berp(A,X)andrp(X,A)')
     parser.add_argument('--only_normal', action='store_true',
-                        help='仅比较normal规则')
+                        help='Compare onlynormalrules')
     parser.add_argument('--list_only', type=int, default=0, choices=[0, 1, 2],
-                        help='列举模式: 0=默认(显示差异), 1=仅列举file1独有规则, 2=仅列举file2独有规则 (默认: 0)')
+                        help='enumeration mode: 0=Default(Show differences), 1=List onlyfile1Unique rules, 2=List onlyfile2Unique rules (Default: 0)')
     parser.add_argument('--max_length', type=int, default=3, choices=[1, 2, 3],
-                        help='最大规则长度，仅保留长度<=该值的规则 (默认: 3)')
+                        help='Maximum rule length, only the length is retained<=rules for this value (Default: 3)')
     
     args = parser.parse_args()
     
-    # 检查互斥选项
+    # Check mutually exclusive options
     filter_options = sum([args.only_b, args.only_u_c, args.only_u_d])
     if filter_options > 1:
-        print("错误: --only_b, --only_u_c, --only_u_d 选项互斥，只能选择其中一个")
+        print("Error: --only_b, --only_u_c, --only_u_d The options are mutually exclusive, only one of them can be selected")
         sys.exit(1)
     
-    # 调用主函数
+    # call main function
     main(args)

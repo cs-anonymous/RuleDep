@@ -300,9 +300,9 @@ def build_report(summary_rows: Sequence[Dict[str, object]], output_dir: Path) ->
     lines: List[str] = []
     lines.append("# Stage2 Gain Density Analysis")
     lines.append("")
-    lines.append("结论基于每个数据集当前最优已完成配置，比较 `stage2 - stage1` 的关系级增益是否集中在更稠密的关系上。")
+    lines.append("The conclusion is based on the current optimal completed configuration of each data set, and the comparison `stage2 - stage1` Whether the relationship-level gain is concentrated on denser relationships.")
     lines.append("")
-    lines.append("## 汇总表")
+    lines.append("## summary table")
     lines.append("")
     lines.append("| Dataset | Best config | Overall gain | Oracle topN | Oracle ratio | Oracle coverage | Density topN | Density ratio | Density coverage |")
     lines.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
@@ -322,39 +322,39 @@ def build_report(summary_rows: Sequence[Dict[str, object]], output_dir: Path) ->
         )
     lines.append("")
 
-    lines.append("## 数据集逐项结论")
+    lines.append("## Data set conclusion one by one")
     lines.append("")
     for row in summary_rows:
         lines.append(f"### {row['dataset']}")
         lines.append("")
         lines.append(
-            f"- 最优配置是 `{row['best_config_label']}`，整体 `stage2-stage1` MRR 增益为 `{fmt_float(row['overall_gain'])}`。"
+            f"- The optimal configuration is `{row['best_config_label']}`, Whole `stage2-stage1` MRR The gain is `{fmt_float(row['overall_gain'])}`. "
         )
         lines.append(
-            f"- 关系级 Spearman 相关：`train={fmt_float(row['spearman_num_triples'])}`，"
-            f"`avg_tails={fmt_float(row['spearman_avg_tails_per_sp'])}`，"
-            f"`dep_per_rule={fmt_float(row['spearman_dep_per_rule'])}`。"
+            f"- relationship level Spearman Related:`train={fmt_float(row['spearman_num_triples'])}`, "
+            f"`avg_tails={fmt_float(row['spearman_avg_tails_per_sp'])}`, "
+            f"`dep_per_rule={fmt_float(row['spearman_dep_per_rule'])}`. "
         )
         if row["oracle_topn"]:
             lines.append(
-                f"- Oracle 子集：按真实关系增益排序取前 `{row['oracle_topn']}` 个关系，"
-                f"子集增益达到 `{fmt_float(row['oracle_gain'])}`，是整体的 `{fmt_ratio(row['oracle_gain_ratio'])}`，"
-                f"覆盖测试集 `{fmt_float(row['oracle_coverage'])}`。"
+                f"- Oracle Subset: sorted by real relationship gain and taken first `{row['oracle_topn']}` a relationship,"
+                f"The subset gain reaches `{fmt_float(row['oracle_gain'])}`, is holistic `{fmt_ratio(row['oracle_gain_ratio'])}`, "
+                f"Coverage test set `{fmt_float(row['oracle_coverage'])}`. "
             )
         else:
-            lines.append("- Oracle 子集：在至少 1% 覆盖率下，没有找到能把整体增益翻倍的 topN 子集。")
+            lines.append("- Oracle subset: at least 1% Under coverage, no one can be found that can double the overall gain. topN subset.")
         if row["density_topn"]:
             lines.append(
-                f"- Density 子集：按 `{row['density_ranking']}` 排序取前 `{row['density_topn']}` 个关系，"
-                f"子集增益为 `{fmt_float(row['density_gain'])}`，是整体的 `{fmt_ratio(row['density_gain_ratio'])}`，"
-                f"覆盖测试集 `{fmt_float(row['density_coverage'])}`。"
+                f"- Density Subset: press `{row['density_ranking']}` Sort before taking `{row['density_topn']}` a relationship,"
+                f"The subset gain is `{fmt_float(row['density_gain'])}`, is holistic `{fmt_ratio(row['density_gain_ratio'])}`, "
+                f"Coverage test set `{fmt_float(row['density_coverage'])}`. "
             )
         else:
-            lines.append("- Density 子集：没有找到满足 5% 测试覆盖率的有效 topN 候选。")
+            lines.append("- Density Subset: No satisfaction found 5% Effective test coverage topN candidate.")
         lines.append(
-            f"- Oracle 子集与全体关系相比：`avg(train)` {fmt_float(row['oracle_subset_avg_num_triples'])} vs {fmt_float(row['all_avg_num_triples'])}，"
-            f"`avg(tails)` {fmt_float(row['oracle_subset_avg_avg_tails_per_sp'])} vs {fmt_float(row['all_avg_avg_tails_per_sp'])}，"
-            f"`avg(dep/rule)` {fmt_float(row['oracle_subset_avg_dep_per_rule'])} vs {fmt_float(row['all_avg_dep_per_rule'])}。"
+            f"- Oracle Subset compared to the whole relationship:`avg(train)` {fmt_float(row['oracle_subset_avg_num_triples'])} vs {fmt_float(row['all_avg_num_triples'])}, "
+            f"`avg(tails)` {fmt_float(row['oracle_subset_avg_avg_tails_per_sp'])} vs {fmt_float(row['all_avg_avg_tails_per_sp'])}, "
+            f"`avg(dep/rule)` {fmt_float(row['oracle_subset_avg_dep_per_rule'])} vs {fmt_float(row['all_avg_dep_per_rule'])}. "
         )
         lines.append("")
 

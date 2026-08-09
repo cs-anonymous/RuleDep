@@ -1,0 +1,3 @@
+dataset,relation,selected_rules,possible_combinations,observed_combinations,support_qualified_combinations,significant_combinations,significant_positive,significant_negative,observed_over_possible,qualified_over_observed,significant_over_qualified
+WN18RR,0,500,20708500,7384,7158,14,11,3,0.0003565685588043557,0.9693932827735645,0.0019558535903883767
+WN18RR,ALL,500,20708500,7384,7158,14,11,3,0.0003565685588043557,0.9693932827735645,0.0019558535903883767

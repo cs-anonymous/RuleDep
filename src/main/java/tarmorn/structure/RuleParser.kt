@@ -4,61 +4,61 @@ import tarmorn.data.IdManager
 import tarmorn.data.RelationPath
 
 /**
- * 规则解析器，支持多种规则格式和简写
+ * Rule parser, supporting multiple rule formats and abbreviations
  * 
- * 支持的规则格式：
- * 1. 简写格式：
+ * Supported rule formats:
+ * 1. Abbreviated format:
  *    /award/award_category/winners./award/award_honor/ceremony <= 
  *    /award/award_category/winners./award/award_honor/ceremony* /award/award_ceremony/awards_presented./award/award_honor/award_winner*INVERSE_/award/award_ceremony/awards_presented./award/award_honor/award_winner
  * 
- * 2. 带括号格式：
+ * 2. Bracketed format:
  *    /award/award_category/winners./award/award_honor/ceremony(X,Y) <= 
  *    /award/award_category/winners./award/award_honor/award_winner(X,A), /award/award_ceremony/awards_presented./award/award_honor/award_winner(Y,A)
  * 
- * 3. 支持单变量规则（一元）和双变量规则（二元）
+ * 3. Supports single variable rules (univariate) and double variable rules (binary)
  */
 object RuleParser {
     
-    /** 调试模式开关 */
+    /** Debug mode switch */
     var DEBUG = false
     
-    /** 调试输出函数 */
+    /** Debug output function */
     private fun debug(message: String) {
         if (DEBUG) {
             println("[DEBUG] $message")
         }
     }
     
-    /** 判断参数是否是变量（单字母或me_myself_i） */
+    /** Determine whether the parameter is a variable (single letter orme_myself_i)  */
     fun isVariable(arg: String) = arg.length == 1 || arg == "me_myself_i"
     
-    /** 判断实体名称是否包含特殊字符（括号或逗号） */
+    /** Determine whether the entity name contains special characters (brackets or commas) */
     private fun hasSpecialChars(entity: String): Boolean {
         return ('(' in entity || ')' in entity || ',' in entity) && !entity.startsWith("/m/")
     }
     
-    /** 判断是否为实体占位符 (E开头后跟数字) */
+    /** Determine whether it is an entity placeholder (EBegin with numbers followed by) */
     private fun isEntityPlaceholder(arg: String): Boolean {
         return arg.matches(Regex("E\\d+"))
     }
     
     /**
-     * 预处理规则字符串：将括号内包含特殊字符的实体替换为占位符
-     * 例如：playsFor(Tom_Kelly_(footballer,born_1964),Y) -> playsFor(E123,Y)
+     * Preprocessing rule string: Replace entities containing special characters within brackets with placeholders
+     * For example:playsFor(Tom_Kelly_(footballer,born_1964),Y) -> playsFor(E123,Y)
      * 
-     * 策略：只处理作为参数出现的实体（在括号内），不处理关系名
+     * Strategy: only process entities that appear as parameters (in parentheses), not relationship names
      */
     private fun preprocessRule(ruleStr: String): String {
         val result = StringBuilder()
         var i = 0
         
         while (i < ruleStr.length) {
-            // 查找关系名后的左括号
+            // Find the left bracket after the relationship name
             if (ruleStr[i] == '(') {
                 result.append('(')
                 i++
                 
-                // 现在我们在参数列表内，解析每个参数
+                // Now we parse each parameter within the parameter list
                 val argsStart = i
                 var parenDepth = 1
                 val argsEnd = run {
@@ -73,7 +73,7 @@ object RuleParser {
                     pos
                 }
                 
-                // 提取参数部分并处理
+                // Extract the parameter part and process it
                 val argsString = ruleStr.substring(argsStart, argsEnd)
                 val processedArgs = preprocessArguments(argsString)
                 result.append(processedArgs)
@@ -89,12 +89,12 @@ object RuleParser {
     }
     
     /**
-     * 预处理参数列表：将包含特殊字符的实体替换为占位符
-     * 只在顶层逗号处分割，尊重嵌套括号
+     * Preprocessing parameter list: Replace entities containing special characters with placeholders
+     * Split only at top-level commas, respecting nested parentheses
      */
     private fun preprocessArguments(argsString: String): String {
-        // 直接按逗号拆分，若出现多于一个逗号，说明某一实体名中包含逗号/括号
-        // 一元/二元规则：依据变量位置合并
+        // Split directly by commas. If more than one comma appears, it means that an entity name contains a comma./brackets
+        // one yuan/Binary rule: merge based on variable position
         var args = argsString.split(',').map { it.trim() }.filter { it.isNotEmpty() }
         if (args.size > 2) {
             args = when {
@@ -114,9 +114,9 @@ object RuleParser {
         }
         val processedArgs = args.map { arg ->
             val trimmedArg = arg.trim()
-            // 如果参数包含特殊字符且不是变量，替换为占位符
+            // If the parameter contains special characters and is not a variable, replace it with a placeholder
             if (hasSpecialChars(trimmedArg) && !isVariable(trimmedArg)) {
-                // 在 IdManager 中注册这个实体并获取ID
+                // in IdManager Register this entity and getID
                 val entityId = IdManager.getEntityId(trimmedArg)
                 "E${entityId}"
             } else {
@@ -127,45 +127,45 @@ object RuleParser {
     }
     
     /**
-     * 解析规则字符串，返回head和body的DepAtom对
+     * Parse the rule string and returnheadandbodyofDepAtomYes
      * 
-     * 统一规则格式为简写模式：
-     * - 一元规则：/rel(const) <= /rel1*rel2(const2)
-     * - 二元规则：/rel <= /rel1*INVERSE_/rel2
+     * The unified rule format is abbreviated mode:
+     * - One dollar rule:/rel(const) <= /rel1*rel2(const2)
+     * - Binary rules:/rel <= /rel1*INVERSE_/rel2
      * 
-     * @param ruleStr 规则字符串
-     * @return Pair<DepAtom, DepAtom?> head和body的原子表示
+     * @param ruleStr rule string
+     * @return Pair<DepAtom, DepAtom?> headandbodyatomic representation of
      */
     fun parseRule(ruleStr: String): Pair<DepAtom, DepAtom?> {
-        require(ruleStr.contains("<=")) { "规则格式错误：缺少 '<='" }
+        require(ruleStr.contains("<=")) { "Rule malformed: missing '<='" }
         
-        debug("原始规则: $ruleStr")
+        debug("original rules: $ruleStr")
         
-        // 预处理：替换包含特殊字符的实体
+        // Preprocessing: Replace entities containing special characters
         var preprocessedRule = preprocessRule(ruleStr)
-        // 替换 me_myself_i,Y 或 Y,me_myself_i 或 me_myself_i,X 或 X,me_myself_i 为 X,X
+        // replace me_myself_i,Y or Y,me_myself_i or me_myself_i,X or X,me_myself_i for X,X
         preprocessedRule = preprocessedRule
             .replace("me_myself_i,Y", "X,X")
             .replace("Y,me_myself_i", "X,X")
             .replace("me_myself_i,X", "X,X")
             .replace("X,me_myself_i", "X,X")
 
-        debug("预处理后: $preprocessedRule")
+        debug("After preprocessing: $preprocessedRule")
         
         val (headPart, bodyPart) = preprocessedRule.split("<=", limit = 2).map { it.trim() }
         
-        // 对 head/body 分别归一化，保证调用相同函数
+        // Yes head/body Normalize separately to ensure calling the same function
         val normHead = normalizeAtomToSimplified(headPart)
         val normBody = normalizeAtomToSimplified(bodyPart)
-        debug("规范化后: $normHead <= $normBody")
+        debug("After normalization: $normHead <= $normBody")
         
-        // 解析head和body为DepAtom
+        // parseheadandbodyforDepAtom
         val headAtom = parseSimplifiedAtom(normHead)
-        debug("HeadAtom解析: relationId=${headAtom.relationId}, entityId=${headAtom.entityId}")
+        debug("HeadAtomparse: relationId=${headAtom.relationId}, entityId=${headAtom.entityId}")
         
         val bodyAtom = if (normBody.isNotBlank()) {
             val atom = parseSimplifiedAtom(normBody)
-            debug("BodyAtom解析: relationId=${atom.relationId}, entityId=${atom.entityId}")
+            debug("BodyAtomparse: relationId=${atom.relationId}, entityId=${atom.entityId}")
             atom
         } else null
         
@@ -173,18 +173,18 @@ object RuleParser {
     }
     
     /**
-     * 解析简化格式的原子
-     * 格式：
-     * 1. relation(constant) - 一元原子，有常量约束
-     * 2. relation(*) - 存在性原子，有中间变量但无常量约束
-     * 3. relation - 二元原子
-     * 4. rel1*rel2*rel3(constant) - 关系路径，有常量约束
-     * 5. rel1*rel2*rel3(*) - 关系路径，存在性原子
+     * Parse atoms in simplified form
+     * Format:
+     * 1. relation(constant) - Unary atoms, with constant constraints
+     * 2. relation(*) - Existential atoms, with intermediate variables but no constant constraints
+     * 3. relation - binary atom
+     * 4. rel1*rel2*rel3(constant) - Relational paths, with constant constraints
+     * 5. rel1*rel2*rel3(*) - relational path, existential atom
      * 
      * @return DepAtom
      */
     private fun parseSimplifiedAtom(atomStr: String): DepAtom {
-        // 检查是否有括号
+        // Check if there are parentheses
         val hasParens = '(' in atomStr && ')' in atomStr
         
         val (relationPath, constantPart) = if (hasParens) {
@@ -195,14 +195,14 @@ object RuleParser {
             Pair(atomStr.trim(), null)
         }
         
-        // 解析关系路径（可能包含*连接的多个关系）
+        // Resolve relationship paths (which may contain*multiple relationships connected)
         val relations = if ('*' in relationPath) {
             relationPath.split('*').map { it.trim() }
         } else {
             listOf(relationPath)
         }
         
-        // 获取关系ID
+        // Get relationshipID
         val relationIds = relations.map { IdManager.getRelationId(it) }
         val finalRelationId = if (relationIds.size == 1) {
             relationIds[0]
@@ -210,12 +210,12 @@ object RuleParser {
             RelationPath.encode(relationIds.toLongArray())
         }
         
-        // 获取实体ID
+        // Get entityID
         val entityId = when {
-            constantPart == null -> IdManager.getYId() // 无括号，二元规则
-            constantPart == "*" -> 0 // 存在性原子，有中间变量但无常量
-            isEntityPlaceholder(constantPart) -> constantPart.substring(1).toInt() // 占位符，去掉E
-            else -> IdManager.getEntityId(constantPart) // 普通实体名
+            constantPart == null -> IdManager.getYId() // No parentheses, binary rules
+            constantPart == "*" -> 0 // Existential atoms, with intermediate variables but no constants
+            isEntityPlaceholder(constantPart) -> constantPart.substring(1).toInt() // placeholder, removeE
+            else -> IdManager.getEntityId(constantPart) // Common entity name
         }
         
         return DepAtom(finalRelationId, entityId)
@@ -223,12 +223,12 @@ object RuleParser {
     
 
     /**
-     * 将完整格式的规则转换为简写格式
+     * Convert full format rules to abbreviated format
      * 
-     * 转换规则：
-     * 1. 一元规则：rel(X,/m/const) <= body1(X,A), body2(A,/m/const2)
+     * Conversion rules:
+     * 1. One dollar rule:rel(X,/m/const) <= body1(X,A), body2(A,/m/const2)
      *    -> rel(/m/const) <= body_path(/m/const2)
-     * 2. 二元规则：rel(X,Y) <= body1(X,A), body2(Y,A)
+     * 2. Binary rules:rel(X,Y) <= body1(X,A), body2(Y,A)
      *    -> rel <= body_path
      */
     fun normalizeAtomToSimplified(atomPart: String): String {
@@ -240,7 +240,7 @@ object RuleParser {
             return normalizeAtomListToSimplified(atoms)
         }
 
-        // 单个 atom 处理
+        // single atom Process
         if ('(' !in atom || ')' !in atom) {
             return atom
         }
@@ -368,7 +368,7 @@ object RuleParser {
     
     
     /**
-     * 从原子中提取关系名
+     * Extract relation name from atom
      */
     fun extractRelationFromAtom(atom: String): String {
         return if ('(' in atom) {
@@ -379,15 +379,15 @@ object RuleParser {
     }
     
     /**
-     * 从原子中提取变量（包括规范化 me_myself_i）
-     * 改进版本：正确处理实体名称中包含括号和逗号的情况
+     * Extract variables from atoms (including normalization me_myself_i) 
+     * Improved version: Correctly handles parentheses and commas in entity names
      */
     fun extractVariables(atom: String): List<String> {
         if ('(' !in atom || ')' !in atom) {
             return emptyList()
         }
         
-        // 找到最外层的括号对
+        // Find the outermost bracket pair
         val firstParen = atom.indexOf('(')
         val lastParen = atom.lastIndexOf(')')
         
@@ -397,16 +397,16 @@ object RuleParser {
         
         val varPart = atom.substring(firstParen + 1, lastParen)
         
-        // 使用智能分割：只在括号层级为0时按逗号分割
+        // Use smart splitting: only at bracket level for0separated by commas
         val variables = smartSplit(varPart)
         
-        // 规范化 me_myself_i
+        // Standardize me_myself_i
         return variables
     }
     
     /**
-     * 智能分割字符串：只在括号层级为0时按逗号分割
-     * 这样可以正确处理 "Tom_Kelly_(footballer,_born_1964),Y" 这样的字符串
+     * Smart string splitting: only at bracket level0separated by commas
+     * This will handle it correctly "Tom_Kelly_(footballer,_born_1964),Y" Such a string
      */
     private fun smartSplit(text: String): List<String> {
         val result = mutableListOf<String>()
@@ -425,11 +425,11 @@ object RuleParser {
                 }
                 ',' -> {
                     if (parenDepth == 0) {
-                        // 只在括号外的逗号处分割
+                        // Split only at commas outside brackets
                         result.add(current.toString().trim())
                         current = StringBuilder()
                     } else {
-                        // 括号内的逗号保留
+                        // Commas within parentheses are retained
                         current.append(char)
                     }
                 }
@@ -437,7 +437,7 @@ object RuleParser {
             }
         }
         
-        // 添加最后一个部分
+        // add last part
         if (current.isNotEmpty()) {
             result.add(current.toString().trim())
         }
@@ -446,11 +446,11 @@ object RuleParser {
     }
     
     /**
-     * 解析身体部分的原子列表
-     * 由于预处理已替换特殊字符，可以安全地使用智能分割
+     * Parse the atomic list of body parts
+     * Since special characters have been replaced by preprocessing, it is safe to use smart segmentation
      */
     fun parseBodyAtoms(bodyPart: String): List<String> {
-        // 使用智能分割，只在括号层级为0时按逗号分割
+        // Use smart splitting, only at the bracket level as0separated by commas
         return smartSplit(bodyPart).filter { it.isNotBlank() }
     }
 }

@@ -1,13 +1,13 @@
 # Best-combination Variant Details
 
-本节按当前报告口径统计：先剔除全部 `best_combination*`，再在剩余配置中选择每个数据集的最优配置，并给出两套 relation-level ensemble。
+This section follows the current reporting scope: all `best_combination*` entries are excluded. The best remaining configuration is selected for each dataset, and two relation-level ensemble results are reported.
 
-相关文件：
+Related files:
 
 - `best_combination_variant_details.csv`
 - `plot_best_combination_variant_delta.png`
 
-| Dataset | Best remaining config | Best MRR | Ensemble-valid | Ensemble-safe | Ensemble-test | Δ(valid-best) | Δ(safe-best) | Δ(test-best) |
+| Dataset | Best remaining config | Best MRR | Ensemble-valid | Ensemble-safe | Ensemble-test | Delta(valid-best) | Delta(safe-best) | Delta(test-best) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | KG20C | tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.233952 | 0.235725 | 0.235325 | 0.239769 | 0.001773 | 0.001373 | 0.005817 |
 | codex-m | tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5 | 0.344803 | 0.346569 | 0.344357 | 0.349667 | 0.001766 | -0.000446 | 0.004864 |

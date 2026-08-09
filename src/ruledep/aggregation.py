@@ -219,8 +219,8 @@ def _rank_from_scores_tensor(scores_tensor, golds_t, test_filter_t, fill_value=0
     if num_golds == 0:
         return torch.empty((0,), dtype=torch.float32, device=scores_tensor.device)
 
-    # 对每个 gold 直接做比较计数，避免每个 key 的全排序开销。
-    # 这里不做分块：单个 key 下 gold 通常较少，直接一次性计算更简洁。
+    # for each gold Do comparison counting directly to avoid each key total sorting overhead.
+    # No chunking is done here: single key down gold Usually less, it is more concise to calculate it directly in one go.
     pairwise_cmp = base_scores.unsqueeze(0)
     gold_scores_col = gold_scores.unsqueeze(1)
     n_less = (pairwise_cmp < gold_scores_col).sum(dim=1).float()
@@ -828,7 +828,7 @@ def build_rank_rows(relation, direction, keys, data, results, stage):
 
 def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=False, return_rank_rows=False, stage=""):
     nnm.eval()
-    # 优化点：直接使用全局 relation_keys 索引，避免每次 get_ranks 线性扫描所有 keys。
+    # Optimization point: directly use the global relation_keys index to avoid each get_ranks Line scan all keys. 
     split_name = "valid" if filter_test else "test"
     direction_name = "o" if direction == "o" else "s"
     keys = relation_keys[f"{split_name}_{direction_name}"].get(relation, [])
@@ -860,10 +860,10 @@ def get_ranks(nnm, sp_to_o, processed, relation, direction="o", filter_test=Fals
                 )
             candidates = processed[key]["candidates_tensor_gpu"]
 
-            # 优化点：对每个 key 的规则列表只做一次 nested->padded 构造并缓存。
-            # 否则每次 eval 都会重复执行：
+            # Optimization point: for each key The list of rules is only done once nested->padded Construct and cache.
+            # Otherwise every time eval will be executed repeatedly:
             # [torch.tensor(x) for x in rules] + nested_tensor + to_padded_tensor
-            # 这是典型 CPU 热点。缓存后后续 epoch 直接复用张量，显著降低 rank_prepare_tensors 时间。
+            # This is typical CPU Hotspot. Follow up after caching epoch Directly reuse tensors, significantly reducing rank_prepare_tensors time.
             if "rules_padded_tensor" not in processed[key]:
                 with step_timer("epoch_eval.rank_prepare_tensors"):
                     rule_lists = processed[key]["rules"]
@@ -1484,7 +1484,7 @@ class FastTensorBatchLoader:
         self.on_device = False
 
         if preload_to_device and device is not None:
-            # 一次性把该 relation 的训练数据搬到设备，避免每个 batch 反复 host->device 拷贝。
+            # once and for all relation training data to the device to avoid each batch Repeat host->device copy.
             self.rules = self.rules.long().to(device, non_blocking=True)
             self.ys = self.ys.to(device, non_blocking=True)
             self.on_device = True
@@ -3117,7 +3117,7 @@ def aggregate_single(relation):
                 )
                 writer.writerows(learned_dependency_weights_final)
 
-    # 显式释放 relation 级别对象，尽量降低长跑时显存峰值。
+    # explicit release relation Level objects, try to reduce the memory peak during long runs.
     del train_dataloader, dataloader, train_split
     del loss_fn, nnm
     del head_mrr, tail_mrr
@@ -3329,7 +3329,7 @@ def _run_one_relation(relation):
 
 def aggregate_multiple():
     sweep_start_time = perf_counter()
-    # 在多进程 worker 内强制 DataLoader 单进程加载（num_workers=0）
+    # in multiple processes worker internal coercion DataLoader Single process loading (num_workers=0) 
     args.max_worker_dataloader = 0
 
     relations = _get_all_relations()
@@ -3453,8 +3453,8 @@ MAX_RULE_ID = rule_meta["max_rule_id"]
 PAD_TOK = MAX_RULE_ID + 1
 rule_map = rule_meta["rule_map"]
 
-# 优化点：预构建规则置信度查表，替代 eval 阶段的 np.vectorize(get_conf) 重复计算。
-# 约定最后一个位置 PAD_TOK 的置信度为 0。
+# Optimization point: pre-built rule confidence lookup table, replacement eval stage np.vectorize(get_conf) Repeat counting.
+# Agree on the last position PAD_TOK The confidence level is 0. 
 rule_conf_values = [0.0] * (PAD_TOK + 1)
 for rule_id, conf in rule_meta["rule_conf_by_id"].items():
     rid = int(rule_id)
@@ -3462,13 +3462,13 @@ for rule_id, conf in rule_meta["rule_conf_by_id"].items():
         continue
     rule_conf_values[rid] = float(conf)
 
-# PAD_TOK 的置信度保留为 0.0
+# PAD_TOK The confidence level of is retained as 0.0
 RULE_CONF_TABLE_CPU = torch.tensor(rule_conf_values, dtype=torch.float32)
 if EVAL_DEVICE.type == "cpu":
     raise RuntimeError("This version uses GPU-only eval. Please run with --device cuda")
 RULE_CONF_TABLE = RULE_CONF_TABLE_CPU.to(EVAL_DEVICE)
 
-# 优化点：预构建 relation -> keys 索引，避免每次 get_ranks 线性扫描所有 keys。
+# Optimization point: pre-built relation -> keys index to avoid each get_ranks Line scan all keys. 
 print("Building relation key indices...")
 relation_keys = {
     "valid_o": build_relation_key_index(valid_sp_to_o, direction="o"),

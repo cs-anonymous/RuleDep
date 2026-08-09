@@ -83,9 +83,9 @@ options.set("loader.b_max_length", args.b_max_length)
 options.set("loader.num_unseen", args.num_unseen)
 options.set("loader.d_weight", args.d_weight)
 
-# *** 关键：设置线程数 ***
+# *** Key: Set the number of threads ***
 options.set("ranking_handler.num_threads", args.ranking_threads)  
-options.set("loader.num_threads", args.loader_threads)           # 指定4个线程用于规则加载
+options.set("loader.num_threads", args.loader_threads)           # Specify4threads for rule loading
 if args.applied_rules:
     options.set("ranking_handler.collect_rules", True)
 
@@ -94,8 +94,8 @@ loader = Loader(options=options.get("loader"))
 loader.load_data(data=train, filter=filter_set, target=target)
 loader.load_rules(rules=rules)
 
-# ComboHandler 配置现在由 Loader 管理，不再需要手动合并选项
-# RankingHandler, QAHandler, PredictionHandler 都会从 Loader 获取相同的 combo 配置
+# ComboHandler Configuration is now provided by Loader Management, no more manual merge options
+# RankingHandler, QAHandler, PredictionHandler will all start from Loader Get the same combo Configuration
 ranker = RankingHandler(options=options.get("ranking_handler"))
 ranker.calculate_ranking(loader=loader)
 headRanking = ranker.get_ranking(direction="head", as_string=True)
@@ -114,14 +114,14 @@ print(
     )
 )
 
-# 保存 ranking 到文件（可用于与 eval_base_ranker 对比）
+# save ranking to file (can be used with eval_base_ranker Contrast)
 if args.ranking_dump:
     dump_obj = {"head": headRanking, "tail": tailRanking}
     with open(args.ranking_dump, "w", encoding="utf-8") as f:
         json.dump(dump_obj, f, ensure_ascii=False)
 
 
-# 保存applied_rules到文件
+# saveapplied_rulesto file
 if args.applied_rules:
     headRules = ranker.get_applied_rules(direction="head")
     tailRules = ranker.get_applied_rules(direction="tail")

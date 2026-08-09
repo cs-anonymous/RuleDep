@@ -20,8 +20,8 @@ class DepAtom(
     val relationId: Long,
     val entityId: Int
 ) {
-    // 内部缓存的实例集合（仅用于非L1的BinaryAtom）
-    // 使用ConcurrentHashMap.newKeySet()保证线程安全
+    // Internally cached instance collection (only used for non-L1ofBinaryAtom) 
+    // UseConcurrentHashMap.newKeySet()Ensure thread safety
     private val _instances: MutableSet<Long>? by lazy {
         if (isBinary && !isL1Atom) {
             java.util.concurrent.ConcurrentHashMap.newKeySet<Long>()
@@ -30,11 +30,11 @@ class DepAtom(
         }
     }
     
-    // 标记是否已经采样耗尽（连续采样收益很低）
+    // Mark whether the sample has been exhausted (continuous sampling yield is very low)
     @Volatile
     var samplingExhausted: Boolean = false
     
-    // 标记是否已经进行过至少一次采样（用于区分首次采样和增量采样）
+    // Mark whether sampling has been performed at least once (used to distinguish first sampling and incremental sampling)
     @Volatile
     var samplingRound: Int = 0
 
@@ -42,9 +42,9 @@ class DepAtom(
         get() = samplingRound > 0
     
     /**
-     * 获取实例集合（统一接口）
-     * - L1 atom: 从DepLearn缓存获取
-     * - 非L1 atom: 返回内部缓存的instances
+     * Get the instance collection (unified interface)
+     * - L1 atom: fromDepLearnCache acquisition
+     * - NotL1 atom: Returns internally cachedinstances
      */
     val instances: Set<Long>
         get() = when {
@@ -53,7 +53,7 @@ class DepAtom(
             else -> emptySet()
         }
     
-    // 判断实例集是否为反向存储：仅对 L1 BinaryAtom 且是 inverse relation 时为 true
+    // Determine whether the instance set is reverse storage: only for L1 BinaryAtom And yes inverse relation time is true
     val isInverseInstances: Boolean
         get() = isBinary && isL1Atom && IdManager.isInverseRelation(relationId)
 
@@ -72,7 +72,7 @@ class DepAtom(
     }
 
     override fun hashCode(): Int {
-        // IMPORTANT: 注意不能使用简单的31 * relationId.hashCode() + entityId，很容易冲突
+        // IMPORTANT: Be careful not to use simple31 * relationId.hashCode() + entityId, Very easy to conflict
         return pairHash32(relationId.hashCode(), entityId)
     }
 
@@ -179,20 +179,20 @@ class DepAtom(
     }
 
     /**
-     * 具象化原子：获取满足当前原子的所有实体实例
+     * Representation atom: Get all entity instances that satisfy the current atom
      * 
-     * 对于一元原子（unary atom，仅支持L1）：
-     * - 返回所有满足该原子的实体集合
-     * - 例如：rel(const) 返回所有满足 rel(X, const) 的 X 集合
+     * For a unary atom (unary atom, Only supportsL1) : 
+     * - Returns the set of all entities that satisfy this atom
+     * - For example:rel(const) Return all satisfying rel(X, const) of X collection
      * 
-     * 对于二元原子（binary atom）：
-     * - 需要提供 entityId 和 isHead 参数
-     * - isHead=true: 给定head实体，返回所有可能的tail实体
-     * - isHead=false: 给定tail实体，返回所有可能的head实体
+     * For binary atoms (binary atom) : 
+     * - Need to provide entityId and isHead parameters
+     * - isHead=true: givenheadEntity, returns all possibletailEntity
+     * - isHead=false: giventailEntity, returns all possibleheadEntity
      * 
-     * @param givenEntityId 对于二元原子，需要提供的实体ID（作为head或tail）
-     * @param isHead 对于二元原子，givenEntityId是否作为head（true）还是tail（false）
-     * @return 满足条件的实体ID集合
+     * @param givenEntityId For binary atoms, the entity needs to be providedID (asheadortail) 
+     * @param isHead For binary atoms,givenEntityIdwhether ashead (true) Stilltail (false) 
+     * @return entities that meet the conditionsIDcollection
      */
     fun materialize(givenEntityId: Int = -1, isHead: Boolean = true): Set<Int> {
         return if (isBinary) {
@@ -204,20 +204,20 @@ class DepAtom(
     }
 
     /**
-     * 具象化二元原子：给定一个实体（作为head或tail），返回所有能与之形成关系的另一端实体
+     * Representation Binary Atom: Given an entity (asheadortail) , Returns all entities on the other end that can form a relationship with it
      */
     private fun materializeBinary(givenEntityId: Int, isHead: Boolean): Set<Int> {
         require(givenEntityId > 0) { "Binary atom materialize requires a valid entityId, got: $givenEntityId" }
         
-        // 根据isHead决定使用正向还是反向关系
+        // According toisHeadDecide whether to use a forward or inverse relationship
         val actualRelation = if (isHead) relationId else RelationPath.getInverseRelation(relationId)
         
-        // 对于L1原子，直接查询
+        // forL1Atom, direct query
         if (isL1Atom) {
             return tarmorn.DepLearn.r2h2tSet[actualRelation]?.get(givenEntityId) ?: emptySet()
         }
         
-        // 对于L2+原子，沿着关系路径逐步扩展
+        // forL2+Atoms, gradually expanded along the relational path
         val relations = RelationPath.decode(actualRelation)
         var currentLayer = setOf(givenEntityId)
         
@@ -236,7 +236,7 @@ class DepAtom(
 
     /**
      * Check if a binary instance exists using bi-directional DFS
-     * 验证成功后会将实例添加到缓存
+     * After successful verification, the instance will be added to the cache
      * @param instance The (head, tail) pair as Long
      * @return true if instance exists
      */
@@ -251,7 +251,7 @@ class DepAtom(
             return tarmorn.DepLearn.r2h2tSet[relationId]?.get(h)?.contains(t) ?: false
         }
         
-        // 先检查缓存
+        // Check cache first
         if (_instances?.contains(instance) == true) {
             return true
         }
@@ -345,20 +345,20 @@ class DepAtom(
             }
         }
         
-        // 如果验证成功，添加到缓存
+        // If verification is successful, add to cache
         if (verified) _instances?.add(instance)
         return verified
     }
     
     /**
-     * EDIS采样 - Entity-D结果先缓存到本地，最后批量添加到内部instances
-     * 支持多次调用，逐步累积实例
+     * EDISsampling - Entity-DThe results are first cached locally and finally added internally in batches.instances
+     * Support multiple calls and gradually accumulate instances
      * 
-     * @param maxAttempts 最大采样尝试次数（默认1000，适合动态采样）
-     * @param maxGroundings 目标grounding数量（默认10，适合动态采样）
-     * @param maxRepetitions 最大连续重复次数（默认5）
-     * @param minNewInstanceRatio 最小新增实例比例阈值（默认0.05，即5%），低于此比例则标记为采样耗尽
-     * @return 本次新增的实例集合
+     * @param maxAttempts Maximum number of sampling attempts (default1000, suitable for dynamic sampling)
+     * @param maxGroundings targetgroundingquantity (default10, suitable for dynamic sampling)
+     * @param maxRepetitions Maximum number of consecutive repetitions (default5) 
+     * @param minNewInstanceRatio Minimum new instance ratio threshold (default0.05, That is5%) , Below this ratio, it is marked as sample exhausted.
+     * @return The newly added instance collection this time
      */
     fun sampleBinaryInstancesEDIS(
         maxAttempts: Int = Settings.BEAM_SAMPLING_MAX_BODY_GROUNDING_ATTEMPTS,
@@ -367,24 +367,24 @@ class DepAtom(
     ): Set<Long> {
         require(isBinary) { "EDIS sampling only supports binary atoms, got: $this" }
         
-        // L1原子不需要采样，直接使用DepLearn的缓存
+        // L1Atoms do not need to be sampled and can be used directlyDepLearncache
         if (isL1Atom) {
             return emptySet()
         }
         
-        // 如果已经标记为采样耗尽，直接返回
+        // If it has been marked as sample exhausted, return directly
         if (samplingExhausted) {
             return emptySet()
         }
         
-        // 判断是否为首次采样，如果是则使用更大的参数
+        // Determine whether it is the first sampling, if so, use larger parameters
         val actualMaxAttempts = if (samplingRound==0) maxAttempts else maxAttempts / 10
         val actualMaxGroundings = if (samplingRound==0) maxGroundings else maxGroundings / 10
         
-        // 确保_instances已初始化
+        // ensure_instancesInitialized
         val instances = _instances ?: return emptySet()
         
-        // 双向采样：forward + inverse
+        // Bidirectional sampling:forward + inverse
         val forwardInstances = sampleBinaryInstancesEDISDirection(
             relationPathId = relationId,
             isForward = true,
@@ -418,7 +418,7 @@ class DepAtom(
     }
 
     /**
-     * 单向EDIS采样的内部实现
+     * One wayEDISInternal implementation of sampling
      */
     private fun sampleBinaryInstancesEDISDirection(
         relationPathId: Long,
@@ -467,43 +467,43 @@ class DepAtom(
     }
     
     /**
-     * 获取采样的起始实体（均匀分布）
-     * 类似TripleSet.getNRandomEntitiesByRelation，但针对DepAtom
+     * Get the starting entity for sampling (uniform distribution)
+     * Similar toTripleSet.getNRandomEntitiesByRelation, But forDepAtom
      */
     private fun getSampledStartEntities(firstRelation: Long, n: Int): List<Int> {
-        // 获取该关系的所有head实体
+        // Get all of the relationshipheadEntity
         val allHeads = tarmorn.DepLearn.r2h2tSet[firstRelation]?.keys ?: return emptyList()
         
-        // 如果实体数少于n，返回所有实体
+        // If the number of entities is less thann, Return all entities
         if (allHeads.size <= n) {
             return allHeads.toList()
         }
         
-        // 随机采样n个实体（均匀分布）
+        // random samplingnentities (evenly distributed)
         return allHeads.shuffled().take(n)
     }
     
     /**
-     * 随机游走完成路径
-     * 从startEntity出发，沿着relations路径随机游走，返回终点实体
+     * random walk completion path
+     * fromstartEntityset off, alongrelationsThe path is randomly walked and the end entity is returned.
      * 
-     * @param startEntity 起始实体
-     * @param relations 关系路径（已解码）
-     * @return 终点实体，如果路径不通返回null
+     * @param startEntity starting entity
+     * @param relations Relationship path (decoded)
+     * @return End entity, returned if the path is blockednull
      */
     private fun beamCyclicPath(startEntity: Int, relations: List<Long>): Int? {
         var currentEntity = startEntity
         val visitedEntities = mutableSetOf(startEntity)
         
         for (relation in relations) {
-            // 获取当前实体通过该关系能到达的实体
+            // Get the entities that the current entity can reach through this relationship
             val nextEntities = tarmorn.DepLearn.r2h2tSet[relation]?.get(currentEntity)
             
             if (nextEntities == null || nextEntities.isEmpty()) {
-                return null // 路径不通
+                return null // The path is blocked
             }
             
-            // 随机选择一个未访问过的实体（OI约束）
+            // Randomly select an unvisited entity (OIconstraints)
             val candidateEntities = if (Settings.OI_CONSTRAINTS_ACTIVE) {
                 nextEntities.filter { it !in visitedEntities }
             } else {
@@ -511,10 +511,10 @@ class DepAtom(
             }
             
             if (candidateEntities.isEmpty()) {
-                return null // 没有可选的实体
+                return null // No optional entities
             }
             
-            // 随机选择下一个实体
+            // Randomly select the next entity
             currentEntity = candidateEntities.random()
             
             if (Settings.OI_CONSTRAINTS_ACTIVE) {
@@ -526,21 +526,21 @@ class DepAtom(
     }
     
     /**
-     * 将(head, tail)打包为Long
+     * will(head, tail)packaged asLong
      */
     private fun packLong(head: Int, tail: Int): Long {
         return (head.toLong() shl 32) or (tail.toLong() and 0xFFFFFFFFL)
     }
     
     /**
-     * 从Long解包出head
+     * fromLongUnpack outhead
      */
     private fun unpackHead(instance: Long): Int {
         return (instance shr 32).toInt()
     }
     
     /**
-     * 从Long解包出tail
+     * fromLongUnpack outtail
      */
     private fun unpackTail(instance: Long): Int {
         return instance.toInt()
@@ -548,7 +548,7 @@ class DepAtom(
 
     companion object {
         fun pairHash32(h: Int, t: Int): Int {
-            val uH = h * -0x61c88647     // 0x9E3779B9 的补码（黄金比例常数）
+            val uH = h * -0x61c88647     // 0x9E3779B9 's complement (golden proportional constant)
             val uT = t * 0x85ebca6b.toInt()
             return uH xor Integer.rotateLeft(uT, 16)
         }

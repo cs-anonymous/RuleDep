@@ -1,8 +1,8 @@
 # 0407 Rule / Dependency Weight Analysis
 
-本节沿用第 2 部分的 best config，仅使用 `dependency_final`，考察 rule 与 dependency 的参数变化，以及最终被保留的 dependency 权重分布。
+This section follows the two partial best configs, focuses on `dependency_final`, and examines how rule and dependency parameters change during training, along with the final distribution of retained dependency weights.
 
-相关表格：
+Related files:
 
 - `best_config_weight_summary.csv`
 - `dependency_sign_by_type.csv`
@@ -21,12 +21,12 @@
 
 ## Definitions (gold-effective metrics)
 
-下面新增 4 个统计，统一基于 `dependency_final` 与阈值 `delta=0.01`，并且都在 gold `(q,c)` 粒度上计算：
+Four statistics computed on `dependency_final` with threshold `delta=0.01`, all calculated at gold `(q,c)` granularity:
 
-- gold 平均有效 Rule 数量：对每个 gold `(q,c)`，统计该候选上 `rule_weight > delta` 的规则条目数，再对所有 gold `(q,c)` 求平均。
-- gold 平均有效 Dep 数量：对每个 gold `(q,c)`，统计由激活规则诱导、且 `dep_weight > delta` 的 dependency 边数，再对所有 gold `(q,c)` 求平均。
-- gold top3 Rule 占比：对每个 gold `(q,c)`，`sum(top3(rule_weight>delta)) / sum(rule_weight>delta)`，再求平均。
-- gold top3 Dep 占比：对每个 gold `(q,c)`，`sum(top3(dep_weight>delta)) / sum(dep_weight>delta)`，再求平均。
+- **Gold avg effective Rule count**: For each gold `(q,c)`, count rules with `rule_weight > delta`, then average across all gold `(q,c)`.
+- **Gold avg effective Dep count**: For each gold `(q,c)`, count dependencies induced by activated rules with `dep_weight > delta`, then average.
+- **Gold top3 Rule Proportion**: For each gold `(q,c)`, `sum(top3(rule_weight > delta)) / sum(rule_weight > delta)`, then averaged.
+- **Gold top3 Dep Proportion**: For each gold `(q,c)`, `sum(top3(dep_weight > delta)) / sum(dep_weight > delta)`, then averaged.
 
 ## Dataset Summary
 
@@ -43,19 +43,19 @@
 
 ## Dependency Sign vs Type
 
-在 `dependency_final` 中，`synergy` 的平均正权重比例为 `36.32776%`，`redundancy` 为 `32.11839%`。
+In `dependency_final`, synergy dependencies have an average positive weight ratio of `36.33%`, while redundancy dependencies average `32.12%`.
 
 ## Global View
 
-rule 权重的平均绝对变化为 `0.25797`，dependency(final) 为 `0.05473`。
-近零比例方面，rule 权重均值为 `21.17739%`，dependency(final) 为 `62.72734%`。
-gold 口径下，平均有效 Rule 数量为 `33.79021`，平均有效 Dep 数量为 `1.83229`。
-用于统计的 gold `(q,c)` 数量均值为 `48800.85714`。
-gold top1 占比方面，Rule 为 `34.77660%`，Dep 为 `61.67787%`。
-gold top3 占比方面，Rule 为 `60.64963%`，Dep 为 `83.12405%`。
+- Average absolute weight change: rules = `0.25797`, dependencies (final) = `0.05473`.
+- Near-zero proportion: rules = `21.18%`, dependencies (final) = `62.73%`.
+- Under the gold criterion, average effective Rule count = `33.79`, average effective Dep count = `1.83`.
+- Average number of gold `(q,c)` instances used for statistics: `48,800.86`.
+- Gold top1 proportion: rules = `34.78%`, dependencies = `61.68%`.
+- Gold top3 proportion: rules = `60.65%`, dependencies = `83.12%`.
 
 ## Interpretation
 
-这些结果共同说明，模型确实会主动稀疏化大量 dependency 边；在最终被保留的 `dependency_final` 中，依然只有少数边具有显著权重，因此它们更像是稀疏但强烈的修正项，而不是均匀分布在所有规则对上的微弱偏置。
+The model actively sparsifies most dependency edges. After training, `dependency_final` retains only a few edges with significant weights -- sparse but strong correction terms, not weak biases evenly distributed across all rule pairs.
 
-从符号分布看，`synergy` 更容易获得正权重，而 `redundancy` 通常更保守，这与依赖类型本身的语义方向基本一致，但并不是绝对的一一对应关系。
+From the sign distribution, synergy dependencies are more likely to receive positive weights, while redundancy dependencies tend to be more conservative. This aligns with the semantic direction of each dependency type, though the correspondence is not absolute.

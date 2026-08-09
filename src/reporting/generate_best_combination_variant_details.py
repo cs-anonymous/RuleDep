@@ -102,9 +102,9 @@ def build_md(rows: List[Dict[str, object]]) -> str:
     lines: List[str] = []
     lines.append("# Best-combination Variant Details")
     lines.append("")
-    lines.append("本节按当前报告口径统计：先剔除全部 `best_combination*`，再在剩余配置中选择每个数据集的最优配置，并给出两套 relation-level ensemble。")
+    lines.append("This section counts according to the current reporting caliber: first remove all `best_combination*`, Then select the optimal configuration for each data set among the remaining configurations and give two sets relation-level ensemble. ")
     lines.append("")
-    lines.append("相关文件：")
+    lines.append("Related documents:")
     lines.append("")
     lines.append("- `best_combination_variant_details.csv`")
     lines.append("- `plot_best_combination_variant_delta.png`")

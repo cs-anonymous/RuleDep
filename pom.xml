@@ -33,7 +33,7 @@
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
-        <!-- 你可以在这里添加更多依赖 -->
+        <!-- You can add more dependencies here -->
     </dependencies>
     <build>
         <plugins>
@@ -93,7 +93,7 @@
                     <mainClass>tarmorn.DepLearn</mainClass>
                     <!-- <mainClass>tarmorn.Apply</mainClass> -->
                     <!-- <mainClass>tarmorn.structure.TLearn.RuleParserTest</mainClass> -->
-                    <!-- 设置UTF-8编码 -->
+                    <!-- settingsUTF-8encoding -->
                     <systemProperties>
                         <systemProperty>
                             <key>file.encoding</key>

@@ -1193,15 +1193,15 @@ def build_type_weight_md(
     lines: List[str] = []
     lines.append("# 0407 Type-weight Analysis")
     lines.append("")
-    lines.append("这一节不再把 type weight 直接做成单个实验级平均值，而是回到 relation 粒度来问：在每个数据集最优的 typed 实验里，究竟是哪一类 rule type 或 dependency interaction 真正在起作用。")
+    lines.append("This section will no longer include type weight directly as a single experimental level average, but instead returns relation Asking about granularity: optimal in each data set typed In the experiment, what kind of rule type or dependency interaction Really working.")
     lines.append("")
-    lines.append("这里将某个 type 在一个 relation 上的重要性定义为：`support x trained_weight`。")
+    lines.append("Here will be a type in a relation The importance of above is defined as:`support x trained_weight`. ")
     lines.append("")
-    lines.append("- `trained_weight` 是最终学到的乘性系数，因此权重越大，说明模型越愿意放大该 type 的贡献。")
-    lines.append("- `support` 反映这个 type 在该 relation 上覆盖了多少规则或 rule pair。")
-    lines.append("- 因而 `support x trained_weight` 可以理解为该 type 在 relation 上的总“有效质量”；若某个 type 的权重小于 `1`，它的相对重要性也会自然下降。")
+    lines.append("- `trained_weight` is the multiplicative coefficient finally learned, so the greater the weight, the more willing the model is to amplify the type contribution.")
+    lines.append("- `support` reflect this type in that relation how many rules are covered or rule pair. ")
+    lines.append("- Therefore `support x trained_weight` It can be understood that type in relation the total "effective mass" on; if a type has a weight less than `1`, Its relative importance will naturally decline as well.")
     lines.append("")
-    lines.append("相关表格：")
+    lines.append("Related forms:")
     lines.append("")
     lines.append("- `best_typed_experiment_by_dataset.csv`")
     lines.append("- `relation_type_weight_importance.csv`")
@@ -1214,7 +1214,7 @@ def build_type_weight_md(
 
     lines.append("## Best Typed Experiment Per Dataset")
     lines.append("")
-    lines.append("为了避免把“是否使用 type weight”与“type weight 学成什么样”混在一起，这里先对每个数据集只在显式带 type weight 的实验中选一个最优配置，即 `r2d3` 与 `r3d6` 二选一。")
+    lines.append("In order to avoid putting "whether to use type weight”with "type weight "What kind of learning can be done" are mixed together. Here, each data set is only explicitly brought type weight Choose an optimal configuration in the experiment, that is, `r2d3` with `r3d6` Choose one of the two.")
     lines.append("")
     lines.append("| Dataset | Best typed experiment | Grouping | Test MRR | Top rule type | Top dependency type |")
     lines.append("| --- | --- | --- | ---: | --- | --- |")
@@ -1229,9 +1229,9 @@ def build_type_weight_md(
     lines.append("## Dataset-level Pattern")
     lines.append("")
     lines.append(
-        f"在这批结果中，最佳 typed 实验的 grouping 分布为 "
-        f"`r2d3 = {typed_grouping_counter.get('r2d3', 0)}`，`r3d6 = {typed_grouping_counter.get('r3d6', 0)}`。"
-        " 但这一步只是选择分析入口，真正关键的是进入该实验后，不同 relation 对不同 type 的偏好是否一致。"
+        f"Among this batch of results, the best typed experimental grouping The distribution is "
+        f"`r2d3 = {typed_grouping_counter.get('r2d3', 0)}`, `r3d6 = {typed_grouping_counter.get('r3d6', 0)}`. "
+        " But this step is just to select the analysis entrance. The real key is that after entering the experiment, different relation to different type preferences are consistent."
     )
     lines.append("")
 
@@ -1240,32 +1240,32 @@ def build_type_weight_md(
     top_rule = overall_rule_counter.most_common(1)[0] if overall_rule_counter else ("", 0)
     top_dep = overall_dep_counter.most_common(1)[0] if overall_dep_counter else ("", 0)
     lines.append(
-        f"按 relation 计数，整体上最常成为主导项的 rule type 是 `{top_rule[0]}`，最常成为主导项的 dependency interaction 是 `{top_dep[0]}`。"
+        f"press relation Counting, which is most often the dominant term overall rule type Yes `{top_rule[0]}`, most often dominant dependency interaction Yes `{top_dep[0]}`. "
     )
     lines.append("")
 
     ordering_row = next((row for row in global_rows if row["scope"] == "r3d6_relation_ordering"), None)
     if ordering_row and ordering_row.get("value") not in (None, ""):
         lines.append(
-            f"如果只在能观测到 `B / Uc / Ud` 三类权重的 relation 上检查，满足 `Ud < B < Uc` 的比例为 `{fmt_float_short(float(ordering_row['value']) * 100.0)}%`。"
-            " 这比“直接看全局平均值”更合理，因为它保留了 relation 之间的差异。"
+            f"If it can only be observed `B / Uc / Ud` Three types of weights relation On inspection, satisfied `Ud < B < Uc` The ratio of `{fmt_float_short(float(ordering_row['value']) * 100.0)}%`. "
+            " This is more reasonable than "looking directly at the global average" because it preserves relation the difference between."
         )
         lines.append("")
 
     lines.append("## Within-dataset Heterogeneity")
     lines.append("")
-    lines.append("下面的统计更能说明问题：如果某个数据集所有 relation 都偏好同一种 type，那么它的 dominant-type entropy 会很低；反过来，如果不同 relation 各自依赖不同的 type，entropy 就会更高。")
+    lines.append("The following statistics are more illustrative: if a certain data set has all relation all prefer the same type, then it's dominant-type entropy will be very low; conversely, if different relation Each depends on different type, entropy will be higher.")
     lines.append("")
     for row in dataset_summary_rows:
         lines.append(
-            f"- `{row['dataset']}`: dominant rule type 最常见的是 `{row['top_rule_type'] or '-'}`，占 `{fmt_float_short(100.0 * float(row['top_rule_type_share'] or 0.0))}%`；"
-            f"rule-type entropy 为 `{fmt_float_short(row['rule_type_entropy'])}`，dependency-type entropy 为 `{fmt_float_short(row['dep_type_entropy'])}`。"
+            f"- `{row['dataset']}`: dominant rule type The most common is `{row['top_rule_type'] or '-'}`, account for `{fmt_float_short(100.0 * float(row['top_rule_type_share'] or 0.0))}%`; "
+            f"rule-type entropy for `{fmt_float_short(row['rule_type_entropy'])}`, dependency-type entropy for `{fmt_float_short(row['dep_type_entropy'])}`. "
         )
     lines.append("")
 
     lines.append("## What Is Important In Each Dataset")
     lines.append("")
-    lines.append("如果把“更重要”理解为 `support x trained_weight` 更高，那么不同数据集的主导 type 确实明显不同。")
+    lines.append("If "more important" is understood as `support x trained_weight` higher, then the dominance of different data sets type It's definitely different.")
     lines.append("")
     for row in dataset_summary_rows:
         rule_candidates = [(key, row.get(f"median_rule_impact_{key}")) for key in RULE_WEIGHT_KEYS if row.get(f"median_rule_impact_{key}") not in (None, "")]
@@ -1273,14 +1273,14 @@ def build_type_weight_md(
         best_rule = max(rule_candidates, key=lambda item: float(item[1])) if rule_candidates else ("-", None)
         best_dep = max(dep_candidates, key=lambda item: float(item[1])) if dep_candidates else ("-", None)
         lines.append(
-            f"- `{row['dataset']}`: rule 侧最重要的 type 是 `{best_rule[0]}`，median importance `{fmt_float_short(best_rule[1])}`；"
-            f"dependency 侧最重要的 interaction 是 `{best_dep[0]}`，median importance `{fmt_float_short(best_dep[1])}`。"
+            f"- `{row['dataset']}`: rule The most important side type Yes `{best_rule[0]}`, median importance `{fmt_float_short(best_rule[1])}`; "
+            f"dependency The most important side interaction Yes `{best_dep[0]}`, median importance `{fmt_float_short(best_dep[1])}`. "
         )
     lines.append("")
 
     lines.append("## Representative Relation-level Diversity")
     lines.append("")
-    lines.append("relation 级别的差异并不会被数据集平均值完全解释。下面列出若干代表性 relation，展示同一数据集内部也会出现不同的主导 type。")
+    lines.append("relation Differences in levels are not fully explained by the data set mean. Listed below are some representative relation, Demonstrate that different dominant patterns can appear within the same data set type. ")
     lines.append("")
     shown = 0
     seen_pairs = set()
@@ -1301,13 +1301,13 @@ def build_type_weight_md(
 
     lines.append("## Interpretation")
     lines.append("")
-    lines.append("这次按 relation 粒度重做后，可以看到 type weight 的作用并不是“整个实验学到一组固定的全局偏好”，而更像是模型针对不同 relation 的局部结构自适应地调整不同 type。")
+    lines.append("Press this time relation After the granularity is redone, you can see type weight The role of the model is not to "learn a fixed set of global preferences throughout the experiment", but more like the model targeting different relation The local structure of the type. ")
     lines.append("")
-    lines.append("因此，第 4 部分更合理的结论不该是“某个 grouping 的全局平均权重大小关系如何”，而应当是：")
+    lines.append("Therefore, the first 4 Some of the more reasonable conclusions would not be "some grouping What is the relationship between the global average weight and the size of the global average weight?" It should be:")
     lines.append("")
-    lines.append("- 不同数据集的主导 rule type 和主导 dependency interaction 确实不同。")
-    lines.append("- 同一数据集内部，不同 relation 的 dominant type 也会显著变化。")
-    lines.append("- `Ud < B < Uc` 若要分析，也应在 relation 级别或数据集级别检查其成立比例，而不是只看被平均之后的一组数字。")
+    lines.append("- Dominance of different data sets rule type and dominant dependency interaction It's really different.")
+    lines.append("- Within the same data set, different relation of dominant type will also change significantly.")
+    lines.append("- `Ud < B < Uc` If you want to analyze, you should also relation Check the proportions at the level or data set level, checking proportions at the relation or dataset level -- averaged global numbers alone are misleading.")
     lines.append("")
     return "\n".join(lines)
 
@@ -1316,9 +1316,9 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     lines: List[str] = []
     lines.append("# 0407 Rule / Dependency Weight Analysis")
     lines.append("")
-    lines.append("本节沿用第 2 部分的 best config，仅使用 `dependency_final`，考察 rule 与 dependency 的参数变化，以及最终被保留的 dependency 权重分布。")
+    lines.append("This section follows the 2 partial best config, Only use `dependency_final`, inspection rule with dependency parameter changes, and ultimately retained dependency weight distribution.")
     lines.append("")
-    lines.append("相关表格：")
+    lines.append("Related forms:")
     lines.append("")
     lines.append("- `best_config_weight_summary.csv`")
     lines.append("- `dependency_sign_by_type.csv`")
@@ -1328,12 +1328,12 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     lines.extend(image_block("plot_dependency_sign_by_type.png", "Dependency Sign by Type", "Figure 3: positive-weight ratio of synergy and redundancy dependencies in dependency_final."))
     lines.append("## Definitions (gold-effective metrics)")
     lines.append("")
-    lines.append("下面新增 4 个统计，统一基于 `dependency_final` 与阈值 `delta=0.01`，并且都在 gold `(q,c)` 粒度上计算：")
+    lines.append("Add below 4 statistics, unified based on `dependency_final` with threshold `delta=0.01`, and are all there gold `(q,c)` Calculation at granularity:")
     lines.append("")
-    lines.append("- gold 平均有效 Rule 数量：对每个 gold `(q,c)`，统计该候选上 `rule_weight > delta` 的规则条目数，再对所有 gold `(q,c)` 求平均。")
-    lines.append("- gold 平均有效 Dep 数量：对每个 gold `(q,c)`，统计由激活规则诱导、且 `dep_weight > delta` 的 dependency 边数，再对所有 gold `(q,c)` 求平均。")
-    lines.append("- gold top3 Rule 占比：对每个 gold `(q,c)`，`sum(top3(rule_weight>delta)) / sum(rule_weight>delta)`，再求平均。")
-    lines.append("- gold top3 Dep 占比：对每个 gold `(q,c)`，`sum(top3(dep_weight>delta)) / sum(dep_weight>delta)`，再求平均。")
+    lines.append("- gold average effective Rule Quantity: For each gold `(q,c)`, Count the candidates `rule_weight > delta` the number of rule entries, and then for all gold `(q,c)` Find the average.")
+    lines.append("- gold average effective Dep Quantity: For each gold `(q,c)`, Statistics are induced by activation rules, and `dep_weight > delta` of dependency number of sides, and then for all gold `(q,c)` Find the average.")
+    lines.append("- gold top3 Rule Proportion: for each gold `(q,c)`, `sum(top3(rule_weight>delta)) / sum(rule_weight>delta)`, Then average.")
+    lines.append("- gold top3 Dep Proportion: for each gold `(q,c)`, `sum(top3(dep_weight>delta)) / sum(dep_weight>delta)`, Then average.")
     lines.append("")
     lines.append("## Dataset Summary")
     lines.append("")
@@ -1392,8 +1392,8 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     lines.append("## Dependency Sign vs Type")
     lines.append("")
     lines.append(
-        f"在 `dependency_final` 中，`synergy` 的平均正权重比例为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_synergy) or 0.0))}%`，"
-        f"`redundancy` 为 `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_redundancy) or 0.0))}%`。"
+        f"in `dependency_final` in,`synergy` The average positive weight ratio of `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_synergy) or 0.0))}%`, "
+        f"`redundancy` for `{fmt_float_short(100.0 * float(mean_or_none(row['positive_ratio'] for row in final_redundancy) or 0.0))}%`. "
     )
     lines.append("")
 
@@ -1401,33 +1401,33 @@ def build_rule_dependency_weight_md(summary_rows: List[Dict[str, object]], dep_t
     dep_final_rows = [row for row in summary_rows if row["component"] == "dependency_final"]
     lines.append("## Global View")
     lines.append("")
-    lines.append(f"rule 权重的平均绝对变化为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in rule_rows))}`，dependency(final) 为 `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in dep_final_rows))}`。")
+    lines.append(f"rule The average absolute change in weight is `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in rule_rows))}`, dependency(final) for `{fmt_float_short(mean_or_none(row['mean_abs_delta'] for row in dep_final_rows))}`. ")
     lines.append(
-        f"近零比例方面，rule 权重均值为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in rule_rows) or 0.0))}%`，"
-        f"dependency(final) 为 `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in dep_final_rows) or 0.0))}%`。"
+        f"In terms of nearly zero proportion,rule The average weight is `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in rule_rows) or 0.0))}%`, "
+        f"dependency(final) for `{fmt_float_short(100.0 * float(mean_or_none(row['near_zero_ratio_0.01'] for row in dep_final_rows) or 0.0))}%`. "
     )
     lines.append(
-        f"gold 口径下，平均有效 Rule 数量为 `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in rule_rows))}`，"
-        f"平均有效 Dep 数量为 `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in dep_final_rows))}`。"
+        f"gold Under the caliber, the average effective Rule The quantity is `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in rule_rows))}`, "
+        f"average effective Dep The quantity is `{fmt_float_short(mean_or_none(row['gold_avg_effective_count'] for row in dep_final_rows))}`. "
     )
     lines.append(
-        f"用于统计的 gold `(q,c)` 数量均值为 `{fmt_float_short(mean_or_none(row['gold_qc_count'] for row in rule_rows))}`。"
+        f"used for statistics gold `(q,c)` The quantity mean is `{fmt_float_short(mean_or_none(row['gold_qc_count'] for row in rule_rows))}`. "
     )
     lines.append(
-        f"gold top1 占比方面，Rule 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in rule_rows) or 0.0))}%`，"
-        f"Dep 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in dep_final_rows) or 0.0))}%`。"
+        f"gold top1 In terms of proportion,Rule for `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in rule_rows) or 0.0))}%`, "
+        f"Dep for `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top1_share'] for row in dep_final_rows) or 0.0))}%`. "
     )
     lines.append(
-        f"gold top3 占比方面，Rule 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in rule_rows) or 0.0))}%`，"
-        f"Dep 为 `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in dep_final_rows) or 0.0))}%`。"
+        f"gold top3 In terms of proportion,Rule for `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in rule_rows) or 0.0))}%`, "
+        f"Dep for `{fmt_float_short(100.0 * float(mean_or_none(row['gold_top3_share'] for row in dep_final_rows) or 0.0))}%`. "
     )
     lines.append("")
 
     lines.append("## Interpretation")
     lines.append("")
-    lines.append("这些结果共同说明，模型确实会主动稀疏化大量 dependency 边；在最终被保留的 `dependency_final` 中，依然只有少数边具有显著权重，因此它们更像是稀疏但强烈的修正项，而不是均匀分布在所有规则对上的微弱偏置。")
+    lines.append("Together, these results demonstrate that the model does actively sparse a large number of dependency side; retained in the end `dependency_final` , there are still only a few edges with significant weights, as sparse but strong correction terms, not weak biases spread evenly across all rule pairs.")
     lines.append("")
-    lines.append("从符号分布看，`synergy` 更容易获得正权重，而 `redundancy` 通常更保守，这与依赖类型本身的语义方向基本一致，但并不是绝对的一一对应关系。")
+    lines.append("Synergy dependencies tend to receive positive weights more often, while redundancy dependencies are typically more conservative. This aligns with the semantic direction of each dependency type, though the correspondence is not absolute.")
     lines.append("")
     return "\n".join(lines)
 

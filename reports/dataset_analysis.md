@@ -1,8 +1,8 @@
 # 0407 Dataset Analysis
 
-本表统计各数据集规模、rule 数量、dependency 数量，以及按 type 聚合后的 rule/dependency 结构。
+This table shows the size of each dataset, the number of rules and dependency pairs, and how rule and dependency types break down across the data.
 
-相关表格：
+Related files:
 
 - `dataset_size_rule_dependency_stats.csv`
 
@@ -20,14 +20,14 @@
 
 ## Highlights
 
-- 规则最多的数据集：`hetionet`，共有 `6103910` 条 rule。
-- filtered dependency 最密的数据集：`FB15k-237`，`filtered_dep_per_rule = 2.27146`。
-- `B` rule 占比最高：`WN18RR`，`B_rule_ratio = 0.11417`。
-- `Ud` rule 占比最高：`codex-l`，`Ud_rule_ratio = 0.18214`。
+- **Most rules**: `hetionet` with `6,103,910` rules.
+- **Densest dependencies**: `FB15k-237` with `filtered_dep_per_rule = 2.27`.
+- **Highest B-rule proportion**: `WN18RR` at `B_rule_ratio = 0.11417`.
+- **Highest Ud-rule proportion**: `codex-l` at `Ud_rule_ratio = 0.18214`.
 
 ## Interpretation
 
-- `FB15k-237 / codex-m / codex-l / YAGO3-10` 这类数据集更像大规模 relation-wise rule aggregation 场景。
-- `KG20C / WN18RR` 关系数较少，但 rule 和 dependency 结构更紧凑，适合做受控比较。
-- `hetionet` 的 graph 规模和语义复杂度都高，通常更依赖更强的 structural bias。
-- `wikidata5m` 当前只有 rule application 结果，dependency / aggregation 统计仍为空，这一点在表格里会直接体现。
+- `FB15k-237`, `codex-m`, `codex-l`, and `YAGO3-10` fit the large-scale relation-wise rule aggregation regime.
+- `KG20C` and `WN18RR` have fewer relations but more compact rule and dependency structures, making them suitable for controlled comparisons.
+- `hetionet` is large in both scale and semantic complexity, and tends to rely more on strong structural bias.
+- `wikidata5m` currently only has rule application results; dependency and aggregation statistics are still empty, which is directly reflected in the table.
