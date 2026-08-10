@@ -1751,6 +1751,12 @@ def get_parser():
     )
     parser.set_defaults(sign_constraint=True, sign_constraint_dependency=False)
     parser.add_argument("--relation", action="store", help="Relation to train on", default=0, type=int)
+    parser.add_argument(
+        "--relation_ids",
+        action="store",
+        default="",
+        help="Comma-separated relation IDs for a sharded all-relation run. Requires --relation -1.",
+    )
     parser.add_argument("--multiprocess", action="store", help="Number of processes for all-relation run. 0/1 means single-process.", default=0, type=int)
     parser.add_argument(
         "--resume_relation_sweep",
@@ -1773,6 +1779,17 @@ def get_parser():
         "--export_experiment_name",
         default="",
         help="Experiment label to store in exported per-query RR rows. Defaults to EXPERIMENT_DIR basename.",
+    )
+    parser.add_argument(
+        "--export_saved_final_per_query_rr",
+        action="store_true",
+        default=False,
+        help="Export official ranks for saved direction-specific final checkpoints without retraining.",
+    )
+    parser.add_argument(
+        "--saved_mrr_dir",
+        default="",
+        help="Directory containing mrr-<relation>.pkl and metric-<relation>.json for saved-rank export.",
     )
     parser.add_argument("--eval_key_batch_size", action="store", default=64, type=int, help="How many eval keys to group into one model inference call.")
     parser.add_argument("--dependency_chunk_size", action="store", default=4096, type=int, help="Target dependency count for merged stage-2 blocks; also used as forward chunk size for dependency pairs.")
@@ -2327,6 +2344,32 @@ def export_model_per_query_rr(relation, model, model_builder, stage):
     )
     rows = list(head_result[6]) + list(tail_result[6])
     return write_per_query_rr_rows(relation, stage, rows)
+
+
+def export_directional_models_per_query_rr(relation, head_model, tail_model, model_builder, stage):
+    """Export ranks when head and tail select different validation checkpoints."""
+    if per_query_export_dir() is None:
+        return None
+    head_metrics = MRR(relation=relation, direction="s", model_builder=model_builder)
+    tail_metrics = MRR(relation=relation, direction="o", model_builder=model_builder)
+    head_result = head_metrics.calc_metrics(
+        head_model,
+        head_metrics.test_sp_to_o,
+        head_metrics.test_processed,
+        direction="s",
+        return_rank_rows=True,
+        stage=stage,
+    )
+    tail_result = tail_metrics.calc_metrics(
+        tail_model,
+        tail_metrics.test_sp_to_o,
+        tail_metrics.test_processed,
+        direction="o",
+        return_rank_rows=True,
+        stage=stage,
+    )
+    rows = list(head_result[6]) + list(tail_result[6])
+    return write_per_query_rr_rows(relation, stage, rows), float((head_result[0] + tail_result[0]) / 2.0)
 
 
 def evaluate_current_stage_result(relation, model, model_builder, evaluate_every=1):
@@ -3137,7 +3180,28 @@ def aggregate_single(relation):
 
 
 def _get_all_relations():
-    return list(range(dataset.num_relations()))
+    raw_relation_ids = str(getattr(args, "relation_ids", "") or "").strip()
+    if raw_relation_ids == "":
+        return list(range(dataset.num_relations()))
+
+    relation_ids = []
+    seen = set()
+    for raw_value in raw_relation_ids.split(","):
+        raw_value = raw_value.strip()
+        if raw_value == "":
+            continue
+        relation = int(raw_value)
+        if relation < 0 or relation >= dataset.num_relations():
+            raise ValueError(
+                f"--relation_ids contains out-of-range relation {relation}; "
+                f"valid range is [0, {dataset.num_relations() - 1}]"
+            )
+        if relation not in seen:
+            relation_ids.append(relation)
+            seen.add(relation)
+    if not relation_ids:
+        raise ValueError("--relation_ids did not contain any relation IDs")
+    return relation_ids
 
 
 def _aggregate_single_and_cleanup(relation):
@@ -3405,10 +3469,12 @@ args.experiment = os.environ["EXPERIMENT_DIR"]
 # Set up experiment folder
 if not os.path.exists(args.experiment):
     os.makedirs(args.experiment)
-# Copy stuff for reproducibility
-shutil.copy(__file__, args.experiment)
-with open(f"{args.experiment}/config.json", "w") as f:
-    json.dump(vars(args), f, indent=4)
+# Copy stuff for reproducibility during training. A saved-checkpoint export is
+# read-only with respect to the original experiment directory.
+if not args.export_saved_final_per_query_rr:
+    shutil.copy(__file__, args.experiment)
+    with open(f"{args.experiment}/config.json", "w") as f:
+        json.dump(vars(args), f, indent=4)
 
 dataset = LocalDataset(dataset_dir)
 
@@ -3477,9 +3543,78 @@ relation_keys = {
     "test_s": build_relation_key_index(test_po_to_s, direction="s"),
 }
 
+
+def export_saved_final_ranks():
+    saved_dir = str(args.saved_mrr_dir or "").strip()
+    if not saved_dir:
+        raise ValueError("--saved_mrr_dir is required with --export_saved_final_per_query_rr")
+    if per_query_export_dir() is None:
+        raise ValueError("--export_per_query_rr_dir is required with --export_saved_final_per_query_rr")
+
+    metric_paths = sorted(
+        glob.glob(os.path.join(saved_dir, "metric-*.json")),
+        key=lambda path: int(re.search(r"metric-(\d+)\.json$", path).group(1)),
+    )
+    requested = {int(args.relation)} if int(args.relation) != -1 else set(_get_all_relations())
+    exported = 0
+    max_abs_diff = 0.0
+    for metric_path in metric_paths:
+        relation = int(re.search(r"metric-(\d+)\.json$", metric_path).group(1))
+        if relation not in requested:
+            continue
+        with open(metric_path, encoding="utf-8") as f:
+            metric = json.load(f)
+        if int(metric.get("num_test_samples", 0)) == 0:
+            continue
+
+        mrr_path = os.path.join(saved_dir, f"mrr-{relation}.pkl")
+        if not os.path.exists(mrr_path):
+            raise FileNotFoundError(f"Missing saved direction checkpoints: {mrr_path}")
+        with open(mrr_path, "rb") as f:
+            head_saved, tail_saved = pickle.load(f)
+
+        selected_stage = metric.get("model_selection", {}).get("selected_stage", "rule_only")
+        if selected_stage == "dependency":
+            model_builder = partial(build_model_for_relation, relation_dependencies=dependency_map.get(relation, []))
+        else:
+            model_builder = build_rule_only_model_for_relation
+
+        head_model = build_model_from_state_dict(relation, model_builder, head_saved.nnm)
+        tail_model = build_model_from_state_dict(relation, model_builder, tail_saved.nnm)
+        _path, exported_mrr = export_directional_models_per_query_rr(
+            relation, head_model, tail_model, model_builder, "final"
+        )
+        expected_mrr = float(metric["test"]["mrr"])
+        abs_diff = abs(exported_mrr - expected_mrr)
+        max_abs_diff = max(max_abs_diff, abs_diff)
+        if abs_diff > 1e-2:
+            raise RuntimeError(
+                f"relation={relation} saved final export MRR mismatch: "
+                f"exported={exported_mrr} expected={expected_mrr}"
+            )
+        if abs_diff > 5e-4:
+            print(
+                f"[WARN] relation={relation} saved final export differs from cached MRR "
+                f"by {abs_diff}; retained for dataset-level validation",
+                flush=True,
+            )
+        exported += 1
+
+    print(
+        f"Exported and validated saved final ranks for {exported} relations; "
+        f"max_abs_mrr_diff={max_abs_diff}",
+        flush=True,
+    )
+
 if __name__ == "__main__":
+    if args.export_saved_final_per_query_rr:
+        export_saved_final_ranks()
+        print_step_profile()
+        raise SystemExit(0)
     if args.dataset == "hetionet":
         args.multiprocess = 1
+    if args.relation != -1 and str(getattr(args, "relation_ids", "") or "").strip():
+        raise ValueError("--relation_ids requires --relation -1")
     if args.relation == -1:
         if args.multiprocess > 1:
             result = aggregate_multiple()

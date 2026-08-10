@@ -21,4 +21,5 @@ Small result groups are kept directly under `reports/`:
 - `type_weights/`: rule/dependency type and weight analyses.
 - `query_analysis/`: query-level case analysis and delta-MRR plots.
 - `official_query_subset/`: official-aligned query subset feature analysis, CSVs, and generated feature plots.
+- `query_level_paired_test/`: paired Stage 1/Stage 2 significance analysis on the saved candidate-list ranks.
 - `high_order_analysis/`: rule-pair versus three-rule-combination support and significance analysis.

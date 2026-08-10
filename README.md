@@ -34,7 +34,7 @@ The pipeline has five main stages:
 
 ## Datasets
 
-The experiments use seven KGC benchmarks:
+The released experiments cover six KGC benchmarks:
 
 | Dataset | Entities | Relations | Train | Valid | Test |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -44,7 +44,6 @@ The experiments use seven KGC benchmarks:
 | FB15k-237 | 14,541 | 237 | 272,115 | 17,535 | 20,466 |
 | Codex-L | 77,951 | 69 | 551,193 | 30,622 | 30,622 |
 | YAGO3-10 | 123,182 | 37 | 1,079,040 | 5,000 | 5,000 |
-| Hetionet | 45,158 | 24 | 1,800,157 | 225,020 | 225,020 |
 
 Download the data release from Hugging Face and place the dataset directories under `data/`:
 
@@ -55,7 +54,7 @@ huggingface-cli download yesun/RuleDepData \
   --local-dir data
 ```
 
-Each dataset directory is expected to contain the standard KGC split files:
+The release contains both the standard KGC split files and the derived Step 1-4 artifacts needed by the aggregation model:
 
 ```text
 data/<dataset>/train.txt
@@ -63,7 +62,13 @@ data/<dataset>/valid.txt
 data/<dataset>/test.txt
 ```
 
-Some stages also create or consume derived files under `data/<dataset>/rules/`, `data/<dataset>/application/`, `data/<dataset>/datasets/`, and `data/<dataset>/aggregation/`.
+```text
+data/<dataset>/rules/
+data/<dataset>/application/
+data/<dataset>/datasets/
+```
+
+Therefore, reproducing the main RuleDep results does not require rerunning rule learning, rule application, dataset construction, or dependency mining.
 
 ## Environment
 
@@ -75,7 +80,7 @@ conda activate ruledep
 pip install -r requirements.txt
 ```
 
-Install the external KGE and PyClause dependencies used by the preprocessing, baseline, and rule-application scripts:
+The following external KGE and PyClause dependencies are only needed when rebuilding preprocessing or rule-application artifacts from scratch; they are not required for the minimal Step 5 reproduction:
 
 ```bash
 git clone https://github.com/uma-pi1/kge.git
@@ -97,108 +102,40 @@ The repository already includes the AnyBURL jar used by the scripts at `script/A
 
 ## Running RuleDep
 
-Run the full pipeline for one dataset:
+After downloading RuleDepData, reproduce the paper's best RuleDep configuration for one dataset:
 
 ```bash
-./run.sh FB15k-237
-```
-
-Run the default batch:
-
-```bash
-./run.sh
-```
-
-The default batch currently covers:
-
-```text
-KG20C
-codex-m
-WN18RR
-FB15k-237
-codex-l
-YAGO3-10
-```
-
-Hetionet is supported by the stage scripts and by `step5_aggregation.sh all`, but it is not included in the default `run.sh` list because of its larger runtime and memory footprint.
-
-You can also run the stages manually:
-
-```bash
-./step1_learning.sh FB15k-237
-./step2_application.sh FB15k-237
-./step3_dataset.sh FB15k-237
-./step4_dependency.sh FB15k-237
 ./step5_aggregation.sh FB15k-237
+```
+
+Run the best configuration for all six datasets sequentially:
+
+```bash
+./step5_aggregation.sh all
+```
+
+The optional second argument controls the number of relation workers, and `GPU_ID` selects the GPU:
+
+```bash
+GPU_ID=1 ./step5_aggregation.sh codex-l 2
+```
+
+Runs are resumable at relation level. Results are written to `data/<dataset>/aggregation/reproduction/`, with logs under `logs/aggregation_reproduction/`.
+
+To reproduce the complete 48-configuration search space used by the relation-wise ensemble, use the research launcher under `script/`:
+
+```bash
+GPU_IDS=0,1,2,3 MAX_PARALLEL_CONFIGS=4 \
+  ./script/run_full_aggregation_grid.sh FB15k-237 2
 ```
 
 All scripts assume they are executed from the repository root.
 
 ## Pipeline Details
 
-### Step 0: Preprocessing
+### Steps 1-4: Released Artifacts
 
-```bash
-python src/ruledep/preprocess.py data/<dataset>
-```
-
-This converts the raw `train.txt`, `valid.txt`, and `test.txt` split files into the `.del`, ID mapping, index, and `dataset.yaml` files used by downstream stages.
-
-### Step 1: Rule Learning
-
-```bash
-./step1_learning.sh <dataset> [support_threshold] [snapshots] [worker_threads]
-```
-
-This stage runs AnyBURL on `data/<dataset>/train.txt`, stores snapshots under `data/<dataset>/rules/`, filters rules by support, and writes the final rule file to:
-
-```text
-data/<dataset>/rules/rule.txt
-```
-
-The default support threshold is `2` for KG20C and WN18RR, and `5` for other datasets.
-
-### Step 2: Rule Application
-
-```bash
-./step2_application.sh <dataset>
-```
-
-This stage applies the learned rules and generates fired-rule evidence for train, validation, and test queries. Outputs are written under:
-
-```text
-data/<dataset>/application/
-```
-
-### Step 3: Relation-Local Dataset Construction
-
-```bash
-./step3_dataset.sh <dataset>
-```
-
-This stage builds the relation-local training data consumed by the aggregation model:
-
-```text
-data/<dataset>/datasets/dataset_<relation>.p
-```
-
-### Step 4: Dependency Mining
-
-```bash
-./step4_dependency.sh <dataset>
-```
-
-This stage mines pairwise dependencies between co-fired rules, estimates signed evidence gain, and separates complementarity and redundancy candidates. Important outputs include:
-
-```text
-data/<dataset>/rules/dependency.txt
-data/<dataset>/rules/synergy.txt
-data/<dataset>/rules/redundancy.txt
-data/<dataset>/rules/synergy_filtered.txt
-data/<dataset>/rules/redundancy_filtered.txt
-```
-
-The dependency learner is implemented in Kotlin under `src/main/java/tarmorn/` and is invoked through Maven.
+Steps 1-4 learn AnyBURL rules, apply them to KGC queries, construct relation-local training datasets, and mine pairwise complementarity/redundancy dependencies. Their outputs are already included in RuleDepData under `rules/`, `application/`, and `datasets/`. The corresponding top-level scripts remain available for researchers who need to rebuild or modify these artifacts, but they are not part of the minimal reproduction workflow.
 
 ### Step 5: Aggregation
 
@@ -206,10 +143,10 @@ The dependency learner is implemented in Kotlin under `src/main/java/tarmorn/` a
 ./step5_aggregation.sh <dataset> [multiprocess]
 ```
 
-This stage trains relation-wise aggregation models. It first learns a rule-only baseline, then introduces dependency corrections initialized from mined gain values. Results are written under:
+This is the only stage required after downloading the released data. It selects the paper's best configuration for the requested dataset, trains relation-wise aggregation models, and resumes completed relations when rerun. The model first learns rule weights and then introduces dependency corrections initialized from mined gain values. Results are written under:
 
 ```text
-data/<dataset>/aggregation/
+data/<dataset>/aggregation/reproduction/
 ```
 
 Typical output files include per-relation metrics, learned weights, dependency diagnostics, and final aggregate metrics.
@@ -221,6 +158,8 @@ The repository keeps only a small set of maintained shell launchers under `scrip
 ```text
 script/run_lragg_baseline.sh          LR-Agg/canonical baseline for one dataset
 script/run_lragg_baseline_all.sh      LR-Agg/canonical baseline batch runner
+script/run_full_aggregation_grid.sh   Complete 48-configuration RuleDep search
+script/run_full_ensemble_sweep_tmux.sh  Four-GPU tmux launcher for the full search
 script/resume_ruledep_grid.sh         Resume missing configurations from the 48-config RuleDep grid
 script/run_dependency_budget_sweep.sh Dependency filtering and budget sweep
 script/export_per_query_rr.sh         Export stage1/stage2 per-query RR for query-subset analysis
@@ -230,13 +169,13 @@ Historical queue, tmux, one-off rerun, and dataset-specific recovery scripts wer
 
 ## Main Results
 
-In the ICDE 2027 submission, RuleDep is evaluated on seven datasets against latent, hybrid, and interpretable KGC baselines. The main findings are:
+In the ICDE 2027 submission, RuleDep is evaluated on six released datasets against latent, hybrid, and interpretable KGC baselines. The main findings are:
 
 - RuleDep improves average MRR by **3.7%** over LR-Agg, the strongest interpretable supervised rule aggregator in the comparison.
-- The relation-wise ensemble variant, RuleDep-ens, obtains the best interpretable result on all 21 dataset/metric settings in the reported benchmark table.
+- The relation-wise ensemble variant, RuleDep-ens, obtains the best interpretable result across the reported dataset/metric settings.
 - The gain is concentrated on dependency-rich queries. On the top 10% of queries selected by a complementarity-to-rule-evidence ratio, RuleDep obtains a **10.77%** dataset-macro relative MRR gain.
 - Dependency corrections are sparse: most retained dependencies are suppressed during supervised training, while a small number of high-impact corrections explain the final ranking changes.
-- The full RuleDep pipeline runs in about **24%** of LR-Agg's runtime on average over the completed LR-Agg datasets, while Hetionet finishes in about 2.4 hours for RuleDep and exceeds 24 hours for LR-Agg.
+- The full RuleDep pipeline runs in about **24%** of LR-Agg's runtime on average over the completed LR-Agg datasets.
 
 ## Repository Layout
 
@@ -258,15 +197,15 @@ PyClause/                External PyClause checkout, if installed locally
 kge/                     External KGE checkout, if installed locally
 ```
 
-Core top-level entrypoints:
+Minimal reproduction entrypoint:
 
 ```text
-run.sh
-step1_learning.sh
-step2_application.sh
-step3_dataset.sh
-step4_dependency.sh
 step5_aggregation.sh
+```
+
+The Step 1-4 entrypoints are retained for rebuilding the released intermediate artifacts. Core implementation files include:
+
+```text
 src/ruledep/preprocess.py
 src/ruledep/process_rules.py
 src/ruledep/filter_dependency.py

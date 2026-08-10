@@ -26,11 +26,14 @@ KEYS = [
 ]
 
 
-def load_rows(export_dir: Path) -> pd.DataFrame:
-    paths = sorted(glob.glob(str(export_dir / "*" / "*" / "relation-*-stage*.csv")))
+def load_rows(export_dir: Path, stages: set[str] | None = None) -> pd.DataFrame:
+    paths = sorted(glob.glob(str(export_dir / "*" / "*" / "relation-*.csv")))
     if not paths:
         raise FileNotFoundError(f"No relation stage CSV files found under {export_dir}")
-    return pd.concat((pd.read_csv(path) for path in paths), ignore_index=True)
+    rows = pd.concat((pd.read_csv(path) for path in paths), ignore_index=True)
+    if stages is not None:
+        rows = rows[rows["stage"].isin(stages)].copy()
+    return rows
 
 
 def build_wide(rows: pd.DataFrame) -> pd.DataFrame:
@@ -40,12 +43,23 @@ def build_wide(rows: pd.DataFrame) -> pd.DataFrame:
     return wide.reset_index()
 
 
-def relation_metric_checks(rows: pd.DataFrame, run_suffix: str) -> pd.DataFrame:
+def relation_metric_checks(
+    rows: pd.DataFrame,
+    run_suffix: str,
+    aggregation_dir_name: str = "",
+) -> pd.DataFrame:
     checks = []
     grouped = rows.groupby(["dataset", "experiment", "relation_id", "stage"], sort=True)
     for (dataset, experiment, relation_id, stage), group in grouped:
-        metric_key = "test_after_stage1" if stage == "stage1" else "test_after_stage2"
-        metric_path = ROOT / "data" / dataset / "aggregation" / f"{experiment}_{run_suffix}" / f"metric-{int(relation_id)}.json"
+        metric_key = {
+            "stage1": "test_after_stage1",
+            "stage2": "test_after_stage2",
+            "final": "test",
+        }.get(stage)
+        if metric_key is None:
+            raise ValueError(f"Unknown exported stage: {stage}")
+        result_dir = aggregation_dir_name or f"{experiment}_{run_suffix}"
+        metric_path = ROOT / "data" / dataset / "aggregation" / result_dir / f"metric-{int(relation_id)}.json"
         metric_mrr = None
         metric_rows = None
         if metric_path.exists():
@@ -77,14 +91,25 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--export_dir", type=Path, default=DEFAULT_EXPORT_DIR)
     parser.add_argument("--run_suffix", default="true_rr_rerun_20260501")
+    parser.add_argument(
+        "--aggregation_dir_name",
+        default="",
+        help="Shared aggregation result directory name, for example reproduction.",
+    )
+    parser.add_argument(
+        "--stages",
+        default="",
+        help="Optional comma-separated exported stages to merge, for example stage1,final.",
+    )
     parser.add_argument("--out_rows", type=Path, default=DEFAULT_EXPORT_DIR / "true_official_per_query_rr_long.csv")
     parser.add_argument("--out_wide", type=Path, default=DEFAULT_EXPORT_DIR / "true_official_per_query_rr_wide.csv")
     parser.add_argument("--out_checks", type=Path, default=DEFAULT_EXPORT_DIR / "true_official_per_query_rr_checks.csv")
     args = parser.parse_args()
 
-    rows = load_rows(args.export_dir)
+    stages = {value.strip() for value in args.stages.split(",") if value.strip()} or None
+    rows = load_rows(args.export_dir, stages=stages)
     wide = build_wide(rows)
-    checks = relation_metric_checks(rows, args.run_suffix)
+    checks = relation_metric_checks(rows, args.run_suffix, args.aggregation_dir_name)
 
     args.out_rows.parent.mkdir(parents=True, exist_ok=True)
     rows.to_csv(args.out_rows, index=False)
@@ -100,4 +125,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

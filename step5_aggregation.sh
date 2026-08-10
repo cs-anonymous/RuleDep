@@ -5,183 +5,122 @@ set -euo pipefail
 
 dataset_arg="$1"
 multiprocess="${2:-2}"
-max_parallel_configs="${MAX_PARALLEL_CONFIGS:-4}"
-run_tag="${RUN_TAG:-}"
-
-ALL_DATASETS=(
-    "KG20C"
-    "codex-m"
-    "WN18RR"
-    "FB15k-237"
-    "codex-l"
-    "YAGO3-10"
-    "hetionet"
-)
-
-if [ -n "${run_tag}" ] && [ "${run_tag#_}" = "${run_tag}" ]; then
-    run_tag="_${run_tag}"
-fi
+gpu_id="${GPU_ID:-0}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATASETS=(KG20C WN18RR codex-m FB15k-237 codex-l YAGO3-10)
 
 if [ -f /home/sy/anaconda3/etc/profile.d/conda.sh ]; then
+    # shellcheck disable=SC1091
     source /home/sy/anaconda3/etc/profile.d/conda.sh
     conda activate ruledep
 else
     export PATH="/home/sy/anaconda3/envs/ruledep/bin:${PATH}"
 fi
 
-run_config() {
+is_supported_dataset() {
+    local requested="$1"
+    local dataset
+    for dataset in "${DATASETS[@]}"; do
+        [ "${requested}" = "${dataset}" ] && return 0
+    done
+    return 1
+}
+
+require_inputs() {
     local dataset="$1"
-    local log_dir="$2"
-    local exp_root="$3"
-    local master_log="$4"
-    local gpu="$5"
-    local name="$6"
-    shift 6
-    local log_path="${log_dir}/${dataset}_${name}.log"
-    local exp_dir="${exp_root}/${name}${run_tag}"
+    local required=(
+        "data/${dataset}/train.txt"
+        "data/${dataset}/valid.txt"
+        "data/${dataset}/test.txt"
+        "data/${dataset}/rules/rule.txt"
+        "data/${dataset}/rules/synergy_filtered.txt"
+        "data/${dataset}/rules/redundancy_filtered.txt"
+        "data/${dataset}/application/processed_sp_train.pkl"
+        "data/${dataset}/application/processed_sp_valid.pkl"
+        "data/${dataset}/application/processed_sp_test.pkl"
+        "data/${dataset}/application/processed_po_train.pkl"
+        "data/${dataset}/application/processed_po_valid.pkl"
+        "data/${dataset}/application/processed_po_test.pkl"
+        "data/${dataset}/datasets"
+    )
+    local path
+    for path in "${required[@]}"; do
+        if [ ! -e "${ROOT_DIR}/${path}" ]; then
+            echo "Missing Step 1-4 artifact: ${path}" >&2
+            echo "Download the complete RuleDepData release before running Step 5." >&2
+            return 1
+        fi
+    done
+}
 
-    if [ -n "${run_tag}" ]; then
-        log_path="${log_dir}/${dataset}_${name}${run_tag}.log"
-    fi
+config_for_dataset() {
+    case "$1" in
+        KG20C)
+            CONFIG_NAME="tg_r2d3__pos_auto_ratio__ri_conf__dn_per_rule_degree__dl1_1e-5"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping r2d3 --pos auto_ratio --rule_init_mode conf --dependency_static_norm per_rule_degree --dep_l1_lambda 1e-5)
+            ;;
+        WN18RR)
+            CONFIG_NAME="structural_rd"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping rd --pos auto_sqrt --rule_init_mode conf --dependency_static_norm none --dep_l1_lambda 0)
+            ;;
+        codex-m)
+            CONFIG_NAME="tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping rd --pos auto_sqrt --rule_init_mode conf --dependency_static_norm per_rule_degree --dep_l1_lambda 1e-5)
+            ;;
+        FB15k-237)
+            CONFIG_NAME="tg_r2d3__pos_auto_ratio__ri_conf__dn_none__dl1_1e-5"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping r2d3 --pos auto_ratio --rule_init_mode conf --dependency_static_norm none --dep_l1_lambda 1e-5)
+            ;;
+        codex-l)
+            CONFIG_NAME="tg_rd__pos_auto_sqrt__ri_conf__dn_per_rule_degree__dl1_1e-5"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping rd --pos auto_sqrt --rule_init_mode conf --dependency_static_norm per_rule_degree --dep_l1_lambda 1e-5)
+            ;;
+        YAGO3-10)
+            CONFIG_NAME="tg_r3d6__pos_auto_sqrt__ri_surprisal__dn_none__dl1_1e-5"
+            CONFIG_ARGS=(--synergy --redundancy --type_grouping r3d6 --pos auto_sqrt --rule_init_mode surprisal --dependency_static_norm none --dep_l1_lambda 1e-5)
+            ;;
+    esac
+}
 
-    mkdir -p "${exp_dir}"
-    echo "[$(date '+%F %T')] START ds=${dataset} ${name} gpu=${gpu} args=$*" | tee -a "${master_log}"
+run_dataset() {
+    local dataset="$1"
+    local output_dir="${ROOT_DIR}/data/${dataset}/aggregation/reproduction"
+    local log_dir="${ROOT_DIR}/logs/aggregation_reproduction/${dataset}"
+    local log_path="${log_dir}/step5.log"
+
+    require_inputs "${dataset}"
+    config_for_dataset "${dataset}"
+    mkdir -p "${output_dir}" "${log_dir}"
+
+    echo "[$(date '+%F %T')] START dataset=${dataset} config=${CONFIG_NAME} gpu=${gpu_id} output=${output_dir}" | tee -a "${log_path}"
     (
         cd "${ROOT_DIR}"
-        export CUDA_VISIBLE_DEVICES="${gpu}"
-        export EXPERIMENT_DIR="${exp_dir}"
+        export CUDA_VISIBLE_DEVICES="${gpu_id}"
+        export EXPERIMENT_DIR="${output_dir}"
         export PYTHONUNBUFFERED=1
         python -u src/ruledep/aggregation.py \
             -d "${dataset}" \
             --rule_file "data/${dataset}/rules/rule.txt" \
             --relation -1 \
             --multiprocess "${multiprocess}" \
+            --resume_relation_sweep \
             --train_rule_in_dependency_stage \
-            "$@"
-    ) 2>&1 | tee "${log_path}"
+            "${CONFIG_ARGS[@]}"
+    ) 2>&1 | tee -a "${log_path}"
     local status=${PIPESTATUS[0]}
-    echo "[$(date '+%F %T')] END ds=${dataset} ${name} status=${status} log=${log_path}" | tee -a "${master_log}"
+    echo "[$(date '+%F %T')] END dataset=${dataset} status=${status}" | tee -a "${log_path}"
     return "${status}"
-}
-
-run_batch() {
-    local dataset="$1"
-    local log_dir="$2"
-    local exp_root="$3"
-    local master_log="$4"
-    local batch_id="$5"
-    shift 5
-    local -a configs=("$@")
-    local -a gpus=(0 1 2 3)
-    local -a pids=()
-    local status=0
-
-    echo "[$(date '+%F %T')] BATCH START ds=${dataset} batch=${batch_id} size=${#configs[@]}" | tee -a "${master_log}"
-
-    for idx in "${!configs[@]}"; do
-        local entry="${configs[$idx]}"
-        local name="${entry%%::*}"
-        local arg_string="${entry#*::}"
-        local -a args=()
-        if [ -n "${arg_string}" ]; then
-            read -r -a args <<< "${arg_string}"
-        fi
-        run_config "${dataset}" "${log_dir}" "${exp_root}" "${master_log}" "${gpus[$idx]}" "${name}" "${args[@]}" &
-        pids[$idx]=$!
-    done
-
-    for pid in "${pids[@]}"; do
-        wait "${pid}" || status=1
-    done
-
-    echo "[$(date '+%F %T')] BATCH END   ds=${dataset} batch=${batch_id} status=${status}" | tee -a "${master_log}"
-
-    return "${status}"
-}
-
-run_batched_configs() {
-    local dataset="$1"
-    local log_dir="$2"
-    local exp_root="$3"
-    local master_log="$4"
-    local batch_size="$5"
-    shift 5
-    local -a configs=("$@")
-    local total=${#configs[@]}
-    local start=0
-    local status=0
-    local batch_id=1
-
-    while [ "${start}" -lt "${total}" ]; do
-        local -a current_batch=()
-        local end=$((start + batch_size))
-        if [ "${end}" -gt "${total}" ]; then
-            end="${total}"
-        fi
-
-        for ((idx = start; idx < end; idx++)); do
-            current_batch+=("${configs[$idx]}")
-        done
-
-        run_batch "${dataset}" "${log_dir}" "${exp_root}" "${master_log}" "${batch_id}" "${current_batch[@]}" || status=1
-        [ "${status}" -eq 0 ] || return "${status}"
-        start="${end}"
-        batch_id=$((batch_id + 1))
-    done
-
-    return 0
-}
-
-build_48_configs() {
-    local -a type_groupings=("rd" "r2d3" "r3d6")
-    local -a pos_modes=("auto_ratio" "auto_sqrt")
-    local -a rule_inits=("conf" "surprisal")
-    local -a static_norms=("none" "per_rule_degree")
-    local -a l1_values=("0" "1e-5")
-
-    local -a out=()
-    local tg pos ri dn l1
-    for tg in "${type_groupings[@]}"; do
-        for pos in "${pos_modes[@]}"; do
-            for ri in "${rule_inits[@]}"; do
-                for dn in "${static_norms[@]}"; do
-                    for l1 in "${l1_values[@]}"; do
-                        local name="tg_${tg}__pos_${pos}__ri_${ri}__dn_${dn}__dl1_${l1}"
-                        local arg_string="--synergy --redundancy --type_grouping ${tg} --pos ${pos} --rule_init_mode ${ri} --dependency_static_norm ${dn} --dep_l1_lambda ${l1}"
-                        out+=("${name}::${arg_string}")
-                    done
-                done
-            done
-        done
-    done
-
-    printf '%s\n' "${out[@]}"
-}
-
-run_for_dataset() {
-    local dataset="$1"
-    local log_dir="${ROOT_DIR}/logs/aggregation_structural/${dataset}"
-    local exp_root="${ROOT_DIR}/data/${dataset}/aggregation"
-    local master_log="${log_dir}/master${run_tag}.log"
-
-    mkdir -p "${log_dir}" "${exp_root}"
-
-    echo "======================================" | tee -a "${master_log}"
-    echo "Step 5: Aggregation for ${dataset}" | tee -a "${master_log}"
-    echo "Config space: 48 (=3*2*2*2*2), batch size=${max_parallel_configs}, multiprocess=${multiprocess}" | tee -a "${master_log}"
-    echo "======================================" | tee -a "${master_log}"
-
-    mapfile -t configs < <(build_48_configs)
-    run_batched_configs "${dataset}" "${log_dir}" "${exp_root}" "${master_log}" "${max_parallel_configs}" "${configs[@]}"
-    echo "Step 5 finished for ${dataset}" | tee -a "${master_log}"
 }
 
 if [ "${dataset_arg}" = "all" ]; then
-    for ds in "${ALL_DATASETS[@]}"; do
-        run_for_dataset "${ds}"
+    for dataset in "${DATASETS[@]}"; do
+        run_dataset "${dataset}"
     done
+elif is_supported_dataset "${dataset_arg}"; then
+    run_dataset "${dataset_arg}"
 else
-    run_for_dataset "${dataset_arg}"
+    echo "Unsupported dataset: ${dataset_arg}" >&2
+    echo "Supported datasets: ${DATASETS[*]}" >&2
+    exit 1
 fi
