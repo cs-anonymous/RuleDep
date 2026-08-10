@@ -398,8 +398,6 @@ object DepLearn {
         
         val processedTasks = java.util.concurrent.atomic.AtomicInteger(0)
         val threadPool = java.util.concurrent.Executors.newFixedThreadPool(Settings.WORKER_THREADS)
-        val compositionActiveThreadCount = java.util.concurrent.atomic.AtomicInteger(0)
-        val compositionThreadMonitorLock = Object()
         
         try {
             val bodyListMap = precomputeBodyLists(threadPool)
@@ -414,66 +412,30 @@ object DepLearn {
 
             val futures = (0 until Settings.WORKER_THREADS).map { _ ->
                 threadPool.submit {
-                    compositionActiveThreadCount.incrementAndGet()
-                    try {
-                        while (true) {
-                            val task = workQueue.poll() ?: break
-                            val headAtom = task.first
-                            val i = task.second
-                            val bodyList = bodyListMap[headAtom].orEmpty()
-                            if (bodyList.isEmpty()) continue
+                    while (true) {
+                        val task = workQueue.poll() ?: break
+                        val headAtom = task.first
+                        val i = task.second
+                        val bodyList = bodyListMap[headAtom].orEmpty()
+                        if (bodyList.isEmpty()) continue
 
-                            if (headAtom.isBinary) {
-                                processBinaryHeadAtom(headAtom, bodyList, i)
-                            } else {
-                                val binaryHeadAtom = headAtom.getBinaryAtom()
-                                val binaryBodyList = bodyListMap[binaryHeadAtom].orEmpty()
-                                processUnaryHeadAtom(headAtom, bodyList, binaryBodyList, i)
-                            }
-
-                            val cnt = processedTasks.incrementAndGet()
-                            if (cnt % 10000 == 0) {
-                                println("Processed $cnt/$totalTasks tasks...")
-                            }
+                        if (headAtom.isBinary) {
+                            processBinaryHeadAtom(headAtom, bodyList, i)
+                        } else {
+                            val binaryHeadAtom = headAtom.getBinaryAtom()
+                            val binaryBodyList = bodyListMap[binaryHeadAtom].orEmpty()
+                            processUnaryHeadAtom(headAtom, bodyList, binaryBodyList, i)
                         }
-                    } finally {
-                        val activeCount = compositionActiveThreadCount.decrementAndGet()
-                        synchronized(compositionThreadMonitorLock) {
-                            compositionThreadMonitorLock.notifyAll()
+
+                        val cnt = processedTasks.incrementAndGet()
+                        if (cnt % 10000 == 0) {
+                            println("Processed $cnt/$totalTasks tasks...")
                         }
                     }
                 }
             }
-
-            // Monitor thread activity
-            var lastActiveCount = 0
-            while (true) {
-                val activeCount: Int
-                synchronized(compositionThreadMonitorLock) {
-                    // Wait for thread count changes
-                    while (compositionActiveThreadCount.get() == lastActiveCount && !futures.all { it.isDone }) {
-                        compositionThreadMonitorLock.wait(1000)
-                    }
-                    activeCount = compositionActiveThreadCount.get()
-                    lastActiveCount = activeCount
-                }
-                
-                if (futures.all { it.isDone }) {
-                    println("All composition tasks completed")
-                    break
-                }
-                
-                if (activeCount > 0 && activeCount < Settings.WORKER_THREADS - 5) {
-                    println("Composition thread count: $activeCount/${Settings.WORKER_THREADS} active")
-                }
-                
-                if (activeCount < 4 && activeCount > 0) {
-                    println("FORCING SHUTDOWN: Less than 4 threads remaining in composition phase")
-                    futures.forEach { it.cancel(true) }
-                    threadPool.shutdownNow()
-                    break
-                }
-            }
+            futures.forEach { it.get() }
+            println("All composition tasks completed")
             
         } catch (e: Exception) {
             println("Error in composition phase monitoring: ${e.message}")

@@ -55,3 +55,9 @@ true_official_per_query_rr
 # Build caches
 _minted*/
 # main.pdf
+
+# Reproducible large outputs from evidence-cap dependency mining
+/reports/evidence_cap_sensitivity/dependency_runs/
+/reports/evidence_cap_sensitivity/logs/
+/reports/evidence_cap_sensitivity/invalid_interrupted_dependency_runs/
+/reports/evidence_cap_sensitivity/invalid_interrupted_logs/

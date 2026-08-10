@@ -15,7 +15,12 @@ data class Metric(
     val coverage: Double = if (headSize > 0) support / headSize else 0.0
 
     private fun surprisalFrom(conf: Double): Double {
-        return if (conf < 1.0) minOf(-Math.log(1 - conf), Settings.MAX_SURPRISAL) else Settings.MAX_SURPRISAL
+        // MAX_SURPRISAL <= 0 denotes an uncapped, finite log-failure transform.
+        // nextDown keeps raw confidence=1 finite; smoothed confidence is already <1
+        // because UNSEEN_NEGATIVE_EXAMPLES is added to every denominator.
+        val safeConfidence = conf.coerceIn(0.0, Math.nextDown(1.0))
+        val value = -Math.log1p(-safeConfidence)
+        return if (Settings.MAX_SURPRISAL > 0.0) minOf(value, Settings.MAX_SURPRISAL) else value
     }
 
     val rawConfidence: Double
