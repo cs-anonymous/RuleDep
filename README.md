@@ -196,16 +196,16 @@ The overall dataset-macro final MRR is **0.3906 +/- 0.0008**, compared with **0.
 
 The repository includes the following experiment reports and supporting artifacts:
 
-- [Overall experiment results](reports/all_results_summary.md)
-- [Dataset and rule-dependency statistics](reports/dataset_analysis.md)
-- [Best-configuration and ensemble variants](reports/best_combination_variant_details.md)
-- [Run-to-run stability](reports/run_to_run_stability/README.md)
-- [Evidence-cap sensitivity](reports/evidence_cap_sensitivity/README.md)
-- [Higher-order rule-dependency analysis](reports/high_order_analysis/README.md)
-- [Dependency-rich query-subset analysis](reports/query_subset/README.md)
-- [Query-level paired significance tests](reports/query_level_paired_test/README.md)
-- [Rule and dependency weight analysis](reports/type_weights/rule_dependency_weight_analysis.md)
-- [Relation-level type-weight analysis](reports/type_weights/type_weight_analysis.md)
+- [Overall experiment results](reports/all_results_summary.md): best configurations, ensemble variants, baseline comparisons, and runtime summaries.
+- [Dataset and rule-dependency statistics](reports/dataset_analysis.md): dataset sizes, rule counts, dependency counts, and structural statistics.
+- [Best-configuration and ensemble variants](reports/best_combination_variant_details.md): selected configurations and their relation-level ensemble results.
+- [Run-to-run stability](reports/run_to_run_stability/README.md): repeated dependency-mining and aggregation-training results with MRR mean and standard deviation.
+- [Evidence-cap sensitivity](reports/evidence_cap_sensitivity/README.md): sensitivity of dependency mining to capped and uncapped log-failure evidence.
+- [Higher-order rule-dependency analysis](reports/high_order_analysis/README.md): pairwise versus three-rule co-firing support and higher-order-effect statistics.
+- [Dependency-rich query-subset analysis](reports/query_subset/README.md): performance on queries ranked by complementary dependency evidence.
+- [Query-level paired significance tests](reports/query_level_paired_test/README.md): paired query-level confidence intervals and corrected significance tests.
+- [Rule and dependency weight analysis](reports/type_weights/rule_dependency_weight_analysis.md): sparsity, effective contributions, and signed dependency-weight statistics.
+- [Relation-level type-weight analysis](reports/type_weights/type_weight_analysis.md): variation in rule and dependency type importance across relations.
 
 ## Repository Layout
 

@@ -1,4 +1,4 @@
-# 0407 Type-weight Analysis
+# Type-weight Analysis
 
 This section moves beyond dataset-level type-weight averages and examines type preferences at relation-level granularity. For each dataset's best typed experiment, we ask which rule types and dependency interactions actually matter per relation.
 

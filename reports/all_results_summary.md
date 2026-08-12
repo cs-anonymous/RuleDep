@@ -1,4 +1,4 @@
-# 0407 Overall Results
+# Overall Results
 
 This table summarizes all completed experiments in the current workspace. Metrics and times are reported in seconds where applicable.
 

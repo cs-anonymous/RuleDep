@@ -1,4 +1,4 @@
-# 0407 Dataset Analysis
+# Dataset Analysis
 
 This table shows the size of each dataset, the number of rules and dependency pairs, and how rule and dependency types break down across the data.
 

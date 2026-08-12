@@ -1,4 +1,4 @@
-# 0407 Rule / Dependency Weight Analysis
+# Rule / Dependency Weight Analysis
 
 This section follows the two partial best configs, focuses on `dependency_final`, and examines how rule and dependency parameters change during training, along with the final distribution of retained dependency weights.
 
