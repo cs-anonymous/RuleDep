@@ -192,7 +192,20 @@ To quantify run-to-run variability, we fixed the rule set and repeated dependenc
 
 The overall dataset-macro final MRR is **0.3906 +/- 0.0008**, compared with **0.3848** for the Stage-1/LR-Agg baseline. All three repeats consistently outperform the baseline on all six datasets.
 
-The complete per-run values are available in [`reports/evidence_cap_sensitivity/repeat_mrr_summary.csv`](reports/evidence_cap_sensitivity/repeat_mrr_summary.csv).
+## Reports
+
+The repository includes the following experiment reports and supporting artifacts:
+
+- [Overall experiment results](reports/all_results_summary.md)
+- [Dataset and rule-dependency statistics](reports/dataset_analysis.md)
+- [Best-configuration and ensemble variants](reports/best_combination_variant_details.md)
+- [Run-to-run stability](reports/run_to_run_stability/README.md)
+- [Evidence-cap sensitivity](reports/evidence_cap_sensitivity/README.md)
+- [Higher-order rule-dependency analysis](reports/high_order_analysis/README.md)
+- [Dependency-rich query-subset analysis](reports/query_subset/README.md)
+- [Query-level paired significance tests](reports/query_level_paired_test/README.md)
+- [Rule and dependency weight analysis](reports/type_weights/rule_dependency_weight_analysis.md)
+- [Relation-level type-weight analysis](reports/type_weights/type_weight_analysis.md)
 
 ## Repository Layout
 
