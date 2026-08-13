@@ -67,9 +67,6 @@ object DepLearn {
     val mixNegativeLift = java.util.concurrent.atomic.AtomicInteger(0)
     val thread0Attempts = java.util.concurrent.atomic.AtomicInteger(0)
     
-    // Constants from TLearn
-    const val MIN_SURPRISAL_LIFT = 0.05
-
     private fun format5(value: Double): String {
         val formatted = String.format(java.util.Locale.US, "%.5f", value)
         return formatted.trimEnd('0').trimEnd('.')
@@ -142,7 +139,7 @@ object DepLearn {
         return bodyMap.entries
             .mapNotNull { entry ->
                 val metric = ID2metric[entry.value] ?: return@mapNotNull null
-                if (metric.surprisal >= MIN_SURPRISAL_LIFT) {   // && metric.surprisal < Settings.MAX_SURPRISAL
+                if (metric.surprisal >= Settings.MIN_SURPRISAL_LIFT) {   // && metric.surprisal < Settings.MAX_SURPRISAL
                     Triple(entry.key, entry.value, metric)
                 } else null
             }
@@ -171,6 +168,16 @@ object DepLearn {
             }
         }
         futures.forEach { it.get() }
+        val eligibleRuleCount = bodyListMap.values.sumOf { it.size.toLong() }
+        val candidatePairCount = bodyListMap.values.sumOf { rules ->
+            val n = rules.size.toLong()
+            n * (n - 1L) / 2L
+        }
+        println(
+            "Eligible relation-local rules after e_min=${Settings.MIN_SURPRISAL_LIFT} " +
+                "and TOP_K=${Settings.TOP_K}: $eligibleRuleCount"
+        )
+        println("Theoretical relation-local pairs among eligible rules: $candidatePairCount")
         return bodyListMap
     }
 
@@ -686,61 +693,53 @@ object DepLearn {
         val synergeFile = File(outputFile.parentFile, "synergy.txt")
         val redundancyFile = File(outputFile.parentFile, "redundancy.txt")
 
-        val jsonOutputPath = outputPath.replace(".txt", ".json")
-        val jsonOutputFile = File(jsonOutputPath)
-        jsonOutputFile.parentFile?.mkdirs()
-
-        val sortedEntries = depAdj2metric.entries
-            .flatMap { (id1, inner) -> inner.entries.map { id1 to it } }
-            .sortedByDescending { it.second.value.confidence }
-
-        // PrintWriter(outputFile).use { writer ->
-        //     sortedEntries.forEach { (id1, entry) ->
-        //         val id2 = entry.key
-        //         val metric = entry.value
-        //         val line = "${metric.bodySize}\t${metric.support.toInt()}\t${format5(metric.lift)}\t$id1\t$id2"
-        //         writer.println(line)
-        //     }
-        // }
-
         var positiveDeps = 0
         var negativeDeps = 0
         PrintWriter(synergeFile).use { synergeWriter ->
             PrintWriter(redundancyFile).use { redundancyWriter ->
-                sortedEntries.forEach { (id1, entry) ->
-                    val id2 = entry.key
-                    val metric = entry.value
-                    val line = "${metric.bodySize}\t${metric.support.toInt()}\t${format5(metric.lift)}\t$id1\t$id2"
-                    if (metric.lift > 0) {
-                        synergeWriter.println(line)
-                        positiveDeps++
-                    } else {
-                        redundancyWriter.println(line)
-                        negativeDeps++
+                depAdj2metric.forEach { (id1, inner) ->
+                    inner.forEach { (id2, metric) ->
+                        val line = "${metric.bodySize}\t${metric.support.toInt()}\t${format5(metric.lift)}\t$id1\t$id2"
+                        if (metric.lift > 0) {
+                            synergeWriter.println(line)
+                            positiveDeps++
+                        } else {
+                            redundancyWriter.println(line)
+                            negativeDeps++
+                        }
                     }
                 }
             }
         }
 
-        PrintWriter(jsonOutputFile).use { writer ->
-            writer.println("{")
-            val entries = depAdj2metric.entries.toList()
-            entries.forEachIndexed { idx, (id1, innerMap) ->
-                val inner = innerMap.entries
-                    .joinToString(", ") { (id2, metric) ->
-                        "\"$id2\": ${format5(metric.lift)}"
+        if (Settings.WRITE_DEPENDENCY_JSON) {
+            val jsonOutputFile = File(outputPath.replace(".txt", ".json"))
+            jsonOutputFile.parentFile?.mkdirs()
+            PrintWriter(jsonOutputFile).use { writer ->
+                writer.println("{")
+                val outerIterator = depAdj2metric.entries.iterator()
+                while (outerIterator.hasNext()) {
+                    val (id1, innerMap) = outerIterator.next()
+                    writer.print("  \"$id1\": { ")
+                    val innerIterator = innerMap.entries.iterator()
+                    while (innerIterator.hasNext()) {
+                        val (id2, metric) = innerIterator.next()
+                        writer.print("\"$id2\": ${format5(metric.lift)}")
+                        if (innerIterator.hasNext()) writer.print(", ")
                     }
-                val comma = if (idx < entries.size - 1) "," else ""
-                writer.println("  \"$id1\": { $inner }$comma")
+                    writer.print(" }")
+                    if (outerIterator.hasNext()) writer.print(",")
+                    writer.println()
+                }
+                writer.println("}")
             }
-            writer.println("}")
+            println("Successfully saved dependency json to ${jsonOutputFile.absolutePath}")
         }
 
         println("Successfully saved depAdj2metric to ${outputFile.absolutePath}")
         println("Successfully saved positive dependencies to ${synergeFile.absolutePath}")
         println("Successfully saved negative/zero dependencies to ${redundancyFile.absolutePath}")
-        println("Successfully saved dependency json to ${jsonOutputFile.absolutePath}")
-        val totalDeps = sortedEntries.size
+        val totalDeps = positiveDeps + negativeDeps
         println("Positive dependencies (synerge): $positiveDeps")
         println("Negative/zero dependencies (redundancy): $negativeDeps")
         println("Total dependency entries: $totalDeps")

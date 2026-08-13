@@ -56,8 +56,10 @@ true_official_per_query_rr
 _minted*/
 # main.pdf
 
-# Reproducible large outputs from evidence-cap dependency mining
-/reports/evidence_cap_sensitivity/dependency_runs/
-/reports/evidence_cap_sensitivity/logs/
-/reports/evidence_cap_sensitivity/invalid_interrupted_dependency_runs/
-/reports/evidence_cap_sensitivity/invalid_interrupted_logs/
+# Reproducible large outputs from threshold-sensitivity dependency mining
+/dependency_runs/threshold_sensitivity/
+/dependency_runs/threshold_sensitivity_failed_initial/
+/reports/threshold_sensitivity/dependency_runs/
+/reports/threshold_sensitivity/logs/
+/reports/threshold_sensitivity/invalid_interrupted_dependency_runs/
+/reports/threshold_sensitivity/invalid_interrupted_logs/

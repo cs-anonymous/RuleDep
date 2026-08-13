@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUTPUT_ROOT="${ROOT_DIR}/reports/evidence_cap_sensitivity"
+OUTPUT_ROOT="${ROOT_DIR}/reports/threshold_sensitivity"
 WORK_ROOT="${OUTPUT_ROOT}/dependency_runs"
 LOG_ROOT="${OUTPUT_ROOT}/logs"
 WORKER_THREADS="${WORKER_THREADS:-24}"

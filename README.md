@@ -198,7 +198,7 @@ The repository includes the following experiment reports and supporting artifact
 
 - [Overall experiment results](reports/all_results_summary.md): best configurations, baseline comparisons, ensemble results, and runtime summaries.
 - [Dataset and rule-dependency statistics](reports/dataset_analysis.md): dataset sizes, rule counts, dependency counts, and structural statistics.
-- [Evidence-cap sensitivity](reports/evidence_cap_sensitivity/README.md): sensitivity of dependency mining to capped and uncapped log-failure evidence.
+- [Dependency-mining threshold sensitivity](reports/threshold_sensitivity/README.md): effects of the evidence cap and the `e_min`, `g_min`, and `n_min` thresholds on dependency counts and link-prediction accuracy.
 - [Higher-order rule-dependency analysis](reports/high_order_analysis/README.md): pairwise versus three-rule co-firing support and higher-order-effect statistics.
 - [Dependency-rich query-subset analysis](reports/query_subset/README.md): performance on queries ranked by complementary dependency evidence.
 - [Query-level paired significance tests](reports/query_level_paired_test/README.md): paired query-level confidence intervals and corrected significance tests.

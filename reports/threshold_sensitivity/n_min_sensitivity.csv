@@ -1,0 +1,4 @@
+dataset,default_n_min,tested_n_min,default_raw_dependencies,tested_raw_dependencies,raw_dependency_factor,default_retained_dependencies,tested_retained_dependencies,retained_dependency_change_pct,default_mrr,tested_mrr,relative_mrr_change_pct
+KG20C,2,1,890804,2404914,2.6997,473727,512583,8.2022,0.234027792,0.234153380,0.0537
+Codex-M,5,1,28931290,57273964,1.9797,1469065,1685135,14.7080,0.344721345,0.344896217,0.0507
+YAGO3-10,5,1,20131765,39241118,1.9495,2828219,3819713,35.0554,0.579076694,0.578930628,-0.0252

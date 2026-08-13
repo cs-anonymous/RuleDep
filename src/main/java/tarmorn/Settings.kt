@@ -219,6 +219,12 @@ object Settings {
     var MIN_ABS_LIFT_DEPENDENCY: Double = 0.01
 
     @JvmField
+    var MIN_SURPRISAL_LIFT: Double = 0.05
+
+    @JvmField
+    var WRITE_DEPENDENCY_JSON: Boolean = true
+
+    @JvmField
     var TOP_K: Int = 300
 
     @JvmField
